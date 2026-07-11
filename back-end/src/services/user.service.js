@@ -1,7 +1,6 @@
 const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
-const MESSAGES = require('../constants/messages');
 const fs = require('fs');
 const path = require('path');
 
@@ -13,7 +12,7 @@ const path = require('path');
 const getProfile = async (userId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, MESSAGES.USER.NOT_FOUND);
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
   }
   return user;
 };
@@ -32,7 +31,7 @@ const updateProfile = async (userId, updateFields, file) => {
     if (file) {
       fs.unlink(file.path, () => {});
     }
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, MESSAGES.USER.NOT_FOUND);
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
   }
 
   // Handle profile image upload

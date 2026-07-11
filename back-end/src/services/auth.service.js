@@ -1,7 +1,6 @@
 const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
-const MESSAGES = require('../constants/messages');
 const crypto = require('crypto');
 const {
   generateAccessToken,
@@ -47,7 +46,7 @@ const signUp = async (userData) => {
   // Check if email already exists
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
-    throw new ApiError(HTTP_STATUS.CONFLICT, MESSAGES.AUTH.EMAIL_EXISTS);
+    throw new ApiError(HTTP_STATUS.CONFLICT, 'auth.email_exists');
   }
 
   // Create new user (password is automatically hashed by pre-save hook)
@@ -75,13 +74,13 @@ const signIn = async (email, password) => {
   // Explicitly select password field to perform verification
   const user = await User.findOne({ email: normalizedEmail }).select('+password');
   if (!user) {
-    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_CREDENTIALS);
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_credentials');
   }
 
   // Verify password
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {
-    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_CREDENTIALS);
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_credentials');
   }
 
   // Generate tokens
@@ -109,7 +108,7 @@ const signIn = async (email, password) => {
 const logout = async (userId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, MESSAGES.USER.NOT_FOUND);
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
   }
 
   // Remove refresh token from database
@@ -124,7 +123,7 @@ const logout = async (userId) => {
  */
 const refresh = async (token) => {
   if (!token) {
-    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_REFRESH);
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_refresh');
   }
 
   try {
@@ -136,7 +135,7 @@ const refresh = async (token) => {
     const hashedIncoming = hashToken(token);
 
     if (!user || !compareHash(user.refreshToken, hashedIncoming)) {
-      throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_REFRESH);
+      throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_refresh');
     }
 
     // Generate new tokens (rotation)
@@ -153,7 +152,7 @@ const refresh = async (token) => {
       user: user.toObject()
     };
   } catch (error) {
-    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_REFRESH);
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_refresh');
   }
 };
 

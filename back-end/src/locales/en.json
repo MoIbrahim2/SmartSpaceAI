@@ -1,0 +1,50 @@
+{
+  "auth": {
+    "signup_success": "User signed up successfully",
+    "signin_success": "User signed in successfully",
+    "logout_success": "User logged out successfully",
+    "refresh_success": "Token refreshed successfully",
+    "email_exists": "Email is already registered",
+    "password_mismatch": "Password and password confirmation do not match",
+    "invalid_credentials": "Invalid email or password",
+    "unauthorized": "Access denied. No token provided",
+    "invalid_token": "Invalid or expired access token",
+    "invalid_refresh": "Invalid or expired refresh token"
+  },
+  "user": {
+    "profile_fetched": "Profile fetched successfully",
+    "profile_updated": "Profile updated successfully",
+    "not_found": "User not found"
+  },
+  "general": {
+    "route_not_found": "Requested resource not found",
+    "server_error": "Internal server error",
+    "rate_limit_exceeded": "Too many requests, please try again later"
+  },
+  "database": {
+    "duplicate_key": "Duplicate value error occurred",
+    "duplicate_key_field": "{{field}} is already in use",
+    "cast_error": "Invalid format for field {{field}}: {{value}}",
+    "invalid_format": "Invalid format"
+  },
+  "fields": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "dateOfBirth": "Date of birth",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "profileImage": "Profile image"
+  },
+  "validation": {
+    "failed": "Validation failed",
+    "any_required": "{{field}} is required",
+    "string_empty": "{{field}} cannot be empty",
+    "string_min": "{{field}} must be at least {{limit}} characters long",
+    "string_max": "{{field}} must not exceed {{limit}} characters",
+    "string_email": "{{field}} must be a valid email",
+    "any_only": "{{field}} must match {{ref}}",
+    "object_unknown": "{{field}} is not allowed",
+    "date_base": "{{field}} must be a valid date"
+  }
+}
