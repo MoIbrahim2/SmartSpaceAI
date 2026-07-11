@@ -39,7 +39,7 @@ const updateProfile = async (userId, updateFields, file) => {
   if (file) {
     // Delete the previous profile image if it exists
     if (user.profileImage) {
-      const oldImagePath = path.join(__dirname, '../../', user.profileImage);
+      const oldImagePath = path.join(process.cwd(), user.profileImage);
       fs.unlink(oldImagePath, (err) => {
         if (err) {
           console.error(`Failed to delete old profile image: ${err.message}`);

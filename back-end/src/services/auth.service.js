@@ -2,11 +2,36 @@ const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
 const MESSAGES = require('../constants/messages');
+const crypto = require('crypto');
 const {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken
 } = require('../helpers/token');
+
+/**
+ * Utility to hash a token using SHA-256
+ * @param {string} token
+ * @returns {string} Hex-encoded hash
+ */
+const hashToken = (token) => {
+  if (!token) return '';
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
+
+/**
+ * Securely compare two hashes using constant-time check to prevent timing attacks
+ * @param {string} storedHash
+ * @param {string} incomingHash
+ * @returns {boolean} True if they match
+ */
+const compareHash = (storedHash, incomingHash) => {
+  if (!storedHash || !incomingHash) return false;
+  const a = Buffer.from(storedHash, 'hex');
+  const b = Buffer.from(incomingHash, 'hex');
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+};
 
 /**
  * Register a new user in the database
@@ -16,8 +41,11 @@ const {
 const signUp = async (userData) => {
   const { firstName, lastName, email, dateOfBirth, password } = userData;
 
+  // Normalize email to lowercase
+  const normalizedEmail = email.toLowerCase();
+
   // Check if email already exists
-  const existingUser = await User.findOne({ email });
+  const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
     throw new ApiError(HTTP_STATUS.CONFLICT, MESSAGES.AUTH.EMAIL_EXISTS);
   }
@@ -26,7 +54,7 @@ const signUp = async (userData) => {
   const newUser = await User.create({
     firstName,
     lastName,
-    email,
+    email: normalizedEmail,
     dateOfBirth,
     password
   });
@@ -41,8 +69,11 @@ const signUp = async (userData) => {
  * @returns {Promise<Object>} User instance, accessToken, refreshToken
  */
 const signIn = async (email, password) => {
+  // Normalize email to lowercase
+  const normalizedEmail = email.toLowerCase();
+
   // Explicitly select password field to perform verification
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email: normalizedEmail }).select('+password');
   if (!user) {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_CREDENTIALS);
   }
@@ -57,8 +88,8 @@ const signIn = async (email, password) => {
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
-  // Save refresh token in database (using select + field update)
-  user.refreshToken = refreshToken;
+  // Hash the refresh token before storing it in the database
+  user.refreshToken = hashToken(refreshToken);
   await user.save();
 
   // Convert mongoose document to plain object and remove password/refresh token
@@ -97,12 +128,14 @@ const refresh = async (token) => {
   }
 
   try {
-    // Verify refresh token
+    // Verify refresh token signature and validity
     const decoded = verifyRefreshToken(token);
 
-    // Fetch user and select the refreshToken field to match
+    // Fetch user and select the stored hashed refreshToken
     const user = await User.findById(decoded.id).select('+refreshToken');
-    if (!user || user.refreshToken !== token) {
+    const hashedIncoming = hashToken(token);
+
+    if (!user || !compareHash(user.refreshToken, hashedIncoming)) {
       throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_REFRESH);
     }
 
@@ -110,8 +143,8 @@ const refresh = async (token) => {
     const newAccessToken = generateAccessToken(user._id);
     const newRefreshToken = generateRefreshToken(user._id);
 
-    // Save the new refresh token
-    user.refreshToken = newRefreshToken;
+    // Store the new hashed refresh token
+    user.refreshToken = hashToken(newRefreshToken);
     await user.save();
 
     return {
