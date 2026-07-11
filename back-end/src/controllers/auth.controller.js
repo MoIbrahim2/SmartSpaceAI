@@ -9,7 +9,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: config.NODE_ENV === 'production',
   sameSite: 'strict',
-  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days matching the REFRESH_TOKEN_EXPIRES config
+  maxAge: config.REFRESH_TOKEN_COOKIE_MAX_AGE
 };
 
 /**

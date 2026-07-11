@@ -4,19 +4,6 @@ A production-ready, secure, and modular REST API built with **Node.js**, **Expre
 
 ---
 
-## Features
-
-*   **Security Hardening**: Configured with `helmet`, `hpp`, `cors`, `compression`, `cookie-parser`, `express-rate-limit`, and `express-xss-sanitizer`.
-*   **Authentication & Session Management**:
-    *   Short-lived **Access Token** (JWT) passed in JSON response bodies.
-    *   Long-lived **Refresh Token** (JWT) stored in a secure, `HttpOnly` Cookie.
-    *   Token rotation and cookie cleanup on logout.
-*   **Image Uploads**: Profile images handled via `multer` with size limitations (5MB) and mimetype constraints.
-*   **Centralized Request Validation**: Strict payload validation using `Joi` schemas before request controllers run.
-*   **Global Error Handler**: Custom `ApiError` class translation logic mapping MongoDB duplicates, Joi errors, Cast errors, and JWT issues to consistent client responses.
-
----
-
 ## Folder Structure
 
 ```text
@@ -42,7 +29,7 @@ src/
 ## Getting Started
 
 ### 1. Prerequisites
-*   [Node.js](https://nodejs.org/) (v16+)
+*   [Node.js](https://nodejs.org/) (v20.19.0+)
 *   [MongoDB](https://www.mongodb.com/) (running locally or a remote MongoDB Atlas URI)
 
 ### 2. Installation

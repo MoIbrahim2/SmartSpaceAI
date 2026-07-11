@@ -77,6 +77,7 @@ sequenceDiagram
     API->>Validation: Validate payload via Joi signupSchema
     Note over Validation: Verifies confirmPassword, strong password, dates
     Validation->>Service: Pass user fields
+    Service->>Service: Normalize email to lowercase
     Service->>DB: Check if email already registered
     DB-->>Service: Email unique check passes
     Service->>DB: Save User (trigger bcrypt pre-save hash)
@@ -89,11 +90,13 @@ sequenceDiagram
     Client->>API: POST /api/auth/signin (JSON)
     API->>Validation: Validate payload via Joi signinSchema
     Validation->>Service: Perform signIn
+    Service->>Service: Normalize email to lowercase
     Service->>DB: Retrieve User including hashed password
     Service->>Service: Compare passwords via bcrypt
     Service->>Service: Generate Access Token (JWT) & Refresh Token (JWT)
-    Service->>DB: Save current Refresh Token in user record
-    Service->>Client: Send 200 OK with Access Token in Body & Refresh Token in HttpOnly Cookie
+    Service->>Service: Hash Refresh Token using SHA-256
+    Service->>DB: Save hashed Refresh Token in user record
+    Service->>Client: Send 200 OK with Access Token in Body & Raw Refresh Token in HttpOnly Cookie
 ```
 
 ### C. Logout
@@ -111,11 +114,14 @@ Refresh tokens provide a safe way to keep users logged in without exposing long-
 
 1.  **Issue**: During a successful Sign In, a short-lived Access Token (expires in 15 minutes) is sent in the response body. A long-lived Refresh Token (expires in 7 days) is set as an `HttpOnly`, `Secure` (in production), and `SameSite=Strict` cookie.
 2.  **Request**: When the Access Token expires, the client calls `POST /api/auth/refresh`. The browser automatically transmits the HttpOnly cookie.
-3.  **Verification**: The backend extracts the cookie, validates the Refresh Token's signature, and checks the database user record to ensure the token matches the stored token.
+3.  **Verification**: 
+    *   The backend extracts the cookie and validates the Refresh Token's signature.
+    *   The database record is fetched and the token is hashed using SHA-256.
+    *   The stored hash and the incoming hash are compared using a constant-time check (`crypto.timingSafeEqual`) to prevent timing attacks.
 4.  **Rotation (Token Rotation)**:
     *   To prevent replay attacks, a new Access Token *and* a new Refresh Token are generated.
-    *   The database is updated with the new Refresh Token.
-    *   The new Refresh Token is returned inside a fresh HttpOnly cookie.
+    *   The database is updated with the SHA-256 hash of the new Refresh Token.
+    *   The new raw Refresh Token is returned inside a fresh HttpOnly cookie.
     *   The new Access Token is returned in the response body.
 
 ---
@@ -124,7 +130,7 @@ Refresh tokens provide a safe way to keep users logged in without exposing long-
 
 The lifecycle of an incoming request follows this path:
 
-1.  **Server Listener**: The port gets hit. `server.js` triggers `app.js`.
+1.  **Server Listener**: The port gets hit. `server.js` triggers `app.js` only after MongoDB connects successfully.
 2.  **Global Middlewares**:
     *   `helmet` configures headers.
     *   `cors` checks origins.
