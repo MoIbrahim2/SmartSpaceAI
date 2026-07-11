@@ -7,41 +7,14 @@ on:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
 
     steps:
-
-      - uses: actions/checkout@v4
-
       - name: Deploy to Azure VM
-
         uses: appleboy/ssh-action@v1.0.3
-
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-
           script: |
-            cd ${{ secrets.PROJECT_PATH }}
-
-            git fetch origin
-            git reset --hard origin/main
-
-            cd back-end
-            npm install
-
-            cd ../front-end
-            npm install
-            npm run build
-
-            rm -rf /var/www/smartspace/*
-            cp -r dist/* /var/www/smartspace/
-
-            cd ../back-end
-
-            pm2 restart smartspace-api
-
-            sudo nginx -t
-            sudo systemctl reload nginx
+            ~/scripts/deploy.sh
