@@ -17,10 +17,5 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          debug: true
           script: |
-            echo "✅ Connected successfully!"
-            whoami
-            hostname
-            pwd
-            ls -la ~
+            ~/scripts/deploy.sh
