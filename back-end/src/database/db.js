@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
-const config = require('../config/env');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(config.MONGO_URI);
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/smartspace_db';
+    const conn = await mongoose.connect(mongoUri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`MongoDB Connection Error: ${error.message}`);

@@ -3,13 +3,36 @@ const { sendSuccess } = require('../utils/responseHelper');
 const HTTP_STATUS = require('../constants/statusCodes');
 const MESSAGES = require('../constants/messages');
 const asyncHandler = require('../utils/asyncHandler');
-const config = require('../config/env');
 
-const cookieOptions = {
-  httpOnly: true,
-  secure: config.NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: config.REFRESH_TOKEN_COOKIE_MAX_AGE
+/**
+ * Utility to parse duration strings (e.g. "7d", "30m", "2h") into milliseconds
+ * @param {string} duration
+ * @returns {number} duration in milliseconds
+ */
+const parseDurationToMs = (duration) => {
+  if (!duration) return 7 * 24 * 60 * 60 * 1000; // default 7 days in ms
+  const number = parseInt(duration, 10);
+  const unit = duration.slice(-1).toLowerCase();
+  switch (unit) {
+    case 's': return number * 1000;
+    case 'm': return number * 60 * 1000;
+    case 'h': return number * 60 * 60 * 1000;
+    case 'd': return number * 24 * 60 * 60 * 1000;
+    default: return number; // fallback if already a number in ms
+  }
+};
+
+/**
+ * Dynamically build cookie options using process.env
+ */
+const getCookieOptions = () => {
+  const expires = process.env.REFRESH_TOKEN_EXPIRES || '7d';
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: parseDurationToMs(expires)
+  };
 };
 
 /**
@@ -28,7 +51,7 @@ const signin = asyncHandler(async (req, res) => {
   const { user, accessToken, refreshToken } = await authService.signIn(email, password);
 
   // Set the refresh token inside an HttpOnly Cookie
-  res.cookie('refreshToken', refreshToken, cookieOptions);
+  res.cookie('refreshToken', refreshToken, getCookieOptions());
 
   // Return the access token in the response body
   return sendSuccess(res, MESSAGES.AUTH.SIGNIN_SUCCESS, {
@@ -49,7 +72,7 @@ const logout = asyncHandler(async (req, res) => {
   // Clear the refresh token cookie
   res.clearCookie('refreshToken', {
     httpOnly: true,
-    secure: config.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict'
   });
 
@@ -66,7 +89,7 @@ const refresh = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken, user } = await authService.refresh(token);
 
   // Set the new rotated refresh token in HttpOnly Cookie
-  res.cookie('refreshToken', refreshToken, cookieOptions);
+  res.cookie('refreshToken', refreshToken, getCookieOptions());
 
   return sendSuccess(res, MESSAGES.AUTH.REFRESH_SUCCESS, {
     user,
