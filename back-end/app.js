@@ -1,13 +1,3 @@
-const express = require("express");
-const app = express();
-
-app.get("/", (req, res) => {
-    res.send("Hello world ")
-})
-
-
-const PORT = 3000
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// Legacy app.js - Relocated to src/app.js and src/server.js as per clean folder structure requirements.
+// The entry point is now src/server.js. Run with "npm run dev".
+require('./src/server');
