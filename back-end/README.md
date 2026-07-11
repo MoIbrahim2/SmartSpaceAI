@@ -8,7 +8,6 @@ A production-ready, secure, and modular REST API built with **Node.js**, **Expre
 
 ```text
 src/
-├── config/              # Environment config loading and defaults
 ├── constants/           # HTTP status codes and custom system messages
 ├── controllers/         # Handles HTTP requests/responses (req, res)
 ├── database/            # Mongoose MongoDB connection initialization

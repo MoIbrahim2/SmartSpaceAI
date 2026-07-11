@@ -10,7 +10,6 @@ The application follows a modular and scalable structure inside the `src/` direc
 
 ```text
 src/
-├── config/              # Centralized environment variable loading and validation
 ├── constants/           # Global immutable constants (HTTP status codes, standard messages)
 ├── controllers/         # Handles HTTP requests/responses; delegates business logic to services
 ├── database/            # Database initialization and connection logic

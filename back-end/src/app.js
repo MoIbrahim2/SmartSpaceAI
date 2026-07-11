@@ -7,7 +7,6 @@ const cookieParser = require('cookie-parser');
 const compression = require('compression');
 const path = require('path');
 
-const config = require('./config/env');
 const routes = require('./routes');
 const limiter = require('./middlewares/rateLimiter.middleware');
 const notFound = require('./middlewares/notFound.middleware');
@@ -20,7 +19,7 @@ app.use(helmet());
 
 // Enable CORS
 app.use(cors({
-  origin: config.CLIENT_URL,
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
 
