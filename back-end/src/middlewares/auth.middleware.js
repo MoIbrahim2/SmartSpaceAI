@@ -1,6 +1,5 @@
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
-const MESSAGES = require('../constants/messages');
 const { verifyAccessToken } = require('../helpers/token');
 const User = require('../models/user.model');
 const asyncHandler = require('../utils/asyncHandler');
@@ -17,7 +16,7 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 
   if (!token) {
-    return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.UNAUTHORIZED));
+    return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.unauthorized'));
   }
 
   try {
@@ -27,14 +26,14 @@ const protect = asyncHandler(async (req, res, next) => {
     // Fetch user and ensure they still exist in the database
     const user = await User.findById(decoded.id);
     if (!user) {
-      return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.USER.NOT_FOUND));
+      return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, 'user.not_found'));
     }
 
     // Attach user instance to request object
     req.user = user;
     next();
   } catch (error) {
-    return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.AUTH.INVALID_TOKEN));
+    return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_token'));
   }
 });
 

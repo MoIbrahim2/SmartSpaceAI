@@ -11,6 +11,7 @@ const routes = require('./routes');
 const limiter = require('./middlewares/rateLimiter.middleware');
 const notFound = require('./middlewares/notFound.middleware');
 const errorMiddleware = require('./middlewares/error.middleware');
+const { i18nMiddleware } = require('./middlewares/i18n.middleware');
 
 const app = express();
 
@@ -22,6 +23,9 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
+
+// Apply Language Detection Middleware
+app.use(i18nMiddleware);
 
 // Apply Rate Limiting
 app.use('/api', limiter);
