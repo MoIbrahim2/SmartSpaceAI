@@ -9,8 +9,13 @@ import MyRooms from "../Pages/Dashboard/MyRooms";
 import Profile from "../Pages/Dashboard/Profile";
 import RoomGeneration from "../Pages/Dashboard/RoomGeneration";
 import NotFound from "../Pages/NotFound";
+import LandingPage from "../Pages/LandingPage/LandingPage";
 
 const router = createBrowserRouter([
+  {
+    path: "/landing",
+    element: <LandingPage />,
+  },
   {
     element: <AuthLayout />,
     children: [
