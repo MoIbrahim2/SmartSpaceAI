@@ -14,11 +14,38 @@ const validate = (schema) => (req, res, next) => {
   });
 
   if (error) {
-    const errorDetails = error.details.map((detail) => ({
-      field: detail.path.join('.'),
-      message: detail.message.replace(/['"]/g, '')
-    }));
-    return next(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Validation failed', errorDetails));
+    const errorDetails = error.details.map((detail) => {
+      const fieldKey = detail.path.join('.');
+      
+      // Translate the field label if it exists in locales/fields
+      const translatedField = req.t 
+        ? req.t(`fields.${fieldKey}`, { defaultValue: fieldKey }) 
+        : fieldKey;
+      
+      // Convert dotted type to underscore type (e.g. "any.required" -> "any_required")
+      const typeKey = detail.type.replace(/\./g, '_');
+      const translationKey = `validation.${typeKey}`;
+      
+      const options = {
+        field: translatedField,
+        limit: detail.context?.limit,
+        ref: detail.context?.peer || detail.context?.ref,
+        defaultValue: detail.message.replace(/['"]/g, '')
+      };
+
+      // Translate validation message using localized rules
+      const message = req.t 
+        ? req.t(translationKey, options) 
+        : detail.message.replace(/['"]/g, '');
+
+      return {
+        field: fieldKey,
+        message
+      };
+    });
+
+    const failedMessage = req.t ? req.t('validation.failed') : 'Validation failed';
+    return next(new ApiError(HTTP_STATUS.BAD_REQUEST, failedMessage, errorDetails));
   }
 
   // Replace request body with validated/formatted values

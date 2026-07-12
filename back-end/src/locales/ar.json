@@ -1,0 +1,50 @@
+{
+  "auth": {
+    "signup_success": "تم تسجيل المستخدم بنجاح",
+    "signin_success": "تم تسجيل الدخول بنجاح",
+    "logout_success": "تم تسجيل الخروج بنجاح",
+    "refresh_success": "تم تحديث الرمز بنجاح",
+    "email_exists": "البريد الإلكتروني مسجل بالفعل",
+    "password_mismatch": "كلمة المرور وتأكيد كلمة المرور غير متطابقين",
+    "invalid_credentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    "unauthorized": "تم رفض الوصول. لم يتم توفير رمز الوصول",
+    "invalid_token": "رمز الوصول غير صالح أو منتهي الصلاحية",
+    "invalid_refresh": "رمز التحديث غير صالح أو منتهي الصلاحية"
+  },
+  "user": {
+    "profile_fetched": "تم جلب البيانات الشخصية بنجاح",
+    "profile_updated": "تم تحديث البيانات الشخصية بنجاح",
+    "not_found": "المستخدم غير موجود"
+  },
+  "general": {
+    "route_not_found": "المورد المطلوب غير موجود",
+    "server_error": "خطأ داخلي في الخادم",
+    "rate_limit_exceeded": "طلبات كثيرة جداً، يرجى المحاولة مرة أخرى لاحقاً"
+  },
+  "database": {
+    "duplicate_key": "حدث خطأ تكرار البيانات",
+    "duplicate_key_field": "حقل {{field}} مستخدم بالفعل",
+    "cast_error": "صيغة غير صالحة للحقل {{field}}: {{value}}",
+    "invalid_format": "صيغة غير صالحة"
+  },
+  "fields": {
+    "firstName": "الاسم الأول",
+    "lastName": "الاسم الأخير",
+    "email": "البريد الإلكتروني",
+    "dateOfBirth": "تاريخ الميلاد",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "profileImage": "الصورة الشخصية"
+  },
+  "validation": {
+    "failed": "فشل التحقق من البيانات",
+    "any_required": "حقل {{field}} مطلوب",
+    "string_empty": "لا يمكن أن يكون حقل {{field}} فارغاً",
+    "string_min": "يجب أن يكون حقل {{field}} على الأقل {{limit}} أحرف",
+    "string_max": "يجب ألا يتجاوز حقل {{field}} {{limit}} حرفاً",
+    "string_email": "يجب أن يكون حقل {{field}} بريداً إلكترونياً صالحاً",
+    "any_only": "يجب أن يتطابق حقل {{field}} مع {{ref}}",
+    "object_unknown": "حقل {{field}} غير مسموح به",
+    "date_base": "يجب أن يكون حقل {{field}} تاريخاً صالحاً"
+  }
+}

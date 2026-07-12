@@ -1,7 +1,6 @@
 const authService = require('../services/auth.service');
 const { sendSuccess } = require('../utils/responseHelper');
 const HTTP_STATUS = require('../constants/statusCodes');
-const MESSAGES = require('../constants/messages');
 const asyncHandler = require('../utils/asyncHandler');
 
 /**
@@ -40,7 +39,7 @@ const getCookieOptions = () => {
  */
 const signup = asyncHandler(async (req, res) => {
   const newUser = await authService.signUp(req.body);
-  return sendSuccess(res, MESSAGES.AUTH.SIGNUP_SUCCESS, { user: newUser }, HTTP_STATUS.CREATED);
+  return sendSuccess(res, 'auth.signup_success', { user: newUser }, HTTP_STATUS.CREATED);
 });
 
 /**
@@ -54,7 +53,7 @@ const signin = asyncHandler(async (req, res) => {
   res.cookie('refreshToken', refreshToken, getCookieOptions());
 
   // Return the access token in the response body
-  return sendSuccess(res, MESSAGES.AUTH.SIGNIN_SUCCESS, {
+  return sendSuccess(res, 'auth.signin_success', {
     user,
     accessToken
   }, HTTP_STATUS.OK);
@@ -76,7 +75,7 @@ const logout = asyncHandler(async (req, res) => {
     sameSite: 'strict'
   });
 
-  return sendSuccess(res, MESSAGES.AUTH.LOGOUT_SUCCESS, {}, HTTP_STATUS.OK);
+  return sendSuccess(res, 'auth.logout_success', {}, HTTP_STATUS.OK);
 });
 
 /**
@@ -91,7 +90,7 @@ const refresh = asyncHandler(async (req, res) => {
   // Set the new rotated refresh token in HttpOnly Cookie
   res.cookie('refreshToken', refreshToken, getCookieOptions());
 
-  return sendSuccess(res, MESSAGES.AUTH.REFRESH_SUCCESS, {
+  return sendSuccess(res, 'auth.refresh_success', {
     user,
     accessToken
   }, HTTP_STATUS.OK);
