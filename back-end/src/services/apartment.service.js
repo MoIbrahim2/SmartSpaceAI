@@ -51,7 +51,8 @@ const getApartments = async (query = {}) => {
     filter.status = query.status;
   }
   if (query.search) {
-    filter.name = { $regex: query.search, $options: 'i' };
+    const escapedSearch = query.search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    filter.name = { $regex: escapedSearch, $options: 'i' };
   }
 
   const page = parseInt(query.page, 10) || 1;

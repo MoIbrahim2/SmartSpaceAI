@@ -55,6 +55,7 @@
     "firstName": "الاسم الأول",
     "lastName": "الاسم الأخير",
     "email": "البريد الإلكتروني",
+    "authentication.email": "البريد الإلكتروني",
     "dateOfBirth": "تاريخ الميلاد",
     "password": "كلمة المرور",
     "confirmPassword": "تأكيد كلمة المرور",

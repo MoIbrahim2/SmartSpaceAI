@@ -117,3 +117,10 @@ All success and validation error messages are fully localizable. Depending on th
 - **English**: *"Room created successfully"*, *"Generations retrieved successfully"*.
 - **Arabic**: *"تم إنشاء الغرفة بنجاح"*, *"تم جلب بيانات عمليات التوليد بنجاح"*.
 - Invalid payloads automatically output translated field errors (e.g. *"Room Type is required"* / *"حقل نوع الغرفة مطلوب"*).
+
+### 4. Input Validation & Security Sanitization
+- **Strict Payload Controls**: Misleading creation fields (`coverImageId` and `selectedGenerationId`) are disallowed during Room creation since these resources are not yet defined.
+- **Cross-Reference Verification**: When updating a room's `selectedGenerationId`, the service verifies that the referenced generation exists, belongs to the exact same room, and is owned by the requesting user. This prevents cross-room or cross-owner data linking exploits.
+- **Regular Expression Safe Escaping (ReDoS Prevention)**: All text searches in Apartment, Room, and Generation filters are sanitized by escaping regex metacharacters, securing the MongoDB `$regex` parser against crafted catastrophic-backtracking payloads.
+- **Safe Profile Updates**: The user service initializes profile fields before updating nested object fields, ensuring that users with incomplete or legacy database documents do not trigger runtime null pointer exceptions.
+- **Authentication Email Localized Keys**: Duplicate-key errors on `authentication.email` are fully translated to map clean, localized labels in English (`Email`) and Arabic (`البريد الإلكتروني`) rather than raw path strings.

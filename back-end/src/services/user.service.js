@@ -34,6 +34,11 @@ const updateProfile = async (userId, updateFields, file) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
   }
 
+  // Initialize profile object if it does not exist
+  if (!user.profile) {
+    user.profile = {};
+  }
+
   // Handle profile image upload
   if (file) {
     // Delete the previous profile image if it exists

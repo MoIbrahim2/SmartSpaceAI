@@ -13,9 +13,7 @@ const createRoomSchema = Joi.object({
   roomType: Joi.string().trim().required(),
   description: Joi.string().trim().allow('').max(1000).optional(),
   dimensions: dimensionsSchema.required(),
-  status: Joi.string().valid('ACTIVE', 'ARCHIVED').optional(),
-  coverImageId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-  selectedGenerationId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional()
+  status: Joi.string().valid('ACTIVE', 'ARCHIVED').optional()
 });
 
 const updateRoomSchema = Joi.object({
@@ -30,7 +28,8 @@ const updateRoomSchema = Joi.object({
   }).optional(),
   status: Joi.string().valid('ACTIVE', 'ARCHIVED').optional(),
   coverImageId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-  selectedGenerationId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional()
+  selectedGenerationId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional().allow('', null),
+  deleteImageIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).optional()
 });
 
 module.exports = {
