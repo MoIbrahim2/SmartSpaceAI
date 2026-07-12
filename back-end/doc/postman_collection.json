@@ -505,6 +505,460 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Rooms",
+			"item": [
+				{
+					"name": "Create Room",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.success && response.data && response.data.room && response.data.room._id) {",
+									"    pm.collectionVariables.set(\"roomId\", response.data.room._id);",
+									"    console.log(\"roomId successfully stored in collection variables.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "apartmentId",
+									"value": "{{apartmentId}}",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Master Bedroom",
+									"type": "text"
+								},
+								{
+									"key": "roomType",
+									"value": "BEDROOM",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Spacious master bedroom with modern layout.",
+									"type": "text"
+								},
+								{
+									"key": "dimensions",
+									"value": "{\n  \"width\": 4.5,\n  \"length\": 5.0,\n  \"height\": 3.0,\n  \"unit\": \"meters\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "sourceImages",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/rooms",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rooms"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rooms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/rooms?apartmentId={{apartmentId}}&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rooms"
+							],
+							"query": [
+								{
+									"key": "apartmentId",
+									"value": "{{apartmentId}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Room by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/rooms/{{roomId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rooms",
+								"{{roomId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Room",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Updated Master Bedroom",
+									"type": "text"
+								},
+								{
+									"key": "dimensions",
+									"value": "{\n  \"width\": 4.8,\n  \"length\": 5.2,\n  \"height\": 3.0,\n  \"unit\": \"meters\"\n}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/rooms/{{roomId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rooms",
+								"{{roomId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Room",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/rooms/{{roomId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"rooms",
+								"{{roomId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Generations",
+			"item": [
+				{
+					"name": "Create Generation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.success && response.data && response.data.generation && response.data.generation._id) {",
+									"    pm.collectionVariables.set(\"generationId\", response.data.generation._id);",
+									"    console.log(\"generationId successfully stored in collection variables.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "roomId",
+									"value": "{{roomId}}",
+									"type": "text"
+								},
+								{
+									"key": "generationType",
+									"value": "CREATE_FROM_SCRATCH",
+									"type": "text"
+								},
+								{
+									"key": "prompt",
+									"value": "Scandinavian cozy design style bedroom",
+									"type": "text"
+								},
+								{
+									"key": "settings",
+									"value": "{\n  \"creativity\": 80,\n  \"preserveLayout\": true,\n  \"colorPalette\": \"light-wood-white-grey\",\n  \"lighting\": \"bright-natural\",\n  \"quality\": \"high\",\n  \"aspectRatio\": \"16:9\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "images",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/generations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"generations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Generations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/generations?roomId={{roomId}}&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"generations"
+							],
+							"query": [
+								{
+									"key": "roomId",
+									"value": "{{roomId}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Generation by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/generations/{{generationId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"generations",
+								"{{generationId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Generation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "COMPLETED",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/generations/{{generationId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"generations",
+								"{{generationId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Generation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/generations/{{generationId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"generations",
+								"{{generationId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
@@ -545,6 +999,16 @@
 		},
 		{
 			"key": "apartmentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "roomId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "generationId",
 			"value": "",
 			"type": "string"
 		}

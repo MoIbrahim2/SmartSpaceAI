@@ -19,7 +19,16 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    const prefix = file.fieldname === 'coverImage' ? 'apartment' : 'profile';
+    let prefix = 'file';
+    if (file.fieldname === 'coverImage') {
+      prefix = 'apartment';
+    } else if (file.fieldname === 'profileImage') {
+      prefix = 'profile';
+    } else if (file.fieldname === 'sourceImages') {
+      prefix = 'room';
+    } else if (file.fieldname === 'images') {
+      prefix = 'generation';
+    }
     cb(null, `${prefix}-${uniqueSuffix}${ext}`);
   }
 });
@@ -44,9 +53,13 @@ const upload = multer({
 
 const uploadProfileImage = upload.single('profileImage');
 const uploadCoverImage = upload.single('coverImage');
+const uploadRoomSourceImages = upload.array('sourceImages', 10);
+const uploadGenerationImages = upload.array('images', 10);
 
 module.exports = {
   uploadProfileImage,
   uploadCoverImage,
+  uploadRoomSourceImages,
+  uploadGenerationImages,
   upload
 };
