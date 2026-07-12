@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ApartmentCard from "../../Components/ApartmentCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
 import CreateApartmentModal from "../../Components/CreateApartmentModal";
@@ -7,7 +7,6 @@ import { getApartments, deleteApartment } from "../../api";
 import Icon from "../../Components/Icon";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
