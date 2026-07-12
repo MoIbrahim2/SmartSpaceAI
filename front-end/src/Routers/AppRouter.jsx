@@ -5,6 +5,8 @@ import Login from "../Pages/Auth/Login";
 import Register from "../Pages/Auth/Registar";
 import Credits from "../Pages/Dashboard/Credits";
 import Dashboard from "../Pages/Dashboard/Dashboard";
+import ApartmentRooms from "../Pages/Dashboard/ApartmentRooms";
+import RoomDetail from "../Pages/Dashboard/RoomDetail";
 import MyRooms from "../Pages/Dashboard/MyRooms";
 import Profile from "../Pages/Dashboard/Profile";
 import RoomGeneration from "../Pages/Dashboard/RoomGeneration";
@@ -32,6 +34,8 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: "/home", element: <Dashboard /> },
+      { path: "/apartments/:apartmentId", element: <ApartmentRooms /> },
+      { path: "/apartments/:apartmentId/rooms/:roomId", element: <RoomDetail /> },
       { path: "/room-generation", element: <RoomGeneration /> },
       { path: "/projects", element: <Dashboard /> },
       { path: "/apartments", element: <Dashboard /> },

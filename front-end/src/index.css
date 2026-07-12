@@ -7,7 +7,7 @@
 @layer base {
   body {
     margin: 0;
-    background-color: #e8eaf0;
+    background-color: #f5f5f4;
     font-family: "Plus Jakarta Sans", sans-serif;
   }
 
@@ -40,11 +40,11 @@
   }
 
   .neo-shadow {
-    box-shadow: 8px 8px 16px #c9cbd1, -8px -8px 16px #ffffff;
+    box-shadow: 8px 8px 16px #e7e5e4, -8px -8px 16px #ffffff;
   }
 
   .neo-button:active {
-    box-shadow: inset 4px 4px 8px #c9cbd1, inset -4px -4px 8px #ffffff;
+    box-shadow: inset 4px 4px 8px #e7e5e4, inset -4px -4px 8px #ffffff;
   }
 
   .neomorph-raised {
@@ -97,77 +97,81 @@
 
 /* Dashboard Dark Mode Overrides */
 html.dark body {
-  background-color: #0b0f19 !important;
-  color: #f8fafc !important;
+  background-color: #0a0908 !important;
+  color: #ffffff !important;
 }
 
 html.dark #root {
-  background-color: #0b0f19 !important;
+  background-color: #0a0908 !important;
 }
 
-html.dark .bg-background,
+html.dark .bg-background {
+  background-color: #0a0908 !important;
+  color: #ffffff !important;
+}
+
 html.dark .bg-surface {
-  background-color: #0b0f19 !important;
-  color: #f8fafc !important;
+  background-color: #12100e !important;
+  color: #ffffff !important;
 }
 
 html.dark .bg-surface-bright {
-  background-color: #111827 !important;
-  color: #f8fafc !important;
+  background-color: #1c1815 !important;
+  color: #ffffff !important;
 }
 
 html.dark .text-on-surface {
-  color: #f8fafc !important;
+  color: #ffffff !important;
 }
 
 html.dark .text-on-surface-variant {
-  color: #9ca3af !important;
+  color: #a8a29e !important;
 }
 
 html.dark .text-outline {
-  color: #4b5563 !important;
+  color: #57534e !important;
 }
 
 html.dark .border-primary {
-  border-color: #818cf8 !important;
+  border-color: #8c6239 !important;
 }
 
 html.dark .text-primary {
-  color: #818cf8 !important;
+  color: #cda37f !important;
 }
 
 html.dark .bg-primary {
-  background-color: #6366f1 !important;
+  background-color: #8c6239 !important;
 }
 
 html.dark .hover\:bg-on-primary-fixed-variant:hover {
-  background-color: #4f46e5 !important;
+  background-color: #704d2b !important;
 }
 
 /* Neomorphic Dark Mode Shadows */
 html.dark .neo-raised,
 html.dark .neomorph-raised {
-  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.4), -6px -6px 12px rgba(255, 255, 255, 0.02) !important;
+  box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.6), -6px -6px 12px rgba(255, 255, 255, 0.02) !important;
 }
 
 html.dark .neo-inset,
 html.dark .neomorph-inset {
-  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.01) !important;
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.01) !important;
 }
 
 html.dark .neo-button-active:active,
 html.dark .neomorph-active:active,
 html.dark .active\:neomorph-inset:active {
-  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.5), inset -4px -4px 8px rgba(255, 255, 255, 0.01) !important;
+  box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.6), inset -4px -4px 8px rgba(255, 255, 255, 0.01) !important;
   transform: scale(0.98);
 }
 
 html.dark .neo-shadow {
-  box-shadow: 8px 8px 16px #030712, -8px -8px 16px #1f2937 !important;
+  box-shadow: 8px 8px 16px #030202, -8px -8px 16px #1c1815 !important;
 }
 
 html.dark .neo-button:active {
-  box-shadow: inset 4px 4px 8px #030712, inset -4px -4px 8px #1f2937 !important;
+  box-shadow: inset 4px 4px 8px #030202, inset -4px -4px 8px #1c1815 !important;
 }
 
 

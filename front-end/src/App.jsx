@@ -7,6 +7,8 @@ import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Registar";
 import Credits from "./Pages/Dashboard/Credits";
 import Dashboard from "./Pages/Dashboard/Dashboard";
+import ApartmentRooms from "./Pages/Dashboard/ApartmentRooms";
+import RoomDetail from "./Pages/Dashboard/RoomDetail";
 import MyRooms from "./Pages/Dashboard/MyRooms";
 import Profile from "./Pages/Dashboard/Profile";
 import RoomGeneration from "./Pages/Dashboard/RoomGeneration";
@@ -31,6 +33,8 @@ function App() {
             }
           >
             <Route path="/home" element={<Dashboard />} />
+            <Route path="/apartments/:apartmentId" element={<ApartmentRooms />} />
+            <Route path="/apartments/:apartmentId/rooms/:roomId" element={<RoomDetail />} />
             <Route path="/room-generation" element={<RoomGeneration />} />
             <Route path="/projects" element={<Dashboard />} />
             <Route path="/apartments" element={<Dashboard />} />

@@ -1,7 +1,12 @@
 import Icon from "./Icon";
 
 export default function RoomCard({ room }) {
-  const firstImage = room.sourceImages?.[0] || room.image;
+  const firstImage = room.sourceImages?.[0]?.url
+    ? (room.sourceImages[0].url.startsWith("http")
+        ? room.sourceImages[0].url
+        : `http://localhost:3000/${room.sourceImages[0].url}`)
+    : room.image ||
+      "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=400&q=80";
 
   return (
     <div className="group flex flex-col rounded-3xl bg-background p-6 transition-shadow duration-300 hover:shadow-[8px_8px_16px_rgba(0,0,0,0.1),-8px_-8px_16px_rgba(255,255,255,0.7)] neomorph-raised">

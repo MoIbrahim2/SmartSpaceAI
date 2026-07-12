@@ -16,7 +16,9 @@ const { i18nMiddleware } = require('./middlewares/i18n.middleware');
 const app = express();
 
 // Set security HTTP headers
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 // Enable CORS
 app.use(cors({

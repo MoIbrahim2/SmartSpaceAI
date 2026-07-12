@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
@@ -8,7 +8,7 @@ import Icon from "../../Components/Icon";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signin } = useAuth();
+  const { signin, user, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [email, setEmail] = useState("");
@@ -16,6 +16,10 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const from = location.state?.from?.pathname || "/home";
+
+  if (!authLoading && user) {
+    return <Navigate to={from} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -175,7 +179,6 @@ const Login = () => {
           </div>
         </section>
       </main>
-      <AuthFooter />
     </div>
   );
 };
