@@ -16,6 +16,14 @@
     "profile_updated": "Profile updated successfully",
     "not_found": "User not found"
   },
+  "apartment": {
+    "create_success": "Apartment created successfully",
+    "fetch_success": "Apartments retrieved successfully",
+    "update_success": "Apartment updated successfully",
+    "delete_success": "Apartment deleted successfully",
+    "not_found": "Apartment not found",
+    "forbidden": "You do not have permission to perform this action on this apartment"
+  },
   "general": {
     "route_not_found": "Requested resource not found",
     "server_error": "Internal server error",
@@ -34,7 +42,11 @@
     "dateOfBirth": "Date of birth",
     "password": "Password",
     "confirmPassword": "Confirm password",
-    "profileImage": "Profile image"
+    "profileImage": "Profile image",
+    "ownerId": "Owner",
+    "name": "Name",
+    "country": "Country",
+    "city": "City"
   },
   "validation": {
     "failed": "Validation failed",

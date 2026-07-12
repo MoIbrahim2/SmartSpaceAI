@@ -273,6 +273,238 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Apartments",
+			"item": [
+				{
+					"name": "Create Apartment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.success && response.data && response.data.apartment && response.data.apartment._id) {",
+									"    pm.collectionVariables.set(\"apartmentId\", response.data.apartment._id);",
+									"    console.log(\"apartmentId successfully stored in collection variables.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Luxury Sea View Apartment",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Beautiful sea view apartment located in Alexandria.",
+									"type": "text"
+								},
+								{
+									"key": "location",
+									"value": "{\n  \"country\": \"Egypt\",\n  \"city\": \"Alexandria\",\n  \"district\": \"Sidi Bishr\",\n  \"street\": \"El Geish Road\",\n  \"building\": \"Tower A\",\n  \"floor\": 12,\n  \"apartmentNumber\": \"1204\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "ACTIVE",
+									"type": "text"
+								},
+								{
+									"key": "coverImage",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/apartments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"apartments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Apartments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/apartments?search=&page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"apartments"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Apartment by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/apartments/{{apartmentId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"apartments",
+								"{{apartmentId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Apartment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "Updated Luxury Sea View Apartment",
+									"type": "text"
+								},
+								{
+									"key": "location",
+									"value": "{\n  \"country\": \"Egypt\",\n  \"city\": \"Alexandria\",\n  \"district\": \"Sidi Bishr\",\n  \"street\": \"El Geish Road\",\n  \"building\": \"Tower A\",\n  \"floor\": 15,\n  \"apartmentNumber\": \"1504\"\n}",
+									"type": "text"
+								},
+								{
+									"key": "coverImage",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/apartments/{{apartmentId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"apartments",
+								"{{apartmentId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Apartment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/apartments/{{apartmentId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"apartments",
+								"{{apartmentId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
@@ -309,6 +541,11 @@
 		{
 			"key": "accept_language",
 			"value": "ar",
+			"type": "string"
+		},
+		{
+			"key": "apartmentId",
+			"value": "",
 			"type": "string"
 		}
 	]

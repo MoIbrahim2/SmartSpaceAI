@@ -16,6 +16,14 @@
     "profile_updated": "تم تحديث البيانات الشخصية بنجاح",
     "not_found": "المستخدم غير موجود"
   },
+  "apartment": {
+    "create_success": "تم إنشاء الشقة بنجاح",
+    "fetch_success": "تم جلب بيانات الشقق بنجاح",
+    "update_success": "تم تحديث بيانات الشقة بنجاح",
+    "delete_success": "تم حذف الشقة بنجاح",
+    "not_found": "الشقة غير موجودة",
+    "forbidden": "ليس لديك الصلاحية لإجراء هذا التعديل على هذه الشقة"
+  },
   "general": {
     "route_not_found": "المورد المطلوب غير موجود",
     "server_error": "خطأ داخلي في الخادم",
@@ -34,7 +42,11 @@
     "dateOfBirth": "تاريخ الميلاد",
     "password": "كلمة المرور",
     "confirmPassword": "تأكيد كلمة المرور",
-    "profileImage": "الصورة الشخصية"
+    "profileImage": "الصورة الشخصية",
+    "ownerId": "المالك",
+    "name": "الاسم",
+    "country": "الدولة",
+    "city": "المدينة"
   },
   "validation": {
     "failed": "فشل التحقق من البيانات",
