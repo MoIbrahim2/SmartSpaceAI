@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
+import { API_HOST } from "../api";
 
 export default function ApartmentCard({ apartment }) {
   const locationStr = apartment.location
     ? [apartment.location.city, apartment.location.district, apartment.location.street]
-        .filter(Boolean)
-        .join(", ") || "Location not specified"
+      .filter(Boolean)
+      .join(", ") || "Location not specified"
     : "Location not specified";
 
   return (
@@ -16,10 +17,10 @@ export default function ApartmentCard({ apartment }) {
           src={
             apartment.coverImage?.url
               ? (apartment.coverImage.url.startsWith("http")
-                  ? apartment.coverImage.url
-                  : `http://localhost:3000/${apartment.coverImage.url}`)
+                ? apartment.coverImage.url
+                : `${API_HOST}/${apartment.coverImage.url.startsWith("/") ? apartment.coverImage.url.slice(1) : apartment.coverImage.url}`)
               : apartment.image ||
-                "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80"
+              "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80"
           }
           alt={apartment.name}
           width={400}
