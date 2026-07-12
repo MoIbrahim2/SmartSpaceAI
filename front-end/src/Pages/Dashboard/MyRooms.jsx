@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import RoomCard from "../../Components/RoomCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
@@ -8,15 +8,26 @@ const MyRooms = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState("");
+  const debounceRef = useRef(null);
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+    setPage(1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(e.target.value);
+    }, 400);
+  };
 
   const fetchRooms = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const { data } = await getRooms({ search, page, limit: 10 });
+      const { data } = await getRooms({ search: debouncedSearch, page, limit: 10 });
       if (data.success) {
         const list = data.data?.rooms || [];
         setRooms(list);
@@ -29,7 +40,7 @@ const MyRooms = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, page]);
+  }, [debouncedSearch, page]);
 
   useEffect(() => {
     fetchRooms();
@@ -63,8 +74,8 @@ const MyRooms = () => {
                   aria-label="Search rooms"
                   autoComplete="off"
                   name="search"
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                value={search}
+                onChange={handleSearchChange}
                 />
               </div>
             </div>

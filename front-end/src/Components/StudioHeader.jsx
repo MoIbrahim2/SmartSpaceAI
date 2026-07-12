@@ -11,6 +11,8 @@ const StudioHeader = () => {
     location.pathname === "/apartments" ||
     location.pathname === "/rooms";
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) return savedTheme;
@@ -82,8 +84,14 @@ const StudioHeader = () => {
             <button className="size-10 rounded-xl bg-surface-bright text-on-surface-variant transition-all hover:text-primary neo-shadow neo-button" aria-label="Notifications">
               <span className="material-symbols-outlined">notifications</span>
             </button>
-            <div className="group relative">
-              <button className="size-10 overflow-hidden rounded-full border-2 border-primary neo-shadow ring-primary ring-offset-2 transition-all focus:ring-2" aria-label="User menu" aria-haspopup="true">
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((prev) => !prev)}
+                className="size-10 overflow-hidden rounded-full border-2 border-primary neo-shadow ring-primary ring-offset-2 transition-all focus:ring-2"
+                aria-label="User menu"
+                aria-haspopup="true"
+                aria-expanded={menuOpen}
+              >
                 {user?.profileImage ? (
                   <img
                     className="h-full w-full object-cover"
@@ -96,27 +104,33 @@ const StudioHeader = () => {
                   </div>
                 )}
               </button>
-              <div className="absolute right-0 z-50 mt-4 hidden w-56 rounded-2xl bg-background p-3 group-hover:block neomorph-raised">
-                <div className="mb-2 px-4 py-2 text-sm font-medium text-on-surface border-b border-outline/20">
-                  {user?.firstName} {user?.lastName}
-                  <br />
-                  <span className="text-xs text-on-surface-variant">{user?.email}</span>
+              {menuOpen && (
+                <div
+                  className="absolute right-0 z-50 mt-4 w-56 rounded-2xl bg-background p-3 neomorph-raised"
+                  onMouseLeave={() => setMenuOpen(false)}
+                >
+                  <div className="mb-2 px-4 py-2 text-sm font-medium text-on-surface border-b border-outline/20">
+                    {user?.firstName} {user?.lastName}
+                    <br />
+                    <span className="text-xs text-on-surface-variant">{user?.email}</span>
+                  </div>
+                  <Link
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
+                    to="/profile"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">settings</span>
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => { handleLogout(); setMenuOpen(false); }}
+                    className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-error transition-all hover:neomorph-inset"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    Logout
+                  </button>
                 </div>
-                <Link
-                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
-                  to="/profile"
-                >
-                  <span className="material-symbols-outlined text-[20px]">settings</span>
-                  Settings
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-error transition-all hover:neomorph-inset"
-                >
-                  <span className="material-symbols-outlined text-[20px]">logout</span>
-                  Logout
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
