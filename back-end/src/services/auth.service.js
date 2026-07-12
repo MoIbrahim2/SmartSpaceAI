@@ -44,18 +44,25 @@ const signUp = async (userData) => {
   const normalizedEmail = email.toLowerCase();
 
   // Check if email already exists
-  const existingUser = await User.findOne({ email: normalizedEmail });
+  const existingUser = await User.findOne({ 'authentication.email': normalizedEmail });
   if (existingUser) {
     throw new ApiError(HTTP_STATUS.CONFLICT, 'auth.email_exists');
   }
 
   // Create new user (password is automatically hashed by pre-save hook)
   const newUser = await User.create({
-    firstName,
-    lastName,
-    email: normalizedEmail,
-    dateOfBirth,
-    password
+    profile: {
+      firstName,
+      lastName,
+      dateOfBirth,
+      avatar: ''
+    },
+    authentication: {
+      email: normalizedEmail,
+      passwordHash: password,
+      provider: 'local',
+      emailVerified: false
+    }
   });
 
   return newUser;
@@ -72,7 +79,7 @@ const signIn = async (email, password) => {
   const normalizedEmail = email.toLowerCase();
 
   // Explicitly select password field to perform verification
-  const user = await User.findOne({ email: normalizedEmail }).select('+password');
+  const user = await User.findOne({ 'authentication.email': normalizedEmail }).select('+authentication.passwordHash');
   if (!user) {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_credentials');
   }
@@ -88,7 +95,8 @@ const signIn = async (email, password) => {
   const refreshToken = generateRefreshToken(user._id);
 
   // Hash the refresh token before storing it in the database
-  user.refreshToken = hashToken(refreshToken);
+  user.authentication.refreshToken = hashToken(refreshToken);
+  user.authentication.lastLogin = new Date();
   await user.save();
 
   // Convert mongoose document to plain object and remove password/refresh token
@@ -112,7 +120,7 @@ const logout = async (userId) => {
   }
 
   // Remove refresh token from database
-  user.refreshToken = null;
+  user.authentication.refreshToken = null;
   await user.save();
 };
 
@@ -131,10 +139,10 @@ const refresh = async (token) => {
     const decoded = verifyRefreshToken(token);
 
     // Fetch user and select the stored hashed refreshToken
-    const user = await User.findById(decoded.id).select('+refreshToken');
+    const user = await User.findById(decoded.id).select('+authentication.refreshToken');
     const hashedIncoming = hashToken(token);
 
-    if (!user || !compareHash(user.refreshToken, hashedIncoming)) {
+    if (!user || !compareHash(user.authentication.refreshToken, hashedIncoming)) {
       throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_refresh');
     }
 
@@ -143,7 +151,7 @@ const refresh = async (token) => {
     const newRefreshToken = generateRefreshToken(user._id);
 
     // Store the new hashed refresh token
-    user.refreshToken = hashToken(newRefreshToken);
+    user.authentication.refreshToken = hashToken(newRefreshToken);
     await user.save();
 
     return {

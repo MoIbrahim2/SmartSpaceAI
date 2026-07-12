@@ -16,6 +16,30 @@
     "profile_updated": "Profile updated successfully",
     "not_found": "User not found"
   },
+  "apartment": {
+    "create_success": "Apartment created successfully",
+    "fetch_success": "Apartments retrieved successfully",
+    "update_success": "Apartment updated successfully",
+    "delete_success": "Apartment deleted successfully",
+    "not_found": "Apartment not found",
+    "forbidden": "You do not have permission to perform this action on this apartment"
+  },
+  "room": {
+    "create_success": "Room created successfully",
+    "fetch_success": "Rooms retrieved successfully",
+    "update_success": "Room updated successfully",
+    "delete_success": "Room deleted successfully",
+    "not_found": "Room not found",
+    "forbidden": "You do not have permission to perform this action on this room"
+  },
+  "generation": {
+    "create_success": "Generation created successfully",
+    "fetch_success": "Generations retrieved successfully",
+    "update_success": "Generation updated successfully",
+    "delete_success": "Generation deleted successfully",
+    "not_found": "Generation not found",
+    "forbidden": "You do not have permission to perform this action on this generation"
+  },
   "general": {
     "route_not_found": "Requested resource not found",
     "server_error": "Internal server error",
@@ -34,7 +58,20 @@
     "dateOfBirth": "Date of birth",
     "password": "Password",
     "confirmPassword": "Confirm password",
-    "profileImage": "Profile image"
+    "profileImage": "Profile image",
+    "ownerId": "Owner",
+    "name": "Name",
+    "country": "Country",
+    "city": "City",
+    "apartmentId": "Apartment ID",
+    "roomType": "Room Type",
+    "width": "Width",
+    "length": "Length",
+    "height": "Height",
+    "unit": "Unit",
+    "roomId": "Room ID",
+    "generationType": "Generation Type",
+    "status": "Status"
   },
   "validation": {
     "failed": "Validation failed",

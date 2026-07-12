@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
 const protect = require('../middlewares/auth.middleware');
-const uploadProfileImage = require('../middlewares/upload.middleware');
+const { uploadProfileImage } = require('../middlewares/upload.middleware');
 const validate = require('../middlewares/validation.middleware');
 const { updateProfileSchema } = require('../validators/user.validator');
 

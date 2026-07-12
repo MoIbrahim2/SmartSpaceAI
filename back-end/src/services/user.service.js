@@ -37,8 +37,8 @@ const updateProfile = async (userId, updateFields, file) => {
   // Handle profile image upload
   if (file) {
     // Delete the previous profile image if it exists
-    if (user.profileImage) {
-      const oldImagePath = path.join(process.cwd(), user.profileImage);
+    if (user.profile.avatar) {
+      const oldImagePath = path.join(process.cwd(), user.profile.avatar);
       fs.unlink(oldImagePath, (err) => {
         if (err) {
           console.error(`Failed to delete old profile image: ${err.message}`);
@@ -46,13 +46,13 @@ const updateProfile = async (userId, updateFields, file) => {
       });
     }
     // Store relative path in DB (e.g., uploads/profile-12345.jpg)
-    user.profileImage = `uploads/${file.filename}`;
+    user.profile.avatar = `uploads/${file.filename}`;
   }
 
   // Update text fields
-  if (updateFields.firstName !== undefined) user.firstName = updateFields.firstName;
-  if (updateFields.lastName !== undefined) user.lastName = updateFields.lastName;
-  if (updateFields.dateOfBirth !== undefined) user.dateOfBirth = updateFields.dateOfBirth;
+  if (updateFields.firstName !== undefined) user.profile.firstName = updateFields.firstName;
+  if (updateFields.lastName !== undefined) user.profile.lastName = updateFields.lastName;
+  if (updateFields.dateOfBirth !== undefined) user.profile.dateOfBirth = updateFields.dateOfBirth;
 
   // Save changes (triggers validators and returns updated user)
   const updatedUser = await user.save();
