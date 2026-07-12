@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const StudioHeader = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const activeApartments =
     location.pathname === "/projects" ||
     location.pathname === "/apartments" ||
@@ -29,6 +32,15 @@ const StudioHeader = () => {
       return nextTheme;
     });
   };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
+  const userInitials = user
+    ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"
+    : "U";
 
   return (
     <header className="sticky top-0 z-50 mb-4 bg-surface-bright px-6 py-4 neo-shadow md:px-20">
@@ -72,28 +84,39 @@ const StudioHeader = () => {
             </button>
             <div className="group relative">
               <button className="size-10 overflow-hidden rounded-full border-2 border-primary neo-shadow ring-primary ring-offset-2 transition-all focus:ring-2" aria-label="User menu" aria-haspopup="true">
-                <img
-                  className="h-full w-full object-cover"
-                  alt="Your profile"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWWSNhPQ34wQABjCdspvcZnNmcvFYYZFLVCui4pyawXxoMH43OagI3hAIFU94KgIeYetgPa9WxV6QgTem1Sgj3cygJxV70o7W45__n3pZkT36Ihkk8NwShurbP0yhlf6hfP_YqmNQ5xx0rSolIiHhSwb8oVY_aX6EijEfwteZI6A25hRYTFK7214gbyVmcDFbgUHIatb62UM4cvVJfS6q8GUA9IYUJqlYJdndJ8HWUi38CajvOgUSG"
-                />
+                {user?.profileImage ? (
+                  <img
+                    className="h-full w-full object-cover"
+                    alt="Your profile"
+                    src={user.profileImage}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-primary font-bold text-white text-sm">
+                    {userInitials}
+                  </div>
+                )}
               </button>
-                         <div className="absolute right-0 z-50 mt-4 hidden w-56 rounded-2xl bg-background p-3 group-hover:block neomorph-raised">
-              <Link
-                className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
-                to="/profile"
-              >
-                <span className="material-symbols-outlined text-[20px]">settings</span>
-                Settings
-              </Link>
-              <Link
-                className="mt-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-error transition-all hover:neomorph-inset"
-                to="/login"
-              >
-                <span className="material-symbols-outlined text-[20px]">logout</span>
-                Logout
-              </Link>
-            </div>
+              <div className="absolute right-0 z-50 mt-4 hidden w-56 rounded-2xl bg-background p-3 group-hover:block neomorph-raised">
+                <div className="mb-2 px-4 py-2 text-sm font-medium text-on-surface border-b border-outline/20">
+                  {user?.firstName} {user?.lastName}
+                  <br />
+                  <span className="text-xs text-on-surface-variant">{user?.email}</span>
+                </div>
+                <Link
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
+                  to="/profile"
+                >
+                  <span className="material-symbols-outlined text-[20px]">settings</span>
+                  Settings
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-error transition-all hover:neomorph-inset"
+                >
+                  <span className="material-symbols-outlined text-[20px]">logout</span>
+                  Logout
+                </button>
+              </div>
             </div>
           </div>
         </div>

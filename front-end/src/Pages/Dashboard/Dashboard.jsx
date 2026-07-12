@@ -1,36 +1,58 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import ApartmentCard from "../../Components/ApartmentCard";
-const apartments = [
-  {
-    name: "Skyline Penthouse",
-    location: "Downtown District, Level 42",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuBRsRfcEqvTefZ-N7JpxKqpj5aV7KAgI5g1cZYGbD6U49RbsIGdQfV1SeyZF2mCGvjuY6aBRlMlCJa6OGnVrQ4A_0kvKeAgK4YQUm-z6s-wiA9pAmhkCUf4KzbEqLlBPyBfdwNK_uwcIVFw-T9gr3JTEA_5SLinXl3yMZKe0boO99e2JKbOsWRNr7upjdDVfGGwaOPVk8Cyl_MgzF3ZJrAkJxX40qRmDTzFYDzbz4aayqTXYio9CNu3",
-  },
-  {
-    name: "Willow Creek Studio",
-    location: "North Greenbelt, Garden St.",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCu1ndOA6On1Z16xKyNZcJ4TELzr37m25LqMXCEXPhZQcJD-zfiGnW8W_3YUv4XPfC8z2YZhXMwUJjVeyJJ_kxZCqd2e9TRmaCbd88-XsLCGXA6eem2k7N07YpYoYq7zBwdAbrJ0as6k7QG70wpjpwDODLtKiQoGlgA02Y8N2RqdK2b6Y6OGVCBtJjCLSKNboMI53riRU9Iye9-l5OzZ3wNMO38zdn0mgDmc3v5Gg0YOjNFlmv_GRp9",
-  },
-  {
-    name: "Sunset Garden Unit",
-    location: "South Park, Terrace Way",
-    image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCQGk9gyLoNGEaa1HxKwIWwd7heGFIKU7OfWUYeOlEt0AswSxGV4t5UGDBC4SAROA2ZzkoA_HWQUDiHyLgpbSnBRDuPRagJwT_NV9MP2c1BJ4jm6Dbcud-5vyRl_t7Snxv91dF8B4nwUM3INUkYvB1yGZGbvDzO41Wq7S7OXzI7RN7Em1zTSybC7fsDY6a6ws2faFB6fwD5T-XiejJYOtYsux4uFh8EsMa5IyE9D0srtjOgpqvWRhQt",
-  },
-];
+import EmptyState from "../../Components/EmptyState/EmptyState";
+import { getApartments, deleteApartment } from "../../api";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [apartments, setApartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [error, setError] = useState("");
+
+  const fetchApartments = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data } = await getApartments({ search, page, limit: 10 });
+      if (data.success) {
+        const list = data.data?.apartments || [];
+        setApartments(list);
+        setTotalPages(data.data?.totalPages || 1);
+      }
+    } catch (err) {
+      if (err.response?.status !== 401) {
+        setError("Failed to load apartments.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [search, page]);
+
+  useEffect(() => {
+    fetchApartments();
+  }, [fetchApartments]);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this apartment?")) return;
+    try {
+      await deleteApartment(id);
+      fetchApartments();
+    } catch {
+      setError("Failed to delete apartment.");
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-surface-bright text-on-surface font-body">
       <main className="mx-auto w-full max-w-[1200px] flex-grow px-6 py-10 md:px-20">
         <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl flex-1">
             <div className="relative flex h-14 items-center rounded-full bg-surface-bright px-6 neo-inset">
-              <span className="material-symbols-outlined text-outline">
-                search
-              </span>
+              <span className="material-symbols-outlined text-outline">search</span>
               <input
                 className="ml-3 w-full bg-transparent text-base text-on-surface placeholder:text-outline outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus:ring-transparent"
                 placeholder="Search your apartments..."
@@ -38,6 +60,8 @@ const Dashboard = () => {
                 aria-label="Search apartments"
                 autoComplete="off"
                 name="search"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
             </div>
           </div>
@@ -54,11 +78,61 @@ const Dashboard = () => {
           My Apartments
         </h2>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {apartments.map((apartment) => (
-            <ApartmentCard key={apartment.name} apartment={apartment} />
-          ))}
-        </div>
+        {error && (
+          <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : apartments.length === 0 ? (
+          <EmptyState
+            icon="domain"
+            title="No Apartments Yet"
+            description="Create your first apartment to get started with AI-powered room design."
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {apartments.map((apartment) => (
+                <div key={apartment._id} className="relative group">
+                  <ApartmentCard apartment={apartment} />
+                  <button
+                    onClick={() => handleDelete(apartment._id)}
+                    className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
+                    aria-label="Delete apartment"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="mt-10 flex items-center justify-center gap-4">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="rounded-full bg-surface-bright px-6 py-3 font-bold text-primary neo-shadow neo-button disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <span className="text-sm font-medium text-on-surface-variant">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="rounded-full bg-surface-bright px-6 py-3 font-bold text-primary neo-shadow neo-button disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
   );

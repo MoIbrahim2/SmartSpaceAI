@@ -2,10 +2,48 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
+import { useAuth } from "../../context/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const [agree, setAgree] = useState(false);
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    dateOfBirth: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!agree) {
+      setError("You must agree to the Terms of Service.");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await signup(form);
+      navigate("/home", { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden selection:bg-primary selection:text-white">
@@ -40,13 +78,13 @@ const Register = () => {
               </p>
             </header>
 
-            <form
-              className="space-y-6"
-              onSubmit={(event) => {
-                event.preventDefault();
-                navigate("/room-generation");
-              }}
-            >
+            {error && (
+              <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+                {error}
+              </div>
+            )}
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="flex flex-col gap-2">
                   <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-firstname">First Name</label>
@@ -57,6 +95,9 @@ const Register = () => {
                     autoComplete="given-name"
                     name="firstName"
                     id="reg-firstname"
+                    value={form.firstName}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -68,6 +109,9 @@ const Register = () => {
                     autoComplete="family-name"
                     name="lastName"
                     id="reg-lastname"
+                    value={form.lastName}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
               </div>
@@ -83,6 +127,9 @@ const Register = () => {
                     autoComplete="email"
                     name="email"
                     id="reg-email"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
               </div>
@@ -99,6 +146,9 @@ const Register = () => {
                     autoComplete="bday"
                     name="dateOfBirth"
                     id="reg-dob"
+                    value={form.dateOfBirth}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
               </div>
@@ -114,6 +164,9 @@ const Register = () => {
                     autoComplete="new-password"
                     name="password"
                     id="reg-password"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
               </div>
@@ -129,6 +182,9 @@ const Register = () => {
                     autoComplete="new-password"
                     name="confirmPassword"
                     id="reg-confirm"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
               </div>
@@ -153,9 +209,13 @@ const Register = () => {
                 </span>
               </label>
 
-              <button className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-surface text-lg font-bold text-primary transition-all neo-raised neo-button-active">
-                Register
-                <span className="material-symbols-outlined">arrow_forward</span>
+              <button
+                className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-surface text-lg font-bold text-primary transition-all neo-raised neo-button-active disabled:opacity-50"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? "Creating account..." : "Register"}
+                {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
               </button>
             </form>
 
@@ -178,7 +238,7 @@ const Register = () => {
           </div>
 
           <div className="mt-8 grid w-full max-w-md grid-cols-2 gap-6">
-            <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active">
+            <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
               <img
                 alt="Google"
                 className="h-5 w-5"
@@ -186,7 +246,7 @@ const Register = () => {
               />
               <span className="text-sm font-semibold text-on-surface">Google</span>
             </button>
-            <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active">
+            <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
               <span className="material-symbols-outlined text-on-surface">apps</span>
               <span className="text-sm font-semibold text-on-surface">Apple</span>
             </button>

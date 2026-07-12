@@ -1,12 +1,34 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const from = location.state?.from?.pathname || "/home";
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await signin(email, password);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen overflow-x-hidden text-on-surface selection:bg-primary selection:text-white">
@@ -40,13 +62,12 @@ const Login = () => {
                 Access your AI-powered design studio
               </p>
             </header>
-            <form
-              className="space-y-6"
-              onSubmit={(event) => {
-                event.preventDefault();
-                navigate("/room-generation");
-              }}
-            >
+            {error && (
+              <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+                {error}
+              </div>
+            )}
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="flex flex-col gap-2">
                 <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="login-email">Email Address</label>
                 <div className="group relative flex items-center">
@@ -60,6 +81,9 @@ const Login = () => {
                     autoComplete="email"
                     name="email"
                     id="login-email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -82,6 +106,9 @@ const Login = () => {
                     autoComplete="current-password"
                     name="password"
                     id="login-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
                   />
                   <button
                     className="absolute right-5 text-outline hover:text-on-surface focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:rounded"
@@ -114,11 +141,12 @@ const Login = () => {
               </label>
 
               <button
-                className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-surface text-lg font-bold text-primary transition-all neo-raised neo-button-active"
+                className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-surface text-lg font-bold text-primary transition-all neo-raised neo-button-active disabled:opacity-50"
                 type="submit"
+                disabled={loading}
               >
-                Sign In
-                <span className="material-symbols-outlined">arrow_forward</span>
+                {loading ? "Signing in..." : "Sign In"}
+                {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
               </button>
             </form>
 
@@ -131,7 +159,7 @@ const Login = () => {
             </div>
 
             <div className="mt-8 grid w-full max-w-md grid-cols-2 gap-6">
-              <button className="group flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active">
+              <button className="group flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
                 <img
                   alt="Google"
                   className="size-5 grayscale transition-all group-hover:grayscale-0"
@@ -139,7 +167,7 @@ const Login = () => {
                 />
                 <span className="text-sm font-semibold text-on-surface">Google</span>
               </button>
-              <button className="group flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active">
+              <button className="group flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
                 <span className="material-symbols-outlined text-on-surface grayscale transition-all group-hover:grayscale-0">
                   laptop_mac
                 </span>

@@ -10,6 +10,7 @@ import Profile from "../Pages/Dashboard/Profile";
 import RoomGeneration from "../Pages/Dashboard/RoomGeneration";
 import NotFound from "../Pages/NotFound";
 import LandingPage from "../Pages/LandingPage/LandingPage";
+import ProtectedRoute from "../Components/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -24,7 +25,11 @@ const router = createBrowserRouter([
     ],
   },
   {
-    element: <DashboardLayout />,
+    element: (
+      <ProtectedRoute>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { path: "/home", element: <Dashboard /> },
       { path: "/room-generation", element: <RoomGeneration /> },
