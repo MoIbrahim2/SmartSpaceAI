@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Icon from "../../Components/Icon";
 
 const priceFormat = (amount) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 }).format(amount);
@@ -29,16 +30,14 @@ const Credits = () => {
               className="flex items-center gap-3 rounded-2xl px-4 py-3 text-on-surface-variant transition-all hover:bg-surface-container-low neo-button"
               to="/profile"
             >
-              <span className="material-symbols-outlined">person</span>
+              <Icon name="person" />
               <span className="font-medium">Profile</span>
             </Link>
             <Link
               className="flex items-center gap-3 rounded-2xl bg-surface-bright px-4 py-3 font-semibold text-primary neo-inset"
               to="/credits"
             >
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: '"FILL" 1' }}>
-                payments
-              </span>
+              <Icon name="payments" />
               <span className="font-medium">Billing</span>
             </Link>
           </div>
@@ -64,7 +63,7 @@ const Credits = () => {
 
           <div className="mt-8">
             <h2 className="mb-8 flex items-center gap-3 text-2xl font-bold text-on-surface">
-              <span className="material-symbols-outlined text-primary">add_circle</span>
+              <Icon name="add_circle" className="text-primary" />
               Top Up Credits
             </h2>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -81,7 +80,7 @@ const Credits = () => {
                     </div>
                   ) : null}
                   <div className="mb-6 flex size-16 items-center justify-center rounded-2xl text-primary neo-inset">
-                    <span className="material-symbols-outlined text-3xl">{offer.icon}</span>
+                    <Icon name={offer.icon} size={32} />
                   </div>
                   <h4 className="mb-2 text-lg font-bold text-on-surface">{offer.title}</h4>
                   <div className="mb-2 text-3xl font-extrabold text-on-surface">
@@ -99,7 +98,7 @@ const Credits = () => {
             </div>
             <div className="mt-12 flex justify-center">
               <button className="flex items-center gap-3 whitespace-nowrap rounded-full bg-primary px-12 py-5 text-lg font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button">
-                <span className="material-symbols-outlined">bolt</span>
+                <Icon name="bolt" />
                 Top Up Now
               </button>
             </div>
@@ -115,7 +114,7 @@ const Credits = () => {
                 <div key={tx.id} className="flex items-center justify-between rounded-2xl bg-surface-bright p-5 neo-inset">
                   <div className="flex items-center gap-4">
                     <div className="flex size-10 items-center justify-center rounded-xl bg-surface-bright text-on-surface-variant neo-shadow">
-                      <span className="material-symbols-outlined text-sm">history</span>
+                      <Icon name="history" size={14} />
                     </div>
                     <div>
                       <p className="text-sm font-bold text-on-surface">{tx.title}</p>

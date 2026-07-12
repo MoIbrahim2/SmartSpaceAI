@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import Icon from "../../Components/Icon";
 import "./LandingPage.css";
 
 const toolsData = {
@@ -411,9 +412,7 @@ const LandingPage = () => {
               }}
               aria-label="Toggle Theme"
             >
-              <span className="material-symbols-outlined" style={{ fontSize: "22px" }}>
-                {theme === "dark" ? "light_mode" : "dark_mode"}
-              </span>
+              <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={22} />
             </button>
             <Link to="/login" className="btn btn-login">
               Log In
