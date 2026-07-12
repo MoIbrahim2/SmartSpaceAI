@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import RoomCard from "../../Components/RoomCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
 import { getRooms, deleteRoom } from "../../api";
+import Icon from "../../Components/Icon";
 
 const MyRooms = () => {
   const [rooms, setRooms] = useState([]);
@@ -66,7 +67,7 @@ const MyRooms = () => {
           <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-6 md:flex-row">
             <div className="max-w-xl flex-1">
               <div className="relative flex h-14 items-center rounded-full bg-background px-6 neomorph-inset">
-                <span className="material-symbols-outlined text-outline">search</span>
+                <Icon name="search" className="text-outline" />
                 <input
                   className="ml-3 w-full bg-transparent text-base text-on-surface placeholder:text-outline outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus:ring-transparent"
                   placeholder="Search your rooms..."
@@ -83,7 +84,7 @@ const MyRooms = () => {
               to="/room-generation"
               className="flex h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neomorph-active neomorph-raised"
             >
-              <span className="material-symbols-outlined">add</span>
+              <Icon name="add" />
               Create New Room
             </Link>
           </div>
@@ -116,7 +117,7 @@ const MyRooms = () => {
                     className="absolute top-8 right-8 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
                     aria-label="Delete room"
                   >
-                    <span className="material-symbols-outlined text-sm">delete</span>
+                    <Icon name="delete" size={14} />
                   </button>
                 </div>
               ))}
@@ -148,15 +149,15 @@ const MyRooms = () => {
 
       <div className="sticky bottom-0 left-0 z-50 flex w-full items-center justify-around bg-background p-4 shadow-[0_-6px_12px_rgba(0,0,0,0.05),0_-6px_12px_rgba(255,255,255,0.6)] md:hidden">
         <button className="flex flex-col items-center font-bold text-primary" aria-label="Apartments">
-          <span className="material-symbols-outlined">domain</span>
+          <Icon name="domain" />
           <span className="mt-1 text-xs">Apartments</span>
         </button>
         <button className="flex flex-col items-center font-medium text-on-surface-variant" aria-label="Alerts">
-          <span className="material-symbols-outlined">notifications</span>
+          <Icon name="notifications" />
           <span className="mt-1 text-xs">Alerts</span>
         </button>
         <button className="flex flex-col items-center font-medium text-on-surface-variant" aria-label="Profile">
-          <span className="material-symbols-outlined">person</span>
+          <Icon name="person" />
           <span className="mt-1 text-xs">Profile</span>
         </button>
       </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import ApartmentCard from "../../Components/ApartmentCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
 import { getApartments, deleteApartment } from "../../api";
+import Icon from "../../Components/Icon";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ const Dashboard = () => {
         <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="max-w-xl flex-1">
             <div className="relative flex h-14 items-center rounded-full bg-surface-bright px-6 neo-inset">
-              <span className="material-symbols-outlined text-outline">search</span>
+              <Icon name="search" className="text-outline" />
               <input
                 className="ml-3 w-full bg-transparent text-base text-on-surface placeholder:text-outline outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus:ring-transparent"
                 placeholder="Search your apartments..."
@@ -80,7 +81,7 @@ const Dashboard = () => {
             className="flex h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button"
             to="/room-generation"
           >
-            <span className="material-symbols-outlined">add</span>
+            <Icon name="add" />
             Create New Apartment
           </Link>
         </div>
@@ -116,7 +117,7 @@ const Dashboard = () => {
                     className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
                     aria-label="Delete apartment"
                   >
-                    <span className="material-symbols-outlined text-sm">delete</span>
+                    <Icon name="delete" size={14} />
                   </button>
                 </div>
               ))}

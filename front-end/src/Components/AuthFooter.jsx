@@ -1,3 +1,5 @@
+import Icon from "./Icon";
+
 const AuthFooter = () => {
   return (
     <footer className="w-full border-t border-surface-container bg-surface px-6 py-12 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] md:px-12">
@@ -40,15 +42,9 @@ const AuthFooter = () => {
           © 2024 SmartSpace AI. All rights reserved.
         </p>
         <div className="flex gap-6">
-          <span className="material-symbols-outlined cursor-pointer text-on-surface-variant hover:text-primary" aria-label="Language">
-            public
-          </span>
-          <span className="material-symbols-outlined cursor-pointer text-on-surface-variant hover:text-primary" aria-label="Share">
-            share
-          </span>
-          <span className="material-symbols-outlined cursor-pointer text-on-surface-variant hover:text-primary" aria-label="Email">
-            mail
-          </span>
+          <Icon name="public" className="cursor-pointer text-on-surface-variant hover:text-primary" aria-label="Language" />
+          <Icon name="share" className="cursor-pointer text-on-surface-variant hover:text-primary" aria-label="Share" />
+          <Icon name="mail" className="cursor-pointer text-on-surface-variant hover:text-primary" aria-label="Email" />
         </div>
       </div>
     </footer>

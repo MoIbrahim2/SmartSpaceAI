@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
+import Icon from "../../Components/Icon";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -119,7 +120,7 @@ const Register = () => {
               <div className="flex flex-col gap-2">
                 <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-email">Email</label>
                 <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-5 text-outline">mail</span>
+                  <Icon name="mail" className="absolute left-5 text-outline" />
                   <input
                     className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="john.doe@example.com"
@@ -137,9 +138,7 @@ const Register = () => {
               <div className="flex flex-col gap-2">
                 <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-dob">Date of Birth</label>
                 <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-5 text-outline">
-                    calendar_today
-                  </span>
+                  <Icon name="calendar_today" className="absolute left-5 text-outline" />
                   <input
                     className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all focus:ring-2 focus:ring-primary/20 neo-inset"
                     type="date"
@@ -156,7 +155,7 @@ const Register = () => {
               <div className="flex flex-col gap-2">
                 <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-password">Password</label>
                 <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-5 text-outline">lock</span>
+                  <Icon name="lock" className="absolute left-5 text-outline" />
                   <input
                     className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="••••••••"
@@ -174,7 +173,7 @@ const Register = () => {
               <div className="flex flex-col gap-2">
                 <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-confirm">Confirm Password</label>
                 <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-5 text-outline">shield</span>
+                  <Icon name="shield" className="absolute left-5 text-outline" />
                   <input
                     className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="••••••••"
@@ -197,9 +196,7 @@ const Register = () => {
                   onChange={() => setAgree((value) => !value)}
                 />
                 <div className="flex h-5 w-5 items-center justify-center rounded-md bg-surface neo-inset peer-checked:bg-primary/10">
-                  <span className={`material-symbols-outlined text-[16px] font-bold text-primary ${agree ? "" : "hidden"}`}>
-                    check
-                  </span>
+                  {agree && <Icon name="check" className="font-bold text-primary" />}
                 </div>
                 <span className="text-sm font-medium text-on-surface-variant">
                   I agree to the{" "}
@@ -215,7 +212,7 @@ const Register = () => {
                 disabled={loading}
               >
                 {loading ? "Creating account..." : "Register"}
-                {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
+                {!loading && <Icon name="arrow_forward" />}
               </button>
             </form>
 
@@ -247,7 +244,7 @@ const Register = () => {
               <span className="text-sm font-semibold text-on-surface">Google</span>
             </button>
             <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
-              <span className="material-symbols-outlined text-on-surface">apps</span>
+              <Icon name="apps" className="text-on-surface" />
               <span className="text-sm font-semibold text-on-surface">Apple</span>
             </button>
           </div>

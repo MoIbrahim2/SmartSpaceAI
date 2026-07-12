@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getProfile, editProfile } from "../../api";
+import Icon from "../../Components/Icon";
 
 const Profile = () => {
   const { user, setUser } = useAuth();
@@ -88,14 +89,14 @@ const Profile = () => {
           <aside className="w-full space-y-6 md:w-64">
             <div className="flex flex-col gap-2 rounded-3xl bg-surface-bright p-6 neo-shadow">
               <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-bold text-primary neo-inset">
-                <span className="material-symbols-outlined">person</span>
+                <Icon name="person" />
                 <span>Profile</span>
               </button>
               <Link
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-on-surface-variant transition-all hover:text-primary neo-button"
                 to="/credits"
               >
-                <span className="material-symbols-outlined">payments</span>
+                <Icon name="payments" />
                 <span>Billing</span>
               </Link>
             </div>
@@ -137,7 +138,7 @@ const Profile = () => {
                         className="absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white neo-shadow neo-button"
                         aria-label="Edit profile photo"
                       >
-                        <span className="material-symbols-outlined text-lg">edit</span>
+                        <Icon name="edit" size={20} />
                       </button>
                     </div>
                     <div className="space-y-4">

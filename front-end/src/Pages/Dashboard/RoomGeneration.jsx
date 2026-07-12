@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createGeneration } from "../../api";
+import Icon from "../../Components/Icon";
 
 const RoomGeneration = () => {
   const navigate = useNavigate();
@@ -96,7 +97,7 @@ const RoomGeneration = () => {
               className="group relative flex min-h-[22rem] cursor-pointer flex-col items-center justify-center rounded-[2rem] bg-background p-12 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] active:neomorph-inset neomorph-raised"
             >
               <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-background text-primary neomorph-inset">
-                <span className="material-symbols-outlined !text-5xl">auto_awesome</span>
+                <Icon name="auto_awesome" size={48} />
               </div>
               <h3 className="mb-4 text-2xl font-bold text-on-surface">Create from Scratch</h3>
               <p className="mb-8 text-center leading-relaxed text-on-surface-variant">
@@ -112,7 +113,7 @@ const RoomGeneration = () => {
               className="group relative flex min-h-[22rem] cursor-pointer flex-col items-center justify-center rounded-[2rem] bg-background p-12 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] active:neomorph-inset neomorph-raised"
             >
               <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-background text-tertiary neomorph-inset">
-                <span className="material-symbols-outlined !text-5xl">photo_camera</span>
+                <Icon name="photo_camera" size={48} />
               </div>
               <h3 className="mb-4 text-2xl font-bold text-on-surface">Enhance Room</h3>
               <p className="mb-8 text-center leading-relaxed text-on-surface-variant">
@@ -131,7 +132,7 @@ const RoomGeneration = () => {
                 onClick={() => setShowCreateForm(false)}
                 className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface neomorph-inset"
               >
-                <span className="material-symbols-outlined">close</span>
+                <Icon name="close" />
               </button>
             </div>
             <form className="space-y-6" onSubmit={handleCreateScratch}>
@@ -161,7 +162,7 @@ const RoomGeneration = () => {
                 disabled={loading}
               >
                 {loading ? "Generating..." : "Generate"}
-                {!loading && <span className="material-symbols-outlined">auto_awesome</span>}
+                {!loading && <Icon name="auto_awesome" />}
               </button>
             </form>
           </div>
@@ -173,7 +174,7 @@ const RoomGeneration = () => {
                 onClick={() => setShowEnhanceForm(false)}
                 className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface neomorph-inset"
               >
-                <span className="material-symbols-outlined">close</span>
+                <Icon name="close" />
               </button>
             </div>
             <form className="space-y-6" onSubmit={handleEnhance}>
@@ -212,7 +213,7 @@ const RoomGeneration = () => {
                 disabled={loading}
               >
                 {loading ? "Enhancing..." : "Enhance"}
-                {!loading && <span className="material-symbols-outlined">photo_camera</span>}
+                {!loading && <Icon name="photo_camera" />}
               </button>
             </form>
           </div>
@@ -224,13 +225,13 @@ const RoomGeneration = () => {
 
       <div className="fixed bottom-8 left-1/2 z-40 flex w-[90%] -translate-x-1/2 items-center justify-around rounded-2xl bg-background p-4 neomorph-raised md:hidden">
         <button className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset" aria-label="Apartments">
-          <span className="material-symbols-outlined">domain</span>
+          <Icon name="domain" />
         </button>
         <button className="rounded-xl p-3 text-primary transition-all neomorph-inset" aria-label="Room generation">
-          <span className="material-symbols-outlined">auto_awesome</span>
+          <Icon name="auto_awesome" />
         </button>
         <button className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset" aria-label="Profile">
-          <span className="material-symbols-outlined">person</span>
+          <Icon name="person" />
         </button>
       </div>
     </div>

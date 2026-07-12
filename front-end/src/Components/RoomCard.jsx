@@ -1,3 +1,5 @@
+import Icon from "./Icon";
+
 export default function RoomCard({ room }) {
   const firstImage = room.sourceImages?.[0] || room.image;
 
@@ -38,7 +40,7 @@ export default function RoomCard({ room }) {
           className="flex h-12 w-12 items-center justify-center rounded-xl bg-background text-on-surface-variant transition-shadow neomorph-active neomorph-raised"
           aria-label="Edit room"
         >
-          <span className="material-symbols-outlined">edit</span>
+          <Icon name="edit" />
         </button>
       </div>
     </div>

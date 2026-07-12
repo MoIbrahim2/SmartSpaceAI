@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Icon from "./Icon";
 
 const StudioHeader = () => {
   const location = useLocation();
@@ -77,12 +78,10 @@ const StudioHeader = () => {
               onClick={toggleTheme}
               aria-label="Toggle Theme"
             >
-              <span className="material-symbols-outlined">
-                {theme === "dark" ? "light_mode" : "dark_mode"}
-              </span>
+              <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} />
             </button>
             <button className="size-10 rounded-xl bg-surface-bright text-on-surface-variant transition-all hover:text-primary neo-shadow neo-button" aria-label="Notifications">
-              <span className="material-symbols-outlined">notifications</span>
+              <Icon name="notifications" />
             </button>
             <div className="relative">
               <button
@@ -119,14 +118,14 @@ const StudioHeader = () => {
                     className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
                     to="/profile"
                   >
-                    <span className="material-symbols-outlined text-[20px]">settings</span>
+                    <Icon name="settings" size={20} />
                     Settings
                   </Link>
                   <button
                     onClick={() => { handleLogout(); setMenuOpen(false); }}
                     className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-error transition-all hover:neomorph-inset"
                   >
-                    <span className="material-symbols-outlined text-[20px]">logout</span>
+                    <Icon name="logout" size={20} />
                     Logout
                   </button>
                 </div>

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import Icon from "./Icon";
 
 export default function ApartmentCard({ apartment }) {
   const locationStr = apartment.location
@@ -26,9 +27,7 @@ export default function ApartmentCard({ apartment }) {
         </h3>
 
         <p className="flex items-center gap-1 text-on-surface-variant">
-          <span className="material-symbols-outlined text-sm">
-            location_on
-          </span>
+          <Icon name="location_on" size={16} />
           {locationStr}
         </p>
 
@@ -37,9 +36,7 @@ export default function ApartmentCard({ apartment }) {
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-surface-bright px-4 py-2 text-sm font-bold text-primary transition-all hover:scale-[1.02] neo-shadow neo-button"
         >
           View Details
-          <span className="material-symbols-outlined text-sm">
-            arrow_forward
-          </span>
+          <Icon name="arrow_forward" size={14} />
         </Link>
       </div>
     </div>

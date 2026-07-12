@@ -1,3 +1,5 @@
+import Icon from "./Icon";
+
 const StudioFooter = () => {
   return (
 
@@ -47,7 +49,7 @@ const StudioFooter = () => {
                 className="rounded-xl p-3 text-on-surface-variant transition-all hover:text-primary active:neomorph-inset neomorph-raised"
                 aria-label={icon === "language" ? "Language" : icon === "share" ? "Share" : "Contact"}
               >
-                <span className="material-symbols-outlined text-[22px]">{icon}</span>
+                <Icon name={icon} size={22} />
               </button>
             ))}
           </div>
