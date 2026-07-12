@@ -13,7 +13,7 @@ const path = require('path');
  * @returns {Promise<Object>} Created room document
  */
 const createRoom = async (userId, roomData, files = []) => {
-  const { apartmentId, name, roomType, description, dimensions, status, selectedGenerationId } = roomData;
+  const { apartmentId, name, roomType, description, dimensions, status } = roomData;
 
   // Verify apartment ownership
   const apartment = await Apartment.findById(apartmentId);
@@ -41,8 +41,7 @@ const createRoom = async (userId, roomData, files = []) => {
     description,
     dimensions,
     status: status || 'ACTIVE',
-    sourceImages,
-    selectedGenerationId
+    sourceImages
   });
 
   // Default coverImageId to the first source image if not provided
@@ -72,7 +71,8 @@ const getRooms = async (query = {}) => {
     filter.status = query.status;
   }
   if (query.search) {
-    filter.name = { $regex: query.search, $options: 'i' };
+    const escapedSearch = query.search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    filter.name = { $regex: escapedSearch, $options: 'i' };
   }
 
   const page = parseInt(query.page, 10) || 1;
@@ -184,7 +184,22 @@ const updateRoom = async (userId, roomId, updateFields, files = []) => {
   if (updateFields.roomType !== undefined) room.roomType = updateFields.roomType;
   if (updateFields.description !== undefined) room.description = updateFields.description;
   if (updateFields.status !== undefined) room.status = updateFields.status;
-  if (updateFields.selectedGenerationId !== undefined) room.selectedGenerationId = updateFields.selectedGenerationId;
+
+  if (updateFields.selectedGenerationId !== undefined) {
+    if (updateFields.selectedGenerationId === null || updateFields.selectedGenerationId === '') {
+      room.selectedGenerationId = undefined;
+    } else {
+      const Generation = require('../models/generation.model');
+      const generation = await Generation.findById(updateFields.selectedGenerationId);
+      if (!generation) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+      }
+      if (generation.roomId.toString() !== roomId.toString() || generation.ownerId.toString() !== userId.toString()) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid selectedGenerationId: must belong to the same room and owner');
+      }
+      room.selectedGenerationId = updateFields.selectedGenerationId;
+    }
+  }
 
   // Update dimensions
   if (updateFields.dimensions) {

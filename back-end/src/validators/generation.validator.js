@@ -36,7 +36,9 @@ const updateGenerationSchema = Joi.object({
   creditsUsed: Joi.number().integer().min(0).optional(),
   settings: settingsSchema.optional(),
   ai: aiSchema.optional(),
-  completedAt: Joi.date().optional()
+  completedAt: Joi.date().optional(),
+  deleteImageIds: Joi.array().items(Joi.string().regex(/^[0-9a-fA-F]{24}$/)).optional(),
+  selectedImageId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional()
 });
 
 module.exports = {

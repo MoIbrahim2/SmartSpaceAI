@@ -55,6 +55,7 @@
     "firstName": "First name",
     "lastName": "Last name",
     "email": "Email",
+    "authentication.email": "Email",
     "dateOfBirth": "Date of birth",
     "password": "Password",
     "confirmPassword": "Confirm password",

@@ -686,6 +686,34 @@
 									"key": "dimensions",
 									"value": "{\n  \"width\": 4.8,\n  \"length\": 5.2,\n  \"height\": 3.0,\n  \"unit\": \"meters\"\n}",
 									"type": "text"
+								},
+								{
+									"key": "coverImageId",
+									"value": "",
+									"description": "Optional: set cover image ID from sourceImages list",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "selectedGenerationId",
+									"value": "{{generationId}}",
+									"description": "Optional: link the final selected AI generation design ID",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "deleteImageIds",
+									"value": "[\"IMAGE_ID_TO_DELETE\"]",
+									"description": "Optional: JSON array of sourceImage IDs to delete",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "sourceImages",
+									"description": "Optional: upload/append new source images",
+									"type": "file",
+									"disabled": true,
+									"src": []
 								}
 							]
 						},
@@ -908,6 +936,20 @@
 									"key": "status",
 									"value": "COMPLETED",
 									"type": "text"
+								},
+								{
+									"key": "selectedImageId",
+									"value": "GENERATED_IMAGE_ID_HERE",
+									"description": "Optional: mark a specific generated image as selected",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "deleteImageIds",
+									"value": "[\"IMAGE_ID_TO_DELETE\"]",
+									"description": "Optional: JSON array of generated image IDs to delete",
+									"type": "text",
+									"disabled": true
 								}
 							]
 						},

@@ -76,7 +76,8 @@ const getGenerations = async (query = {}) => {
     filter.generationType = query.generationType;
   }
   if (query.search) {
-    filter.prompt = { $regex: query.search, $options: 'i' };
+    const escapedSearch = query.search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    filter.prompt = { $regex: escapedSearch, $options: 'i' };
   }
 
   const page = parseInt(query.page, 10) || 1;
