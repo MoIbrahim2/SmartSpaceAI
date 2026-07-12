@@ -223,8 +223,28 @@ const LandingPage = () => {
       }
     : {};
 
-  // 7. Pricing Billing Cycle
-  const [billingCycle, setBillingCycle] = useState("monthly");
+  // 7. Scroll and Tab Handlers
+  const scrollToSection = (e, id) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const headerOffset = 90;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  const handleTabScroll = (e, tabName, sectionId) => {
+    e.preventDefault();
+    setActiveTab(tabName);
+    setSliderPosition(50);
+    scrollToSection(e, sectionId);
+  };
 
   // 8. Accordion FAQ
   const [activeFaq, setActiveFaq] = useState(null);
@@ -273,24 +293,7 @@ const LandingPage = () => {
         <div className="glow-orb glow-orb-2"></div>
         <div className="glow-orb glow-orb-3"></div>
       </div>
-
-      {/* 1. TOP PROMO BANNER */}
-      <div className="promo-banner">
-        <span className="promo-text">
-          25% off! Make listings stand out! Use code: <strong>SUMPEAK</strong>
-        </span>
-        <span className="countdown" id="promo-countdown">
-          {countdownText}
-        </span>
-        <a
-          href="#cta"
-          className="btn-promo magnetic-btn"
-          onMouseMove={handleMagneticMouseMove}
-          onMouseLeave={handleMagneticMouseLeave}
-        >
-          SUBSCRIBE NOW
-        </a>
-      </div>
+    
 
       {/* NAVIGATION HEADER */}
       <header className={`main-header ${isScrolled ? "scrolled" : ""}`} id="header">
@@ -307,7 +310,11 @@ const LandingPage = () => {
           <nav style={mobileNavMenuStyle}>
             <ul className="nav-menu" style={isMobileMenuOpen ? { display: "flex" } : {}}>
               <li className="nav-item">
-                <a href="#virtual-staging" className="nav-link">
+                <a
+                  href="#virtual-staging"
+                  className="nav-link"
+                  onClick={(e) => scrollToSection(e, "virtual-staging")}
+                >
                   AI Virtual Staging
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -321,22 +328,38 @@ const LandingPage = () => {
                 </a>
                 {/* Dropdown */}
                 <div className="dropdown">
-                  <a href="#virtual-staging" className="dropdown-link">
+                  <a
+                    href="#virtual-staging"
+                    className="dropdown-link"
+                    onClick={(e) => scrollToSection(e, "virtual-staging")}
+                  >
                     <span className="dropdown-title">Add Furniture</span>
                     <span className="dropdown-desc">Instantly stage empty spaces with high-end designer furniture.</span>
                   </a>
-                  <a href="#virtual-staging" className="dropdown-link">
+                  <a
+                    href="#virtual-staging"
+                    className="dropdown-link"
+                    onClick={(e) => scrollToSection(e, "virtual-staging")}
+                  >
                     <span className="dropdown-title">Furniture Eraser</span>
                     <span className="dropdown-desc">Remove existing items with seamless AI replacement.</span>
                   </a>
-                  <a href="#virtual-staging" className="dropdown-link">
+                  <a
+                    href="#virtual-staging"
+                    className="dropdown-link"
+                    onClick={(e) => scrollToSection(e, "virtual-staging")}
+                  >
                     <span className="dropdown-title">Room Declutter</span>
                     <span className="dropdown-desc">Clear any room completely to showcase full space.</span>
                   </a>
                 </div>
               </li>
               <li className="nav-item">
-                <a href="#virtual-staging" className="nav-link">
+                <a
+                  href="#comparison"
+                  className="nav-link"
+                  onClick={(e) => scrollToSection(e, "comparison")}
+                >
                   AI Tools
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
@@ -349,48 +372,58 @@ const LandingPage = () => {
                   </svg>
                 </a>
                 <div className="dropdown">
-                  <a href="#virtual-staging" className="dropdown-link">
+                  <a
+                    href="#comparison"
+                    className="dropdown-link"
+                    onClick={(e) => handleTabScroll(e, "twilight", "comparison")}
+                  >
                     <span className="dropdown-title">Twilight Conversion</span>
                     <span className="dropdown-desc">Convert day photos to premium evening shots.</span>
                   </a>
-                  <a href="#virtual-staging" className="dropdown-link">
+                  <a
+                    href="#comparison"
+                    className="dropdown-link"
+                    onClick={(e) => handleTabScroll(e, "lawn", "comparison")}
+                  >
                     <span className="dropdown-title">Lawn Replacement</span>
                     <span className="dropdown-desc">Swap dead patches with lush green lawns.</span>
                   </a>
-                  <a href="#virtual-staging" className="dropdown-link">
-                    <span className="dropdown-title">Material Overlay</span>
-                    <span className="dropdown-desc">Change flooring, walls, countertops, and textures.</span>
+                  <a
+                    href="#comparison"
+                    className="dropdown-link"
+                    onClick={(e) => handleTabScroll(e, "weather", "comparison")}
+                  >
+                    <span className="dropdown-title">Weather Control</span>
+                    <span className="dropdown-desc">Remove heavy clouds, fog, and rainy gloom.</span>
                   </a>
                 </div>
               </li>
               <li className="nav-item">
-                <a href="#pricing" className="nav-link">
+                <a
+                  href="#gallery"
+                  className="nav-link"
+                  onClick={(e) => scrollToSection(e, "gallery")}
+                >
+                  Showcase
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  href="#pricing"
+                  className="nav-link"
+                  onClick={(e) => scrollToSection(e, "pricing")}
+                >
                   Pricing
                 </a>
               </li>
               <li className="nav-item">
-                <a href="#faq" className="nav-link">
-                  Resources
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M1 1L5 5L9 1"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                <a
+                  href="#faq"
+                  className="nav-link"
+                  onClick={(e) => scrollToSection(e, "faq")}
+                >
+                  FAQ
                 </a>
-                <div className="dropdown">
-                  <a href="#how-to-use" className="dropdown-link">
-                    <span className="dropdown-title">Documentation</span>
-                    <span className="dropdown-desc">Integration guides, API documentation, and help docs.</span>
-                  </a>
-                  <a href="#how-to-use" className="dropdown-link">
-                    <span className="dropdown-title">Blog & Trends</span>
-                    <span className="dropdown-desc">Stay updated on B2B real estate staging trends.</span>
-                  </a>
-                </div>
               </li>
             </ul>
           </nav>
@@ -472,7 +505,7 @@ const LandingPage = () => {
             <h1>
               <span className="serif-title">Redefine space</span>
               <br />
-              with intelligent design
+              <span className="bronze-highlight">with intelligent design</span>
             </h1>
             <p className="lead">
               Transform any room into your dream space instantly with SmartSpace AI's revolutionary one-click interior
@@ -730,7 +763,7 @@ const LandingPage = () => {
       </section>
 
       {/* 4b. COMPARISON BEFORE-AFTER SLIDER */}
-      <section className="comparison-section">
+      <section className="comparison-section" id="comparison">
         <div className="container">
           <div className="comparison-wrapper">
             <div className="comparison-info fade-in-up">
@@ -944,7 +977,7 @@ const LandingPage = () => {
       </section>
 
       {/* 4d. STAGED DESIGN SHOWCASE GALLERY */}
-      <section className="gallery-section">
+      <section className="gallery-section" id="gallery">
         <div className="container">
           <div className="section-header fade-in-up">
             <h2>Staged to perfection</h2>
@@ -1077,59 +1110,74 @@ const LandingPage = () => {
             >
               {/* Testimonial 1 */}
               <div className="testimonial-slide">
-                <p className="testimonial-quote">
-                  "SmartSpace AI has saved me hundreds of dollars per month and given me more creative control over how
-                  my properties are presented. This tool has become an essential part of my marketing strategy, and I
-                  can't recommend it enough."
-                </p>
-                <div className="testimonial-profile">
-                  <img
-                    src="https://d37vt2dds2nfmk.cloudfront.net/20250825/bdc74339-08e5-4d5c-946a-875f069c7e84.webp"
-                    alt="Linda Jennings"
-                    className="testimonial-avatar"
-                  />
-                  <div className="testimonial-meta">
-                    <span className="testimonial-name">Linda Jennings</span>
-                    <span className="testimonial-role">Real Estate Agent, Elite Realty</span>
+                <div className="testimonial-content-wrapper">
+                  <svg className="quote-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
+                  </svg>
+                  <p className="testimonial-quote">
+                    "SmartSpace AI has saved me hundreds of dollars per month and given me more creative control over how
+                    my properties are presented. This tool has become an essential part of my marketing strategy, and I
+                    can't recommend it enough."
+                  </p>
+                  <div className="testimonial-profile">
+                    <img
+                      src="https://d37vt2dds2nfmk.cloudfront.net/20250825/bdc74339-08e5-4d5c-946a-875f069c7e84.webp"
+                      alt="Linda Jennings"
+                      className="testimonial-avatar"
+                    />
+                    <div className="testimonial-meta">
+                      <span className="testimonial-name">Linda Jennings</span>
+                      <span className="testimonial-role">Real Estate Agent, Elite Realty</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Testimonial 2 */}
               <div className="testimonial-slide">
-                <p className="testimonial-quote">
-                  "The speed of twilight conversion is insane. What used to take hours of manual photoshop editing is
-                  completed in seconds with a quality level that buyers can't distinguish from authentic sunset shots."
-                </p>
-                <div className="testimonial-profile">
-                  <img
-                    src="https://d37vt2dds2nfmk.cloudfront.net/20250825/eb6c55cb-f273-426c-bf60-1ae8c5e28f02.webp"
-                    alt="Ron Givon"
-                    className="testimonial-avatar"
-                  />
-                  <div className="testimonial-meta">
-                    <span className="testimonial-name">Ron Givon</span>
-                    <span className="testimonial-role">Real Estate Photographer</span>
+                <div className="testimonial-content-wrapper">
+                  <svg className="quote-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
+                  </svg>
+                  <p className="testimonial-quote">
+                    "The speed of twilight conversion is insane. What used to take hours of manual photoshop editing is
+                    completed in seconds with a quality level that buyers can't distinguish from authentic sunset shots."
+                  </p>
+                  <div className="testimonial-profile">
+                    <img
+                      src="https://d37vt2dds2nfmk.cloudfront.net/20250825/eb6c55cb-f273-426c-bf60-1ae8c5e28f02.webp"
+                      alt="Ron Givon"
+                      className="testimonial-avatar"
+                    />
+                    <div className="testimonial-meta">
+                      <span className="testimonial-name">Ron Givon</span>
+                      <span className="testimonial-role">Real Estate Photographer</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Testimonial 3 */}
               <div className="testimonial-slide">
-                <p className="testimonial-quote">
-                  "Virtual staging with SmartSpace AI allowed me to list properties 3 days faster than working with local
-                  contractors. Properties command 20% higher offers when staged correctly. Essential SaaS for any modern
-                  broker."
-                </p>
-                <div className="testimonial-profile">
-                  <img
-                    src="https://d37vt2dds2nfmk.cloudfront.net/20250825/329fd64a-b004-4d40-9bb2-e98de1b2c324.webp"
-                    alt="Joseph Allegra"
-                    className="testimonial-avatar"
-                  />
-                  <div className="testimonial-meta">
-                    <span className="testimonial-name">Joseph Allegra</span>
-                    <span className="testimonial-role">Realtor, RE/MAX Group</span>
+                <div className="testimonial-content-wrapper">
+                  <svg className="quote-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
+                  </svg>
+                  <p className="testimonial-quote">
+                    "Virtual staging with SmartSpace AI allowed me to list properties 3 days faster than working with local
+                    contractors. Properties command 20% higher offers when staged correctly. Essential SaaS for any modern
+                    broker."
+                  </p>
+                  <div className="testimonial-profile">
+                    <img
+                      src="https://d37vt2dds2nfmk.cloudfront.net/20250825/329fd64a-b004-4d40-9bb2-e98de1b2c324.webp"
+                      alt="Joseph Allegra"
+                      className="testimonial-avatar"
+                    />
+                    <div className="testimonial-meta">
+                      <span className="testimonial-name">Joseph Allegra</span>
+                      <span className="testimonial-role">Realtor, RE/MAX Group</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1149,44 +1197,31 @@ const LandingPage = () => {
       <section className="pricing-section" id="pricing">
         <div className="container">
           <div className="section-header fade-in-up">
-            <h2>Simple, transparent pricing</h2>
-            <p>Choose the plan that fits your volume. Save 20% with annual billing.</p>
-          </div>
-
-          <div className="billing-toggle-container fade-in-up">
-            <button
-              className={`billing-btn ${billingCycle === "monthly" ? "active" : ""}`}
-              onClick={() => setBillingCycle("monthly")}
-            >
-              Monthly
-            </button>
-            <button
-              className={`billing-btn ${billingCycle === "annually" ? "active" : ""}`}
-              onClick={() => setBillingCycle("annually")}
-            >
-              Annually <span className="billing-discount">Save 20%</span>
-            </button>
+            <h2>Top Up Credits</h2>
+            <p>Choose the right credit package to power your virtual staging needs. One-time purchases, no monthly subscription required.</p>
           </div>
 
           <div className="pricing-grid fade-in-up">
-            {/* Starter Plan */}
+            {/* Basic Boost */}
             <div className="pricing-card spotlight-card" onMouseMove={handleSpotlightMouseMove}>
-              <span className="plan-name">Starter</span>
-              <p className="plan-desc">Perfect for individual realtors starting with virtual staging.</p>
-              <div className="plan-price-container">
-                <span className="plan-price" id="price-starter">
-                  {billingCycle === "monthly" ? "$29" : "$23"}
-                </span>
-                <span className="plan-period" id="period-starter">
-                  /mo
-                </span>
+              <div className="plan-icon-container" style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "var(--accent)" }}>
+                <Icon name="token" size={48} />
               </div>
-              <ul className="plan-features">
+              <span className="plan-name">Basic Boost</span>
+              <p className="plan-desc">Great for testing and staging a few listings.</p>
+              <div className="plan-price-container" style={{ margin: "20px 0" }}>
+                <span className="plan-price" style={{ fontSize: "40px", fontWeight: "800" }}>500</span>
+                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>Credits</span>
+              </div>
+              <div className="plan-bonus" style={{ color: "var(--accent)", fontWeight: "700", marginBottom: "20px", fontSize: "14px" }}>
+                +100 FREE Credits
+              </div>
+              <ul className="plan-features" style={{ textAlign: "left", marginBottom: "30px" }}>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  10 Staging Credits / mo
+                  600 Total Credits
                 </li>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -1204,34 +1239,36 @@ const LandingPage = () => {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  Email Support
+                  24/7 Email Support
                 </li>
               </ul>
               <Link to="/register" className="btn-pricing magnetic-btn" onMouseMove={handleMagneticMouseMove} onMouseLeave={handleMagneticMouseLeave}>
-                Get Started
+                Buy for $29
               </Link>
             </div>
 
-            {/* Professional Plan */}
+            {/* Growth Pack */}
             <div className="pricing-card featured spotlight-card" onMouseMove={handleSpotlightMouseMove}>
               <div className="card-glow"></div>
-              <span className="plan-badge">Best Value</span>
-              <span className="plan-name">Professional</span>
-              <p className="plan-desc">For active agents and photographers needing premium marketing quality.</p>
-              <div className="plan-price-container">
-                <span className="plan-price" id="price-professional">
-                  {billingCycle === "monthly" ? "$79" : "$63"}
-                </span>
-                <span className="plan-period" id="period-professional">
-                  /mo
-                </span>
+              <span className="plan-badge">BEST VALUE</span>
+              <div className="plan-icon-container" style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "var(--accent)" }}>
+                <Icon name="database" size={48} />
               </div>
-              <ul className="plan-features">
+              <span className="plan-name">Growth Pack</span>
+              <p className="plan-desc">Designed for active agents and photographers.</p>
+              <div className="plan-price-container" style={{ margin: "20px 0" }}>
+                <span className="plan-price" style={{ fontSize: "40px", fontWeight: "800" }}>2,000</span>
+                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>Credits</span>
+              </div>
+              <div className="plan-bonus" style={{ color: "var(--accent)", fontWeight: "700", marginBottom: "20px", fontSize: "14px" }}>
+                +500 FREE Credits
+              </div>
+              <ul className="plan-features" style={{ textAlign: "left", marginBottom: "30px" }}>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  50 Staging Credits / mo
+                  2,500 Total Credits
                 </li>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -1264,40 +1301,42 @@ const LandingPage = () => {
                 onMouseMove={handleMagneticMouseMove}
                 onMouseLeave={handleMagneticMouseLeave}
               >
-                Try Professional
+                Buy for $99
               </Link>
             </div>
 
-            {/* Enterprise Plan */}
+            {/* Master Volume */}
             <div className="pricing-card spotlight-card" onMouseMove={handleSpotlightMouseMove}>
-              <span className="plan-name">Enterprise</span>
-              <p className="plan-desc">For larger brokerages and agencies looking for automated staging.</p>
-              <div className="plan-price-container">
-                <span className="plan-price" id="price-enterprise">
-                  {billingCycle === "monthly" ? "$199" : "$159"}
-                </span>
-                <span className="plan-period" id="period-enterprise">
-                  /mo
-                </span>
+              <div className="plan-icon-container" style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "var(--accent)" }}>
+                <Icon name="diamond" size={48} />
               </div>
-              <ul className="plan-features">
+              <span className="plan-name">Master Volume</span>
+              <p className="plan-desc">Perfect for brokerages and scaling agencies.</p>
+              <div className="plan-price-container" style={{ margin: "20px 0" }}>
+                <span className="plan-price" style={{ fontSize: "40px", fontWeight: "800" }}>5,000</span>
+                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>Credits</span>
+              </div>
+              <div className="plan-bonus" style={{ color: "var(--accent)", fontWeight: "700", marginBottom: "20px", fontSize: "14px" }}>
+                +1,700 FREE Credits
+              </div>
+              <ul className="plan-features" style={{ textAlign: "left", marginBottom: "30px" }}>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  Unlimited Staging Credits
+                  6,700 Total Credits
                 </li>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  API Integration Access
+                  Unlimited Staging API Access
                 </li>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  Custom Design Styles
+                  Custom Design Style Templates
                 </li>
                 <li>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -1305,10 +1344,21 @@ const LandingPage = () => {
                   </svg>
                   Dedicated Account Manager
                 </li>
+                <li>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Ultra-HD Resolution Output
+                </li>
               </ul>
-              <a href="mailto:sales@smartspace.ai?subject=Enterprise Inquiry" className="btn-pricing magnetic-btn" onMouseMove={handleMagneticMouseMove} onMouseLeave={handleMagneticMouseLeave}>
-                Contact Sales
-              </a>
+              <Link
+                to="/register"
+                className="btn-pricing magnetic-btn"
+                onMouseMove={handleMagneticMouseMove}
+                onMouseLeave={handleMagneticMouseLeave}
+              >
+                Buy for $199
+              </Link>
             </div>
           </div>
         </div>
@@ -1404,118 +1454,36 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* MULTI-COLUMN FOOTER */}
-      <footer>
+      {/* FOOTER */}
+      <footer className="landing-footer">
         <div className="container">
-          <div className="footer-grid">
-            {/* Column 1 Brand */}
-            <div className="footer-brand">
-              <div className="logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                <span className="logo-main">
-                  SmartSpace<span>.ai</span>
-                </span>
-                <span className="logo-sub">INTELLIGENT DESIGN</span>
-              </div>
+          <div className="landing-footer-grid">
+            <div className="landing-footer-brand">
+              <div className="landing-footer-logo">SmartSpace AI</div>
               <p>
-                Premium virtual staging AI platform for realtors, architects, and designers. Create photorealistic
-                properties instantly.
+                Revolutionizing interior design through the power of intelligent spatial awareness and AI-driven creativity.
               </p>
-              <div className="social-links">
-                <a href="#" className="social-icon" aria-label="LinkedIn">
-                  LN
-                </a>
-                <a href="#" className="social-icon" aria-label="Instagram">
-                  IG
-                </a>
-                <a href="#" className="social-icon" aria-label="Twitter">
-                  TW
-                </a>
-                <a href="#" className="social-icon" aria-label="Facebook">
-                  FB
-                </a>
-              </div>
             </div>
-
-            {/* Column 2 Solutions */}
-            <div className="footer-column">
-              <h4>Solutions</h4>
-              <ul className="footer-links">
-                <li>
-                  <a href="#virtual-staging">Residential Staging</a>
-                </li>
-                <li>
-                  <a href="#virtual-staging">Commercial Layouts</a>
-                </li>
-                <li>
-                  <a href="#virtual-staging">Architectural Rendering</a>
-                </li>
-                <li>
-                  <a href="#virtual-staging">Agent Portals</a>
-                </li>
-              </ul>
+            <div className="landing-footer-col">
+              <h4>Company</h4>
+              <a href="#">About Us</a>
+              <a href="#">Contact Support</a>
+              <a href="#">Careers</a>
             </div>
-
-            {/* Column 3 Tools */}
-            <div className="footer-column">
-              <h4>Tools</h4>
-              <ul className="footer-links">
-                <li>
-                  <a href="#virtual-staging">Furniture Placement</a>
-                </li>
-                <li>
-                  <a href="#virtual-staging">Declutter & Clear</a>
-                </li>
-                <li>
-                  <a href="#virtual-staging">Twilight Conversion</a>
-                </li>
-                <li>
-                  <a href="#virtual-staging">Grass Replacement</a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 4 Resources */}
-            <div className="footer-column">
-              <h4>Resources</h4>
-              <ul className="footer-links">
-                <li>
-                  <a href="#how-to-use">Documentation</a>
-                </li>
-                <li>
-                  <a href="#how-to-use">Staging Guidelines</a>
-                </li>
-                <li>
-                  <a href="#how-to-use">API Integrations</a>
-                </li>
-                <li>
-                  <a href="#how-to-use">Success Stories</a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 5 Support */}
-            <div className="footer-column">
-              <h4>Support</h4>
-              <ul className="footer-links">
-                <li>
-                  <a href="#faq">Help Center</a>
-                </li>
-                <li>
-                  <a href="#pricing">Contact Sales</a>
-                </li>
-                <li>
-                  <a href="#faq">Terms & Privacy</a>
-                </li>
-                <li>
-                  <a href="#faq">API Status</a>
-                </li>
-              </ul>
+            <div className="landing-footer-col">
+              <h4>Legal</h4>
+              <a href="#">Privacy Policy</a>
+              <a href="#">Terms of Service</a>
+              <a href="#">Cookie Policy</a>
             </div>
           </div>
-
-          <div className="footer-bottom">
-            <span>&copy; 2026 SmartSpace AI. All rights reserved.</span>
-            <span>Made with premium luxury aesthetics.</span>
+          <div className="landing-footer-bottom">
+            <span>© 2024 SmartSpace AI. All rights reserved.</span>
+            <div className="landing-footer-icons">
+              <span className="landing-footer-icon-btn"><Icon name="public" size={20} /></span>
+              <span className="landing-footer-icon-btn"><Icon name="share" size={20} /></span>
+              <span className="landing-footer-icon-btn"><Icon name="mail" size={20} /></span>
+            </div>
           </div>
         </div>
       </footer>

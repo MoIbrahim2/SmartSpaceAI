@@ -47,7 +47,7 @@ const Credits = () => {
               420 <span className="text-sm font-semibold text-on-surface-variant">/ 500</span>
             </div>
             <div className="mb-3 h-3 w-full overflow-hidden rounded-full bg-surface-bright neo-inset">
-              <div className="h-full w-[84%] rounded-full bg-primary shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+              <div className="h-full w-[84%] rounded-full bg-primary shadow-[0_0_8px_rgba(140,98,57,0.5)]" />
             </div>
             <p className="text-[11px] font-medium text-on-surface-variant opacity-80">Next reset on {dateFormat(resetDate)}</p>
           </div>
@@ -95,12 +95,6 @@ const Credits = () => {
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="mt-12 flex justify-center">
-              <button className="flex items-center gap-3 whitespace-nowrap rounded-full bg-primary px-12 py-5 text-lg font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button">
-                <Icon name="bolt" />
-                Top Up Now
-              </button>
             </div>
           </div>
 

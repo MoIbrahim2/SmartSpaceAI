@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
@@ -7,7 +7,12 @@ import Icon from "../../Components/Icon";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, user, loading: authLoading } = useAuth();
+
+  if (!authLoading && user) {
+    return <Navigate to="/home" replace />;
+  }
+
   const [agree, setAgree] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
@@ -250,7 +255,6 @@ const Register = () => {
           </div>
         </section>
       </main>
-      <AuthFooter />
     </div>
   );
 };

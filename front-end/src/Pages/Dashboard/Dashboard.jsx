@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ApartmentCard from "../../Components/ApartmentCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
+import CreateApartmentModal from "../../Components/CreateApartmentModal";
 import { getApartments, deleteApartment } from "../../api";
 import Icon from "../../Components/Icon";
 
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const debounceRef = useRef(null);
 
   const handleSearchChange = (e) => {
@@ -58,6 +60,11 @@ const Dashboard = () => {
     }
   };
 
+  const handleApartmentCreated = (apartment) => {
+    setShowCreateModal(false);
+    navigate(`/apartments/${apartment._id}`);
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-surface-bright text-on-surface font-body">
       <main className="mx-auto w-full max-w-[1200px] flex-grow px-6 py-10 md:px-20">
@@ -77,13 +84,13 @@ const Dashboard = () => {
               />
             </div>
           </div>
-          <Link
+          <button
+            onClick={() => setShowCreateModal(true)}
             className="flex h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button"
-            to="/room-generation"
           >
             <Icon name="add" />
             Create New Apartment
-          </Link>
+          </button>
         </div>
 
         <h2 className="mb-8 text-3xl font-extrabold tracking-tight text-on-surface">
@@ -146,6 +153,13 @@ const Dashboard = () => {
           </>
         )}
       </main>
+
+      {/* Create Apartment Modal */}
+      <CreateApartmentModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={handleApartmentCreated}
+      />
     </div>
   );
 };

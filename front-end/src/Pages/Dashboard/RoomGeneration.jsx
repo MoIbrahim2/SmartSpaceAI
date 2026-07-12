@@ -1,14 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createGeneration } from "../../api";
 import Icon from "../../Components/Icon";
+
+// Import step sub-components
+import Stepper from "../../Components/RoomGeneration/Stepper";
+import StepSelectType from "../../Components/RoomGeneration/StepSelectType";
+import StepRoomDetails from "../../Components/RoomGeneration/StepRoomDetails";
+import StepDesignInstructions from "../../Components/RoomGeneration/StepDesignInstructions";
+import StepSelectProducts from "../../Components/RoomGeneration/StepSelectProducts";
+import StepRoomGenerationResult from "../../Components/RoomGeneration/StepRoomGenerationResult";
 
 const RoomGeneration = () => {
   const navigate = useNavigate();
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showEnhanceForm, setShowEnhanceForm] = useState(false);
+  const [step, setStep] = useState(0); // 0 = main choice, 1 = details, 2 = instructions, 3 = products, 4 = generation
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [activeCategory, setActiveCategory] = useState("Electronics");
+  const [addedProducts, setAddedProducts] = useState([1]); // ID 1 (Soundbar) is added by default
+  const [regenerating, setRegenerating] = useState(false);
 
   const [form, setForm] = useState({
     roomId: "",
@@ -23,214 +32,143 @@ const RoomGeneration = () => {
       aspectRatio: "16:9",
     }),
     images: null,
+    length: "",
+    width: "",
+    height: "",
+    budget: "",
   });
 
-  const handleCreateScratch = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const fd = new FormData();
-      fd.append("generationType", "CREATE_FROM_SCRATCH");
-      fd.append("prompt", form.prompt);
-      fd.append("settings", form.settings);
-      if (form.roomId) fd.append("roomId", form.roomId);
-      const { data } = await createGeneration(fd);
-      if (data.success) {
-        navigate("/projects");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Generation failed.");
-    } finally {
-      setLoading(false);
+  const productData = {
+    Electronics: [
+      { id: 0, title: "Quantum OLED TV", desc: "Ultra-slim 65\" smart TV with immersive spatial audio and anti-glare display panel.", price: "$2,499", numericPrice: 2499, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZST4vtc7qjDCP3hJI4joyaqPVSMu_uWOw_LswA96enxaECsY7JCmlms6P1rOBg3YWjpao7U-QvYkj1dD2TSU8zaDGqCIaGcZN7YZksoiLDAO7NkhqkTnBVOeIoVaDupk_PXG36JhPDk7VhWhTI5XyqAGthzt6CYWx0T2QeieMVQW4x3NvFlDfdmgUvKN1b_N0XFtdcCQA66rSDmiWMyO3bWb_eQ340yLciuGHyYVf6yFYs2nw_dk-" },
+      { id: 1, title: "Acoustic Soundbar", desc: "Premium Dolby Atmos soundbar with wireless subwoofer and minimalist design.", price: "$850", numericPrice: 850, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAJHLqojjkou5nLcqZJZF3y86OwC02MqlnUcKIqraFA0kuM9gOkPAzea_bUOZo2UmHujFy_cdPhVxolVF2X17YH_9NzRwlDkE6M4RRKGlcCmYBrp9B_xjf89oDuaIeAItWJ1NMKM1ko1CHJhN8gRV2hnM9u_gz8vf4YkK2TTbJ1xN6Zxqo-_m_-xKNoHQzpcE8xuKBuJ3PKATm2MUC8y44THYoD2gQFljyoVAzFmZx6wdQjGJyTPP6v" },
+      { id: 2, title: "Central Home Hub", desc: "Voice-activated central controller for lighting, climate, and security systems.", price: "$299", numericPrice: 299, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBoyvAfisBcJVgzpL5rd90DHEKRUlEp1khduP_j6nGncDph2lLmB2RcHYC-udSK7eMk67R_l18SB268T4_a7eJY-QLwAR4DM49iapd1wkGSf3-4QHoYsCShcgOfq0bJ_9qIVY55be29G0kyjrJBzU4zBMw1smuFeX5w7zqfKpc66VQDL-6lfTckP_wMZRm67lK7WQf21JoMXqzucdLglah5KxFoeGFoS70LF2sgrT977tEdcCZFE21m" },
+    ],
+    Decor: [
+      { id: 3, title: "Ceramic Vase Set", desc: "Hand-crafted minimalist ceramic vases in neutral earth tones.", price: "$120", numericPrice: 120, img: "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&w=600&q=80" },
+      { id: 4, title: "Minimalist Wall Art", desc: "Abstract textured canvas painting in beige, white, and gold accents.", price: "$350", numericPrice: 350, img: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=600&q=80" },
+      { id: 5, title: "Velvet Throw Pillow", desc: "Soft velvet pillows with premium feather inserts for ultimate comfort.", price: "$45", numericPrice: 45, img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80" }
+    ],
+    Furniture: [
+      { id: 6, title: "Mid-Century Sofa", desc: "Stunning olive green velvet sofa with tapered oak legs and high-density foam cushions.", price: "$1,800", numericPrice: 1800, img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80" },
+      { id: 7, title: "Light Oak Coffee Table", desc: "Solid oak coffee table with clean lines and a lower shelf for storage.", price: "$450", numericPrice: 450, img: "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=600&q=80" },
+      { id: 8, title: "Cozy Armchair", desc: "Upholstered accent chair in warm beige bouclé fabric.", price: "$650", numericPrice: 650, img: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=600&q=80" }
+    ]
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setForm((p) => ({ ...p, images: e.target.files }));
     }
   };
 
-  const handleEnhance = async (e) => {
+  const handleDrop = (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const fd = new FormData();
-      fd.append("generationType", "ENHANCE_ROOM");
-      fd.append("prompt", form.prompt);
-      fd.append("settings", form.settings);
-      if (form.roomId) fd.append("roomId", form.roomId);
-      if (form.images) {
-        for (const file of form.images) {
-          fd.append("images", file);
-        }
-      }
-      const { data } = await createGeneration(fd);
-      if (data.success) {
-        navigate("/projects");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Enhancement failed.");
-    } finally {
-      setLoading(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setForm((p) => ({ ...p, images: e.dataTransfer.files }));
     }
   };
+
+  const toggleProduct = (id) => {
+    if (addedProducts.includes(id)) {
+      setAddedProducts(addedProducts.filter((pId) => pId !== id));
+    } else {
+      setAddedProducts([...addedProducts, id]);
+    }
+  };
+
+  const handleRegenerate = () => {
+    setRegenerating(true);
+    setTimeout(() => {
+      setRegenerating(false);
+    }, 2000);
+  };
+
+  // Spent calculations for Step 3
+  const baseBudget = form.budget ? parseFloat(form.budget) : 70000;
+  const baseSpent = 29150;
+  const allProducts = Object.values(productData).flat();
+  const selectedProductsCost = allProducts
+    .filter((p) => addedProducts.includes(p.id))
+    .reduce((sum, p) => sum + p.numericPrice, 0);
+
+  // We baseline so if ONLY the default Soundbar (850) is selected, spent is exactly 30000
+  const currentSpent = baseSpent + selectedProductsCost;
+  const percent = Math.min(100, Math.round((currentSpent / baseBudget) * 100));
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-on-surface">
-      <main className="relative flex flex-grow flex-col items-center justify-center overflow-hidden bg-background p-8 md:p-12 lg:p-16">
-        <div className="relative z-10 mb-16 text-center">
-          <h1 className="mb-6 text-4xl font-bold uppercase tracking-tight text-on-surface md:text-5xl">
-            Room Generation
-          </h1>
-          <p className="mx-auto max-w-lg text-lg text-on-surface-variant">
-            Transform your living spaces with AI-powered interior design. Start from a blank canvas or enhance your existing room photos.
-          </p>
-        </div>
+    <div className="flex min-h-screen flex-col bg-background text-on-surface pb-24 md:pb-0">
+      {step === 0 ? (
+        <StepSelectType setForm={setForm} setStep={setStep} error={error} />
+      ) : (
+        <main className="flex-grow flex flex-col md:flex-row gap-8 max-w-7xl mx-auto w-full p-6 md:p-8 lg:p-10">
+          <Stepper currentStep={step} />
 
-        {error && (
-          <div className="relative z-10 mb-6 w-full max-w-md rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
-            {error}
-          </div>
-        )}
+          <section className="flex-grow flex flex-col gap-6 w-full md:w-3/4 lg:w-4/5">
+            {step === 1 && (
+              <StepRoomDetails
+                form={form}
+                setForm={setForm}
+                setStep={setStep}
+                handleFileChange={handleFileChange}
+                handleDrop={handleDrop}
+              />
+            )}
 
-        {!showCreateForm && !showEnhanceForm ? (
-          <div className="relative z-10 grid w-full max-w-5xl grid-cols-1 gap-12 md:grid-cols-2">
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="group relative flex min-h-[22rem] cursor-pointer flex-col items-center justify-center rounded-[2rem] bg-background p-12 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] active:neomorph-inset neomorph-raised"
-            >
-              <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-background text-primary neomorph-inset">
-                <Icon name="auto_awesome" size={48} />
-              </div>
-              <h3 className="mb-4 text-2xl font-bold text-on-surface">Create from Scratch</h3>
-              <p className="mb-8 text-center leading-relaxed text-on-surface-variant">
-                Generate entirely new room concepts using our advanced AI engine. Input dimensions, style preferences, and mood.
-              </p>
-              <div className="rounded-xl px-8 py-3 font-bold text-primary transition-all duration-300 group-active:neomorph-inset neomorph-raised">
-                Get Started
-              </div>
-            </button>
+            {step === 2 && (
+              <StepDesignInstructions
+                form={form}
+                setForm={setForm}
+                setStep={setStep}
+              />
+            )}
 
-            <button
-              onClick={() => setShowEnhanceForm(true)}
-              className="group relative flex min-h-[22rem] cursor-pointer flex-col items-center justify-center rounded-[2rem] bg-background p-12 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] active:neomorph-inset neomorph-raised"
-            >
-              <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-background text-tertiary neomorph-inset">
-                <Icon name="photo_camera" size={48} />
-              </div>
-              <h3 className="mb-4 text-2xl font-bold text-on-surface">Enhance Room</h3>
-              <p className="mb-8 text-center leading-relaxed text-on-surface-variant">
-                Upload a photo of your current space and let SmartSpace AI reimagine the furniture, lighting, and decor seamlessly.
-              </p>
-              <div className="rounded-xl px-8 py-3 font-bold text-tertiary transition-all duration-300 group-active:neomorph-inset neomorph-raised">
-                Upload Photo
-              </div>
-            </button>
-          </div>
-        ) : showCreateForm ? (
-          <div className="relative z-10 w-full max-w-lg rounded-[2rem] bg-background p-10 neomorph-raised">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-on-surface">Create from Scratch</h2>
-              <button
-                onClick={() => setShowCreateForm(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface neomorph-inset"
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-            <form className="space-y-6" onSubmit={handleCreateScratch}>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-on-surface-variant">Prompt</label>
-                <textarea
-                  className="w-full rounded-2xl border-none bg-background px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neomorph-inset"
-                  rows={4}
-                  placeholder="Describe your ideal room..."
-                  value={form.prompt}
-                  onChange={(e) => setForm((p) => ({ ...p, prompt: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-on-surface-variant">Room ID (optional)</label>
-                <input
-                  className="w-full rounded-2xl border-none bg-background px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neomorph-inset"
-                  placeholder="Room ID"
-                  value={form.roomId}
-                  onChange={(e) => setForm((p) => ({ ...p, roomId: e.target.value }))}
-                />
-              </div>
-              <button
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-background py-4 font-bold text-primary neomorph-raised neomorph-active disabled:opacity-50"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? "Generating..." : "Generate"}
-                {!loading && <Icon name="auto_awesome" />}
-              </button>
-            </form>
-          </div>
-        ) : (
-          <div className="relative z-10 w-full max-w-lg rounded-[2rem] bg-background p-10 neomorph-raised">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-on-surface">Enhance Room</h2>
-              <button
-                onClick={() => setShowEnhanceForm(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface neomorph-inset"
-              >
-                <Icon name="close" />
-              </button>
-            </div>
-            <form className="space-y-6" onSubmit={handleEnhance}>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-on-surface-variant">Room Photos</label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  className="w-full rounded-2xl border-none bg-background px-6 py-4 text-on-surface file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white focus:ring-2 focus:ring-primary/20 neomorph-inset"
-                  onChange={(e) => setForm((p) => ({ ...p, images: e.target.files }))}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-on-surface-variant">Prompt (optional)</label>
-                <textarea
-                  className="w-full rounded-2xl border-none bg-background px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neomorph-inset"
-                  rows={3}
-                  placeholder="Describe the style you want..."
-                  value={form.prompt}
-                  onChange={(e) => setForm((p) => ({ ...p, prompt: e.target.value }))}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-on-surface-variant">Room ID (optional)</label>
-                <input
-                  className="w-full rounded-2xl border-none bg-background px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neomorph-inset"
-                  placeholder="Room ID"
-                  value={form.roomId}
-                  onChange={(e) => setForm((p) => ({ ...p, roomId: e.target.value }))}
-                />
-              </div>
-              <button
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-background py-4 font-bold text-tertiary neomorph-raised neomorph-active disabled:opacity-50"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? "Enhancing..." : "Enhance"}
-                {!loading && <Icon name="photo_camera" />}
-              </button>
-            </form>
-          </div>
-        )}
+            {step === 3 && (
+              <StepSelectProducts
+                setStep={setStep}
+                productData={productData}
+                activeCategory={activeCategory}
+                setActiveCategory={setActiveCategory}
+                addedProducts={addedProducts}
+                toggleProduct={toggleProduct}
+                currentSpent={currentSpent}
+                baseBudget={baseBudget}
+                percent={percent}
+              />
+            )}
 
-        <div className="pointer-events-none fixed left-0 top-1/4 -z-10 h-96 w-96 rounded-full bg-primary/5 blur-[120px]" />
-        <div className="pointer-events-none fixed bottom-1/4 right-0 -z-10 h-96 w-96 rounded-full bg-tertiary/5 blur-[120px]" />
-      </main>
+            {step === 4 && (
+              <StepRoomGenerationResult
+                setStep={setStep}
+                regenerating={regenerating}
+                handleRegenerate={handleRegenerate}
+              />
+            )}
+          </section>
+        </main>
+      )}
 
+      {/* Mobile Bottom Navigation Bar */}
       <div className="fixed bottom-8 left-1/2 z-40 flex w-[90%] -translate-x-1/2 items-center justify-around rounded-2xl bg-background p-4 neomorph-raised md:hidden">
-        <button className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset" aria-label="Apartments">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset"
+          aria-label="Apartments"
+        >
           <Icon name="domain" />
         </button>
-        <button className="rounded-xl p-3 text-primary transition-all neomorph-inset" aria-label="Room generation">
+        <button
+          onClick={() => setStep(0)}
+          className={`rounded-xl p-3 transition-all active:neomorph-inset ${step === 0 ? "text-primary neomorph-inset" : "text-on-surface-variant"}`}
+          aria-label="Room generation"
+        >
           <Icon name="auto_awesome" />
         </button>
-        <button className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset" aria-label="Profile">
+        <button
+          onClick={() => navigate("/profile")}
+          className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset"
+          aria-label="Profile"
+        >
           <Icon name="person" />
         </button>
       </div>
