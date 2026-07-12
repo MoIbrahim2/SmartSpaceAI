@@ -27,7 +27,33 @@ src/
 
 ---
 
-## 2. Package Usage and Security Configurations
+## 2. Database User Schema
+
+The User model matches the following structured BSON schema representation:
+
+*   **`profile`**: Object containing profile information
+    *   `firstName` (String, required): First name of the user.
+    *   `lastName` (String, required): Last name of the user.
+    *   `avatar` (String): URL or file path of the user's avatar.
+    *   `dateOfBirth` (Date): Date of birth of the user.
+*   **`authentication`**: Object containing credentials and authentication details
+    *   `email` (String, required, unique, lowercase): Primary email address of the user.
+    *   `passwordHash` (String, hidden): BCRYPT password hash.
+    *   `provider` (String, enum: `['local', 'google', 'apple']`, required): Identity provider.
+    *   `providerId` (String): Identity provider user ID (for OAuth).
+    *   `emailVerified` (Boolean): Boolean flag indicating email validation status.
+    *   `lastLogin` (Date): Timestamp of the last login.
+    *   `refreshToken` (String, hidden): SHA-256 hash of active refresh token.
+*   **`preferences`**: Object containing preferences configuration
+    *   `theme` (String): Theme preference (e.g. `'light'`, `'dark'`).
+    *   `language` (String): Language preference (e.g. `'en'`, `'ar'`).
+    *   `timezone` (String): Timezone preference.
+*   **`createdAt`** (Date, automatic): Timestamp when the user document was created.
+*   **`updatedAt`** (Date, automatic): Timestamp when the user document was last updated.
+
+---
+
+## 3. Package Usage and Security Configurations
 
 Each package has been selected and configured to fulfill security and performance requirements:
 
@@ -48,7 +74,7 @@ Each package has been selected and configured to fulfill security and performanc
 
 ---
 
-## 3. Middleware Architecture
+## 4. Middleware Architecture
 
 Our Express app uses six key middlewares to process requests safely:
 
@@ -67,7 +93,7 @@ Our Express app uses six key middlewares to process requests safely:
 
 ---
 
-## 4. Authentication Flow
+## 5. Authentication Flow
 
 ### A. Sign Up
 ```mermaid
@@ -107,7 +133,7 @@ sequenceDiagram
 
 ---
 
-## 5. Refresh Token Flow
+## 6. Refresh Token Flow
 
 Refresh tokens provide a safe way to keep users logged in without exposing long-lived access credentials in client-side storage:
 
@@ -125,7 +151,7 @@ Refresh tokens provide a safe way to keep users logged in without exposing long-
 
 ---
 
-## 6. Request Lifecycle
+## 7. Request Lifecycle
 
 The lifecycle of an incoming request follows this path:
 
@@ -151,7 +177,7 @@ The lifecycle of an incoming request follows this path:
 
 ---
 
-## 7. Postman Collection Integration
+## 8. Postman Collection Integration
 
 We have provided a fully configured Postman collection to easily import and test the endpoints:
 

@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "4ed90961-8d51-45e8-8ddb-aef6a4f9e1e5",
 		"name": "SmartSpaceAI REST API",
-		"description": "Postman Collection for SmartSpaceAI Backend REST API. Includes automated JWT access token storage upon login or token refresh.",
+		"description": "Postman Collection for SmartSpaceAI Backend REST API. Includes automated JWT access token storage upon login or token refresh, along with support for Accept-Language header localization.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -17,6 +17,11 @@
 							{
 								"key": "Content-Type",
 								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
 								"type": "text"
 							}
 						],
@@ -66,6 +71,11 @@
 								"key": "Content-Type",
 								"value": "application/json",
 								"type": "text"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -104,7 +114,13 @@
 							]
 						},
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
 						"url": {
 							"raw": "{{base_url}}/auth/logout",
 							"host": [
@@ -137,7 +153,13 @@
 					],
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
 						"url": {
 							"raw": "{{base_url}}/auth/refresh",
 							"host": [
@@ -171,7 +193,13 @@
 							]
 						},
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
 						"url": {
 							"raw": "{{base_url}}/users/profile",
 							"host": [
@@ -199,7 +227,13 @@
 							]
 						},
 						"method": "PATCH",
-						"header": [],
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "formdata",
 							"formdata": [
@@ -270,6 +304,11 @@
 		{
 			"key": "accessToken",
 			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "accept_language",
+			"value": "ar",
 			"type": "string"
 		}
 	]
