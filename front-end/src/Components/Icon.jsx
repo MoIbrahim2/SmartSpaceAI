@@ -1,18 +1,85 @@
-const icons = import.meta.glob("../assets/icons/*.svg", { eager: true, query: "?raw", import: "default" });
+import {
+  Search,
+  Plus,
+  Trash2,
+  Building2,
+  Bell,
+  User,
+  Settings,
+  LogOut,
+  Pencil,
+  MapPin,
+  ArrowRight,
+  Sparkles,
+  Camera,
+  X,
+  Mail,
+  Calendar,
+  Lock,
+  Shield,
+  Check,
+  LayoutGrid,
+  Laptop,
+  Eye,
+  EyeOff,
+  CreditCard,
+  CirclePlus,
+  Zap,
+  History,
+  Languages,
+  Share2,
+  Globe,
+  Moon,
+  Sun,
+  Coins,
+  Database,
+  Diamond,
+  DoorOpen,
+  Inbox,
+} from "lucide-react";
 
-export default function Icon({ name, size = 24, className = "" }) {
-  const svgContent = icons[`../assets/icons/${name}.svg`];
-  if (!svgContent) return null;
+const iconMap = {
+  search: Search,
+  add: Plus,
+  delete: Trash2,
+  domain: Building2,
+  notifications: Bell,
+  person: User,
+  settings: Settings,
+  logout: LogOut,
+  edit: Pencil,
+  location_on: MapPin,
+  arrow_forward: ArrowRight,
+  auto_awesome: Sparkles,
+  photo_camera: Camera,
+  close: X,
+  mail: Mail,
+  calendar_today: Calendar,
+  lock: Lock,
+  shield: Shield,
+  check: Check,
+  apps: LayoutGrid,
+  laptop_mac: Laptop,
+  visibility: Eye,
+  visibility_off: EyeOff,
+  payments: CreditCard,
+  add_circle: CirclePlus,
+  bolt: Zap,
+  history: History,
+  language: Languages,
+  share: Share2,
+  public: Globe,
+  dark_mode: Moon,
+  light_mode: Sun,
+  token: Coins,
+  database: Database,
+  diamond: Diamond,
+  meeting_room: DoorOpen,
+  inbox: Inbox,
+};
 
-  const cleaned = svgContent
-    .replace(/\s*(width|height)="[^"]*"/g, "")
-    .replace("<svg", `<svg width="${size}" height="${size}"`);
-
-  return (
-    <span
-      className={className}
-      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}
-      dangerouslySetInnerHTML={{ __html: cleaned }}
-    />
-  );
+export default function Icon({ name, size = 24, className = "", ...props }) {
+  const LucideIcon = iconMap[name];
+  if (!LucideIcon) return null;
+  return <LucideIcon size={size} className={className} {...props} />;
 }
