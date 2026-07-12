@@ -13,7 +13,7 @@ import LandingPage from "../Pages/LandingPage/LandingPage";
 
 const router = createBrowserRouter([
   {
-    path: "/landing",
+    path: "/",
     element: <LandingPage />,
   },
   {
@@ -26,7 +26,7 @@ const router = createBrowserRouter([
   {
     element: <DashboardLayout />,
     children: [
-      { path: "/", element: <Dashboard /> },
+      { path: "/home", element: <Dashboard /> },
       { path: "/room-generation", element: <RoomGeneration /> },
       { path: "/projects", element: <Dashboard /> },
       { path: "/apartments", element: <Dashboard /> },
