@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartSpace AI: Premium B2B Virtual Staging & Interior Design Platform</title>
+  <meta name="description" content="Elevate real estate listings with AI-powered virtual staging. Instantly add furniture, declutter spaces, enhance photo quality, and convert day to twilight.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- GLOW ORBS FOR MESH BACKGROUND -->
+  <div class="glow-container">
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+    <div class="glow-orb glow-orb-3"></div>
+  </div>
+
+  <!-- 1. TOP PROMO BANNER -->
+  <div class="promo-banner">
+    <span class="promo-text">25% off! Make listings stand out! Use code: <strong>SUMPEAK</strong></span>
+    <span class="countdown" id="promo-countdown">00d 00h 00m 00s</span>
+    <a href="#cta" class="btn-promo magnetic-btn">SUBSCRIBE NOW</a>
+  </div>
+
+  <!-- NAVIGATION HEADER -->
+  <header class="main-header" id="header">
+    <div class="nav-container">
+      <!-- Logo -->
+      <div class="logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <span class="logo-main">SmartSpace<span>.ai</span></span>
+        <span class="logo-sub">INTELLIGENT DESIGN</span>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav>
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              AI Virtual Staging
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <!-- Dropdown -->
+            <div class="dropdown">
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Add Furniture</span>
+                <span class="dropdown-desc">Instantly stage empty spaces with high-end designer furniture.</span>
+              </a>
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Furniture Eraser</span>
+                <span class="dropdown-desc">Remove existing items with seamless AI replacement.</span>
+              </a>
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Room Declutter</span>
+                <span class="dropdown-desc">Clear any room completely to showcase full space.</span>
+              </a>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              AI Tools
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <div class="dropdown">
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Twilight Conversion</span>
+                <span class="dropdown-desc">Convert day photos to premium evening shots.</span>
+              </a>
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Lawn Replacement</span>
+                <span class="dropdown-desc">Swap dead patches with lush green lawns.</span>
+              </a>
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Material Overlay</span>
+                <span class="dropdown-desc">Change flooring, walls, countertops, and textures.</span>
+              </a>
+            </div>
+          </li>
+          <li class="nav-item"><a href="#pricing" class="nav-link">Pricing</a></li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              Resources
+              <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <div class="dropdown">
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Documentation</span>
+                <span class="dropdown-desc">Integration guides, API documentation, and help docs.</span>
+              </a>
+              <a href="#" class="dropdown-link">
+                <span class="dropdown-title">Blog & Trends</span>
+                <span class="dropdown-desc">Stay updated on B2B real estate staging trends.</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <a href="#" class="btn btn-login">Log In</a>
+        <a href="#cta" class="btn btn-accent btn-design magnetic-btn shine-effect">Design Now</a>
+      </div>
+
+      <!-- Mobile Nav Toggle -->
+      <button class="mobile-nav-toggle" id="mobile-toggle">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- 2. HERO SECTION -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content fade-in-up">
+        <span class="hero-pretitle">Next-Gen Virtual Staging</span>
+        <h1>
+          <span class="serif-title">Redefine space</span><br>
+          with intelligent design
+        </h1>
+        <p class="lead">
+          Transform any room into your dream space instantly with SmartSpace AI's revolutionary one-click interior design tool. Professional virtual staging made simple.
+        </p>
+        <div class="hero-actions">
+          <a href="#virtual-staging" class="btn btn-accent btn-try magnetic-btn shine-effect">Try It Free</a>
+        </div>
+      </div>
+
+      <!-- Floating Badge 1 (Left - Add Furniture) -->
+      <div class="floating-badge floating-badge-1 glass-card">
+        <img src="img/img3.jpeg" alt="Add Furniture" class="floating-thumb">
+        <div class="floating-info">
+          <span class="floating-title">Add Furniture</span>
+          <span class="floating-desc">Instantly stage empty spaces with 3D furniture.</span>
+        </div>
+      </div>
+
+      <!-- Floating Badge 2 (Right - Rain to Shine) -->
+      <div class="floating-badge floating-badge-2 glass-card">
+        <img src="img/15.webp" alt="Rain to Shine" class="floating-thumb">
+        <div class="floating-info">
+          <span class="floating-title">Rain to Shine</span>
+          <span class="floating-desc">Remove rain, dark clouds, and gloom instantly.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. SOCIAL PROOF / TRUST SECTION -->
+  <section class="social-proof">
+    <p>Trusted by Leading Real Estate Professionals</p>
+    <div class="marquee-container">
+      <div class="marquee-content" id="logo-ticker">
+        <!-- Logos replicated dynamically or manually via HTML -->
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/39dbdbd1-50e9-4dd8-984c-b4c22b952bee.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/33a472db-74c8-4c74-8a06-0e3480faa434.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/830f7bd7-e8c6-4f2d-beea-ad97a29bece6.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/0ca4c425-b5de-4759-90d8-386f6cd79347.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/2f84ba43-1c6e-4abf-a33c-f91f81489e6b.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/7a85e1ab-194f-4e22-af6a-fe06bdf7357a.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/7636610b-20ab-4d6f-9107-5f63ad95f7f9.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/0d95507b-3e7c-490a-af75-2ede90f8e288.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/0c905888-2353-4b50-a2f1-86c170536a12.png" alt="Partner Logo" class="logo-item">
+        
+        <!-- Duplicate for loop -->
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/39dbdbd1-50e9-4dd8-984c-b4c22b952bee.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/33a472db-74c8-4c74-8a06-0e3480faa434.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/830f7bd7-e8c6-4f2d-beea-ad97a29bece6.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/0ca4c425-b5de-4759-90d8-386f6cd79347.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/2f84ba43-1c6e-4abf-a33c-f91f81489e6b.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/7a85e1ab-194f-4e22-af6a-fe06bdf7357a.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/7636610b-20ab-4d6f-9107-5f63ad95f7f9.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/0d95507b-3e7c-490a-af75-2ede90f8e288.png" alt="Partner Logo" class="logo-item">
+        <img src="/d37vt2dds2nfmk.cloudfront.net/20260319/0c905888-2353-4b50-a2f1-86c170536a12.png" alt="Partner Logo" class="logo-item">
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. PRODUCT & FEATURES SECTION -->
+  <!-- 4a. HOW IT WORKS -->
+  <section class="steps-section">
+    <div class="container">
+      <div class="section-header fade-in-up">
+        <h2>How it works</h2>
+        <p>Three simple steps to transform your property photography with advanced AI staging.</p>
+      </div>
+
+      <div class="steps-grid fade-in-up">
+        <!-- Step 1 -->
+        <div class="step-card spotlight-card">
+          <div class="step-number">1</div>
+          <h3>Upload Your Photo</h3>
+          <p>Upload a standard photo of an empty room, a patchy yard, or a daylight shot from your device.</p>
+        </div>
+        <!-- Step 2 -->
+        <div class="step-card spotlight-card">
+          <div class="step-number">2</div>
+          <h3>Choose Style & Action</h3>
+          <p>Select your desired aesthetic—such as Modern, Scandinavian, Industrial—or pick enhancement presets.</p>
+        </div>
+        <!-- Step 3 -->
+        <div class="step-card spotlight-card">
+          <div class="step-number">3</div>
+          <h3>Get Instant Results</h3>
+          <p>Review the staged photo in seconds. Download in high definition, market-ready quality.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4a-2. AI VIRTUAL STAGING DETAIL SECTION -->
+  <section class="staging-detail-section" id="virtual-staging">
+    <div class="container">
+      <div class="staging-detail-wrapper">
+        <div class="staging-detail-content fade-in-up">
+          <span class="detail-pretitle">Core Technology</span>
+          <h2>AI virtual staging built for B2B scale</h2>
+          <p class="detail-lead">SmartSpace AI staging technology understands depth, lighting, and spatial perspective. Stage empty listings with designer furniture in seconds, and get properties under contract faster.</p>
+          
+          <ul class="detail-features-list">
+            <li>
+              <div class="detail-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              </div>
+              <div class="detail-feature-text">
+                <h4>Perspective Alignment Engine</h4>
+                <p>Our algorithms calculate the precise pitch, yaw, and roll of the room to align furniture natively with floorboards and ceiling heights.</p>
+              </div>
+            </li>
+            <li>
+              <div class="detail-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              </div>
+              <div class="detail-feature-text">
+                <h4>Natural Shadows & Lighting Inheritance</h4>
+                <p>Placed objects adapt to window light directions, ambient room temperatures, and ceiling lamps, casting realistic shadows.</p>
+              </div>
+            </li>
+            <li>
+              <div class="detail-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              </div>
+              <div class="detail-feature-text">
+                <h4>Curated Designer Collections</h4>
+                <p>Choose styles ranging from Contemporary to Scandinavian, Industrial, or Mid-Century, designed by interior staging experts.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="staging-detail-visual fade-in-up">
+          <div class="visual-card-stack">
+            <!-- Staged Room Preview -->
+            <div class="visual-card main-card">
+              <img src="img/img3.jpeg" alt="Staged Living Space Preview">
+              <div class="visual-badge">Staged</div>
+            </div>
+            <!-- Original Room Preview -->
+            <div class="visual-card secondary-card">
+              <img src="img/img2.jpeg" alt="Original Empty Living Space">
+              <div class="visual-badge">Empty</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4b. COMPARISON BEFORE-AFTER SLIDER -->
+  <section class="comparison-section">
+    <div class="container">
+      <div class="comparison-wrapper">
+        <div class="comparison-info fade-in-up">
+          <h2>Drag to reveal the transformation</h2>
+          <p>Interact with our custom before-after comparison tool below to see the realistic staging results produced by our AI algorithm.</p>
+          
+          <div class="comparison-tabs">
+            <button class="tab-btn active" data-tool="staging">Virtual Staging</button>
+            <button class="tab-btn" data-tool="twilight">Twilight Conversion</button>
+            <button class="tab-btn" data-tool="lawn">Lawn Replacement</button>
+            <button class="tab-btn" data-tool="weather">Weather Control</button>
+          </div>
+        </div>
+
+        <div class="fade-in-up">
+          <!-- Slider Container -->
+          <div class="slider-container" id="before-after-slider">
+            <!-- Background (Before) -->
+            <div class="slider-img slider-before" id="img-before" style="background-image: url('img/img2.jpeg');"></div>
+            <!-- Overlay (After) -->
+            <div class="slider-img slider-after" id="img-after" style="background-image: url('img/img3.jpeg');"></div>
+            
+            <!-- Handle -->
+            <div class="slider-handle" id="slider-handle">
+              <div class="slider-button">&#8596;</div>
+            </div>
+
+            <!-- Labels -->
+            <span class="slider-label label-before">Original</span>
+            <span class="slider-label label-after">Staged</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4c. FEATURES GRID -->
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header fade-in-up">
+        <h2>Intelligent AI staging toolkit</h2>
+        <p>A full suite of real estate photography enhancement features tailored to boost conversion rates.</p>
+      </div>
+
+      <div class="features-grid fade-in-up">
+        <!-- Feature 1 -->
+        <div class="feature-card col-span-2 spotlight-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M9 21V9h6v12"/>
+            </svg>
+          </div>
+          <h3>Add / Remove Furniture</h3>
+          <p>Whether you need to furnish an empty listing or replace existing, outdated decor, our deep-learning staging engine creates seamless, perspective-accurate renders in seconds.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card spotlight-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 2v20M2 12h20"/>
+            </svg>
+          </div>
+          <h3>Twilight Conversion</h3>
+          <p>Turn flat daytime listing photos into eye-catching sunset or twilight views, raising buyer interest and CTR.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card spotlight-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 22h20L12 2z"/>
+            </svg>
+          </div>
+          <h3>Lawn Replacement</h3>
+          <p>Easily swap brown patches, dry dirt, or messy weeds for lush, hyper-realistic green Bermuda grass.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card spotlight-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+          </div>
+          <h3>Style Swap</h3>
+          <p>Re-furnish a whole room in one click using styles ranging from Mid-Century Modern to Contemporary or Rustic.</p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card spotlight-card">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v2M4.93 4.93l1.41 1.41M2 12h2M6.34 17.66l-1.41 1.41M12 20v2M17.66 17.66l1.41 1.41M20 12h2M17.66 6.34l-1.41-1.41"/>
+            </svg>
+          </div>
+          <h3>Weather Control</h3>
+          <p>Remove heavy clouds, fog, and rainy gloom, shifting the sky automatically to bright, sunlit blue skies.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4d. STAGED DESIGN SHOWCASE GALLERY -->
+  <section class="gallery-section">
+    <div class="container">
+      <div class="section-header fade-in-up">
+        <h2>Staged to perfection</h2>
+        <p>Explore high-resolution, photorealistic staging designs generated dynamically by SmartSpace AI using our local assets.</p>
+      </div>
+
+      <div class="gallery-grid fade-in-up">
+        <div class="gallery-item">
+          <img src="img/image.png" alt="Staged Living Room View">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Living Room</span>
+            <h4 class="gallery-title">Modern Luxury Suite</h4>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="img/15.webp" alt="Staged Bedroom Design">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Bedroom</span>
+            <h4 class="gallery-title">Minimalist Scandinavian Retreat</h4>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="img/8_1.webp" alt="Twilight Staged House Patio">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Outdoor Patio</span>
+            <h4 class="gallery-title">Sunset Garden Oasis</h4>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="img/img2.jpeg" alt="Staged Dining Room">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Dining Room</span>
+            <h4 class="gallery-title">Contemporary Bistro Layout</h4>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="img/img3.jpeg" alt="Staged Living Room Space">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Living Space</span>
+            <h4 class="gallery-title">Urban Loft Lounge</h4>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="img/img4.jpeg" alt="Enhanced Photo Quality Study">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Office / Study</span>
+            <h4 class="gallery-title">Executive Workspace</h4>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="img/img5.jpeg" alt="Kitchen Material Overlay">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Kitchen</span>
+            <h4 class="gallery-title">High-End Quartz Island</h4>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="img/img6.jpeg" alt="Staged Lawn Front Yard">
+          <div class="gallery-overlay">
+            <span class="gallery-tag">Front Yard</span>
+            <h4 class="gallery-title">Lush Emerald Curb Appeal</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4e. VIDEO WALKTHROUGH SECTION -->
+  <section class="video-walkthrough-section" id="how-to-use">
+    <div class="container">
+      <div class="section-header fade-in-up">
+        <h2>See how easy it is to use</h2>
+        <p>Watch our 2-minute product walkthrough to master empty-room virtual staging, style swapping, and decluttering.</p>
+      </div>
+      
+      <div class="video-container fade-in-up">
+        <div class="video-preview-wrapper" id="video-play-btn">
+          <img src="img/image.png" alt="SmartSpace AI Video Tutorial Walkthrough" class="video-thumbnail">
+          <div class="video-glow-overlay"></div>
+          
+          <button class="play-pulsate-btn" aria-label="Play Walkthrough Video">
+            <svg width="24" height="28" viewBox="0 0 24 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.5 11.5359C24.5 12.6906 24.5 15.5772 22.5 16.7319L4.5 27.1242C2.5 28.2789 -1.43385e-06 26.8356 -1.33303e-06 24.5262L-4.23725e-07 3.74158C-3.2374e-07 1.43218 2.5 -0.0111663 4.5 1.14353L22.5 11.5359Z" fill="currentColor"/>
+            </svg>
+          </button>
+          
+          <span class="video-duration">2:14 Walkthrough</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIDEO MODAL LIGHTBOX -->
+  <div class="video-modal-overlay" id="video-modal">
+    <div class="video-modal-content">
+      <button class="video-modal-close" id="video-modal-close" aria-label="Close video player">&times;</button>
+      <div class="video-modal-body">
+        <iframe id="video-iframe" src="" title="SmartSpace AI Video Guide" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. SOCIAL PROOF / TESTIMONIALS -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div class="section-header fade-in-up">
+        <h2>Loved by top agents</h2>
+        <p>See how realtors and brokerages save hundreds of dollars using SmartSpace AI.</p>
+      </div>
+
+      <div class="testimonials-carousel fade-in-up">
+        <div class="testimonials-slider" id="testimonial-slider">
+          <!-- Testimonial 1 -->
+          <div class="testimonial-slide">
+            <p class="testimonial-quote">"SmartSpace AI has saved me hundreds of dollars per month and given me more creative control over how my properties are presented. This tool has become an essential part of my marketing strategy, and I can't recommend it enough."</p>
+            <div class="testimonial-profile">
+              <img src="/d37vt2dds2nfmk.cloudfront.net/20250825/bdc74339-08e5-4d5c-946a-875f069c7e84.webp" alt="Linda Jennings" class="testimonial-avatar">
+              <div class="testimonial-meta">
+                <span class="testimonial-name">Linda Jennings</span>
+                <span class="testimonial-role">Real Estate Agent, Elite Realty</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Testimonial 2 -->
+          <div class="testimonial-slide">
+            <p class="testimonial-quote">"The speed of twilight conversion is insane. What used to take hours of manual photoshop editing is completed in seconds with a quality level that buyers can't distinguish from authentic sunset shots."</p>
+            <div class="testimonial-profile">
+              <img src="/d37vt2dds2nfmk.cloudfront.net/20250825/eb6c55cb-f273-426c-bf60-1ae8c5e28f02.webp" alt="Ron Givon" class="testimonial-avatar">
+              <div class="testimonial-meta">
+                <span class="testimonial-name">Ron Givon</span>
+                <span class="testimonial-role">Real Estate Photographer</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonial 3 -->
+          <div class="testimonial-slide">
+            <p class="testimonial-quote">"Virtual staging with SmartSpace AI allowed me to list properties 3 days faster than working with local contractors. Properties command 20% higher offers when staged correctly. Essential SaaS for any modern broker."</p>
+            <div class="testimonial-profile">
+              <img src="/d37vt2dds2nfmk.cloudfront.net/20250825/329fd64a-b004-4d40-9bb2-e98de1b2c324.webp" alt="Joseph Allegra" class="testimonial-avatar">
+              <div class="testimonial-meta">
+                <span class="testimonial-name">Joseph Allegra</span>
+                <span class="testimonial-role">Realtor, RE/MAX Group</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dot Indicators -->
+        <div class="carousel-dots" id="carousel-dots">
+          <span class="dot active" data-index="0"></span>
+          <span class="dot" data-index="1"></span>
+          <span class="dot" data-index="2"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5b. PRICING & PLANS SECTION -->
+  <section class="pricing-section" id="pricing">
+    <div class="container">
+      <div class="section-header fade-in-up">
+        <h2>Simple, transparent pricing</h2>
+        <p>Choose the plan that fits your volume. Save 20% with annual billing.</p>
+      </div>
+
+      <div class="billing-toggle-container fade-in-up">
+        <button class="billing-btn active" id="billing-monthly">Monthly</button>
+        <button class="billing-btn" id="billing-annually">
+          Annually <span class="billing-discount">Save 20%</span>
+        </button>
+      </div>
+
+      <div class="pricing-grid fade-in-up">
+        <!-- Starter Plan -->
+        <div class="pricing-card spotlight-card">
+          <span class="plan-name">Starter</span>
+          <p class="plan-desc">Perfect for individual realtors starting with virtual staging.</p>
+          <div class="plan-price-container">
+            <span class="plan-price" id="price-starter">$29</span>
+            <span class="plan-period" id="period-starter">/mo</span>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              10 Staging Credits / mo
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Standard Staging Tool
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Standard Resolution
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Email Support
+            </li>
+          </ul>
+          <a href="#" class="btn-pricing magnetic-btn">Get Started</a>
+        </div>
+
+        <!-- Professional Plan -->
+        <div class="pricing-card featured spotlight-card">
+          <div class="card-glow"></div>
+          <span class="plan-badge">Best Value</span>
+          <span class="plan-name">Professional</span>
+          <p class="plan-desc">For active agents and photographers needing premium marketing quality.</p>
+          <div class="plan-price-container">
+            <span class="plan-price" id="price-professional">$79</span>
+            <span class="plan-period" id="period-professional">/mo</span>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              50 Staging Credits / mo
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Full Staging & Eraser Tools
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Twilight & Lawn Replacement
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              HD Resolution Output
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Priority 24/7 Support
+            </li>
+          </ul>
+          <a href="#" class="btn-pricing magnetic-btn shine-effect">Try Professional</a>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card spotlight-card">
+          <span class="plan-name">Enterprise</span>
+          <p class="plan-desc">For larger brokerages and agencies looking for automated staging.</p>
+          <div class="plan-price-container">
+            <span class="plan-price" id="price-enterprise">$199</span>
+            <span class="plan-period" id="period-enterprise">/mo</span>
+          </div>
+          <ul class="plan-features">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Unlimited Staging Credits
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              API Integration Access
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Custom Design Styles
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Dedicated Account Manager
+            </li>
+          </ul>
+          <a href="#" class="btn-pricing magnetic-btn">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5c. FREQUENTLY ASKED QUESTIONS (FAQ) SECTION -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <h2 class="faq-header fade-in-up">
+        <span class="faq-serif">Frequently</span> Asked Questions
+      </h2>
+
+      <div class="faq-list fade-in-up">
+        <!-- FAQ Item 1 -->
+        <div class="faq-item">
+          <div class="faq-trigger">
+            <span class="faq-question">What do you offer?</span>
+            <span class="faq-icon">+</span>
+          </div>
+          <div class="faq-content">
+            <p class="faq-answer">
+              We provide a suite of AI-powered design tools, including AI Virtual Staging, AI Photo Editing, and AI Virtual Tours, designed to help real estate professionals and businesses market properties faster and more cost-effectively.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 2 -->
+        <div class="faq-item">
+          <div class="faq-trigger">
+            <span class="faq-question">How do your AI products work?</span>
+            <span class="faq-icon">+</span>
+          </div>
+          <div class="faq-content">
+            <p class="faq-answer">
+              Our state-of-the-art deep learning model analyzes empty or furnished room photos, calculates perspective lines and lighting, and places realistic, high-definition 3D furniture. Other tools automatically replace lawns, remove objects, and adjust lighting to produce stunning twilight renders.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 3 -->
+        <div class="faq-item">
+          <div class="faq-trigger">
+            <span class="faq-question">Do you offer a free trial?</span>
+            <span class="faq-icon">+</span>
+          </div>
+          <div class="faq-content">
+            <p class="faq-answer">
+              Yes, you can sign up for a free trial to test our tools. No credit card is required. You get 3 free credits to stage rooms, convert daylight to twilight, or swap flooring styles.
+            </p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 4 -->
+        <div class="faq-item">
+          <div class="faq-trigger">
+            <span class="faq-question">How does your pricing work?</span>
+            <span class="faq-icon">+</span>
+          </div>
+          <div class="faq-content">
+            <p class="faq-answer">
+              We offer both monthly and annual subscription plans depending on your usage requirements. The pricing scales based on the number of rendering credits needed per month. Custom enterprise API access is also available.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. CONVERSION CTA & FOOTER -->
+  <section class="cta-section" id="cta">
+    <div class="cta-glow"></div>
+    <div class="container fade-in-up">
+      <h2>Start Your Journey Today</h2>
+      <p>Transform empty rooms into stunning, market-ready homes with our cutting-edge virtual staging AI. Join thousands of high-converting brokerages.</p>
+      <a href="#" class="btn btn-accent btn-cta magnetic-btn shine-effect">Design Now</a>
+    </div>
+  </section>
+
+  <!-- MULTI-COLUMN FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Column 1 Brand -->
+        <div class="footer-brand">
+          <div class="logo">
+            <span class="logo-main">SmartSpace<span>.ai</span></span>
+            <span class="logo-sub">INTELLIGENT DESIGN</span>
+          </div>
+          <p>Premium virtual staging AI platform for realtors, architects, and designers. Create photorealistic properties instantly.</p>
+          <div class="social-links">
+            <a href="#" class="social-icon" aria-label="LinkedIn">LN</a>
+            <a href="#" class="social-icon" aria-label="Instagram">IG</a>
+            <a href="#" class="social-icon" aria-label="Twitter">TW</a>
+            <a href="#" class="social-icon" aria-label="Facebook">FB</a>
+          </div>
+        </div>
+
+        <!-- Column 2 Solutions -->
+        <div class="footer-column">
+          <h4>Solutions</h4>
+          <ul class="footer-links">
+            <li><a href="#">Residential Staging</a></li>
+            <li><a href="#">Commercial Layouts</a></li>
+            <li><a href="#">Architectural Rendering</a></li>
+            <li><a href="#">Agent Portals</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3 Tools -->
+        <div class="footer-column">
+          <h4>Tools</h4>
+          <ul class="footer-links">
+            <li><a href="#">Furniture Placement</a></li>
+            <li><a href="#">Declutter & Clear</a></li>
+            <li><a href="#">Twilight Conversion</a></li>
+            <li><a href="#">Grass Replacement</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 4 Resources -->
+        <div class="footer-column">
+          <h4>Resources</h4>
+          <ul class="footer-links">
+            <li><a href="#">Documentation</a></li>
+            <li><a href="#">Staging Guidelines</a></li>
+            <li><a href="#">API Integrations</a></li>
+            <li><a href="#">Success Stories</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 5 Support -->
+        <div class="footer-column">
+          <h4>Support</h4>
+          <ul class="footer-links">
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Contact Sales</a></li>
+            <li><a href="#">Terms & Privacy</a></li>
+            <li><a href="#">API Status</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>&copy; 2026 SmartSpace AI. All rights reserved.</span>
+        <span>Made with premium luxury aesthetics.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

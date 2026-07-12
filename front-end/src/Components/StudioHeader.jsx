@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const StudioHeader = () => {
@@ -6,6 +7,28 @@ const StudioHeader = () => {
     location.pathname === "/projects" ||
     location.pathname === "/apartments" ||
     location.pathname === "/rooms";
+
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme;
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const nextTheme = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", nextTheme);
+      return nextTheme;
+    });
+  };
 
   return (
     <header className="sticky top-0 z-50 mb-4 bg-surface-bright px-6 py-4 neo-shadow md:px-20">
@@ -35,6 +58,15 @@ const StudioHeader = () => {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
+            <button
+              className="size-10 rounded-xl bg-surface-bright text-on-surface-variant transition-all hover:text-primary neo-shadow neo-button"
+              onClick={toggleTheme}
+              aria-label="Toggle Theme"
+            >
+              <span className="material-symbols-outlined">
+                {theme === "dark" ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
             <button className="size-10 rounded-xl bg-surface-bright text-on-surface-variant transition-all hover:text-primary neo-shadow neo-button" aria-label="Notifications">
               <span className="material-symbols-outlined">notifications</span>
             </button>
