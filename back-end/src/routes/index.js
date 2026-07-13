@@ -7,6 +7,15 @@ const roomRoutes = require('./room.routes');
 const generationRoutes = require('./generation.routes');
 const contactRoutes = require('./contact.routes');
 
+// Health check for azure vm
+router.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "healthy",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Connect sub-routers
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
