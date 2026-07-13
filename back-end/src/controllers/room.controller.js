@@ -15,7 +15,7 @@ const createRoom = asyncHandler(async (req, res) => {
  * Fetch all rooms with query filters and pagination
  */
 const getRooms = asyncHandler(async (req, res) => {
-  const result = await roomService.getRooms(req.query);
+  const result = await roomService.getRooms(req.user._id, req.query);
   return sendSuccess(res, 'room.fetch_success', result, HTTP_STATUS.OK);
 });
 
@@ -23,7 +23,7 @@ const getRooms = asyncHandler(async (req, res) => {
  * Fetch a single room by ID
  */
 const getRoomById = asyncHandler(async (req, res) => {
-  const room = await roomService.getRoomById(req.params.id);
+  const room = await roomService.getRoomById(req.user._id, req.params.id);
   return sendSuccess(res, 'room.fetch_success', { room }, HTTP_STATUS.OK);
 });
 

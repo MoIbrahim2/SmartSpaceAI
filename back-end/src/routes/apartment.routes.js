@@ -20,9 +20,9 @@ const parseLocationBody = (req, res, next) => {
   next();
 };
 
-// Public retrieval routes
-router.get('/', apartmentController.getApartments);
-router.get('/:id', apartmentController.getApartmentById);
+// Protected retrieval routes
+router.get('/', protect, apartmentController.getApartments);
+router.get('/:id', protect, apartmentController.getApartmentById);
 
 // Protected mutation routes
 router.post('/', protect, uploadCoverImage, parseLocationBody, validate(createApartmentSchema), apartmentController.createApartment);

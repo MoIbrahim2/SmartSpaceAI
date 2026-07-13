@@ -28,8 +28,8 @@ const createGeneration = async (userId, generationData, files = []) => {
   }
 
   const images = files.map(file => ({
-    url: `uploads/${file.filename}`,
-    thumbnail: `uploads/${file.filename}`,
+    url: `uploads/generations/${file.filename}`,
+    thumbnail: `uploads/generations/${file.filename}`,
     width: 1024, // standard default
     height: 1024,
     selected: false
@@ -155,7 +155,7 @@ const updateGeneration = async (userId, generationId, updateFields, files = []) 
       for (const img of generation.images) {
         if (deleteIds.includes(img._id.toString())) {
           // Delete file from disk
-          const filePath = path.join(process.cwd(), 'uploads', img.fileName || path.basename(img.url));
+          const filePath = path.join(process.cwd(), 'uploads', 'generations', img.fileName || path.basename(img.url));
           fs.unlink(filePath, (err) => {
             if (err) console.error(`Failed to delete generation image: ${err.message}`);
           });
@@ -170,8 +170,8 @@ const updateGeneration = async (userId, generationId, updateFields, files = []) 
   // Handle appending new uploads
   if (files && files.length > 0) {
     const newImages = files.map(file => ({
-      url: `uploads/${file.filename}`,
-      thumbnail: `uploads/${file.filename}`,
+      url: `uploads/generations/${file.filename}`,
+      thumbnail: `uploads/generations/${file.filename}`,
       width: 1024,
       height: 1024,
       selected: false
@@ -237,7 +237,7 @@ const deleteGeneration = async (userId, generationId) => {
   if (generation.images && generation.images.length > 0) {
     generation.images.forEach(img => {
       const fileName = img.fileName || path.basename(img.url);
-      const filePath = path.join(process.cwd(), 'uploads', fileName);
+      const filePath = path.join(process.cwd(), 'uploads', 'generations', fileName);
       fs.unlink(filePath, (err) => {
         if (err) console.error(`Failed to delete generation image: ${err.message}`);
       });

@@ -15,7 +15,7 @@ const createApartment = asyncHandler(async (req, res) => {
  * Fetch all apartments with query filters and pagination
  */
 const getApartments = asyncHandler(async (req, res) => {
-  const result = await apartmentService.getApartments(req.query);
+  const result = await apartmentService.getApartments(req.user._id, req.query);
   return sendSuccess(res, 'apartment.fetch_success', result, HTTP_STATUS.OK);
 });
 
@@ -23,7 +23,7 @@ const getApartments = asyncHandler(async (req, res) => {
  * Fetch a single apartment by ID
  */
 const getApartmentById = asyncHandler(async (req, res) => {
-  const apartment = await apartmentService.getApartmentById(req.params.id);
+  const apartment = await apartmentService.getApartmentById(req.user._id, req.params.id);
   return sendSuccess(res, 'apartment.fetch_success', { apartment }, HTTP_STATUS.OK);
 });
 

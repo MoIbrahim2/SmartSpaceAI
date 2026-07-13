@@ -14,7 +14,21 @@ if (!fs.existsSync(uploadDir)) {
 // Set up storage engine
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    let subfolder = 'others';
+    if (file.fieldname === 'coverImage') {
+      subfolder = 'apartments';
+    } else if (file.fieldname === 'profileImage') {
+      subfolder = 'profiles';
+    } else if (file.fieldname === 'sourceImages') {
+      subfolder = 'rooms';
+    } else if (file.fieldname === 'images') {
+      subfolder = 'generations';
+    }
+    const targetDir = path.join(uploadDir, subfolder);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    cb(null, targetDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

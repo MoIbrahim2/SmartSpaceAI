@@ -28,7 +28,7 @@ const createRoom = async (userId, roomData, files = []) => {
   }
 
   const sourceImages = files.map(file => ({
-    url: `uploads/${file.filename}`,
+    url: `uploads/rooms/${file.filename}`,
     storageProvider: 'local',
     fileName: file.filename,
     uploadedAt: new Date()
@@ -54,16 +54,37 @@ const createRoom = async (userId, roomData, files = []) => {
 };
 
 /**
- * Fetch rooms with query filters and pagination
+ * Fetch rooms with query filters and pagination for apartments owned by the user
+ * @param {string} userId - Requesting user ID
  * @param {Object} query - Express query params
  * @returns {Promise<Object>} Paginated rooms list
  */
-const getRooms = async (query = {}) => {
+const getRooms = async (userId, query = {}) => {
   const filter = {};
 
+  // Fetch all apartments owned by the user
+  const userApartments = await Apartment.find({ ownerId: userId }).select('_id');
+  const userApartmentIds = userApartments.map(apt => apt._id);
+
   if (query.apartmentId) {
+    // If apartmentId is provided, verify ownership
+    if (!userApartmentIds.map(id => id.toString()).includes(query.apartmentId.toString())) {
+      return {
+        rooms: [],
+        pagination: {
+          total: 0,
+          page: parseInt(query.page, 10) || 1,
+          limit: parseInt(query.limit, 10) || 10,
+          pages: 0
+        }
+      };
+    }
     filter.apartmentId = query.apartmentId;
+  } else {
+    // Restrict to only apartments owned by the user
+    filter.apartmentId = { $in: userApartmentIds };
   }
+
   if (query.roomType) {
     filter.roomType = query.roomType;
   }
@@ -103,11 +124,12 @@ const getRooms = async (query = {}) => {
 };
 
 /**
- * Fetch a single room by ID
+ * Fetch a single room by ID, enforcing ownership
+ * @param {string} userId - Requesting user ID
  * @param {string} roomId
  * @returns {Promise<Object>} Room document
  */
-const getRoomById = async (roomId) => {
+const getRoomById = async (userId, roomId) => {
   const room = await Room.findById(roomId)
     .populate({
       path: 'apartmentId',
@@ -118,6 +140,12 @@ const getRoomById = async (roomId) => {
   if (!room) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'room.not_found');
   }
+
+  // Verify apartment ownership
+  if (!room.apartmentId || room.apartmentId.ownerId.toString() !== userId.toString()) {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'room.forbidden');
+  }
+
   return room;
 };
 
@@ -156,7 +184,7 @@ const updateRoom = async (userId, roomId, updateFields, files = []) => {
       for (const img of room.sourceImages) {
         if (deleteIds.includes(img._id.toString())) {
           // Delete file from disk
-          const filePath = path.join(process.cwd(), 'uploads', img.fileName);
+          const filePath = path.join(process.cwd(), 'uploads', 'rooms', img.fileName);
           fs.unlink(filePath, (err) => {
             if (err) console.error(`Failed to delete room source image: ${err.message}`);
           });
@@ -171,7 +199,7 @@ const updateRoom = async (userId, roomId, updateFields, files = []) => {
   // Handle appending new uploads
   if (files && files.length > 0) {
     const newImages = files.map(file => ({
-      url: `uploads/${file.filename}`,
+      url: `uploads/rooms/${file.filename}`,
       storageProvider: 'local',
       fileName: file.filename,
       uploadedAt: new Date()
@@ -249,7 +277,7 @@ const deleteRoom = async (userId, roomId) => {
   // Clean up source images
   if (room.sourceImages && room.sourceImages.length > 0) {
     room.sourceImages.forEach(img => {
-      const filePath = path.join(process.cwd(), 'uploads', img.fileName);
+      const filePath = path.join(process.cwd(), 'uploads', 'rooms', img.fileName);
       fs.unlink(filePath, (err) => {
         if (err) console.error(`Failed to delete room source image: ${err.message}`);
       });
