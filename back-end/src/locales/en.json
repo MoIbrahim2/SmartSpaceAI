@@ -40,6 +40,9 @@
     "not_found": "Generation not found",
     "forbidden": "You do not have permission to perform this action on this generation"
   },
+  "contact": {
+    "submit_success": "Message sent successfully"
+  },
   "general": {
     "route_not_found": "Requested resource not found",
     "server_error": "Internal server error",
@@ -62,6 +65,8 @@
     "profileImage": "Profile image",
     "ownerId": "Owner",
     "name": "Name",
+    "subject": "Subject",
+    "message": "Message",
     "country": "Country",
     "city": "City",
     "apartmentId": "Apartment ID",

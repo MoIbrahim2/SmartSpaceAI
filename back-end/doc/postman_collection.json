@@ -1041,6 +1041,43 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Contact",
+			"item": [
+				{
+					"name": "Submit Contact Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept-Language",
+								"value": "{{accept_language}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"message\": \"Hello, I would like to get more information about SmartSpace AI services. Please reach out to me.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/contact",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"contact"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
