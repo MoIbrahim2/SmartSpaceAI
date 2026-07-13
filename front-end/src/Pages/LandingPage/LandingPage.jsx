@@ -196,31 +196,31 @@ const LandingPage = () => {
 
   const mobileNavMenuStyle = isMobileMenuOpen
     ? {
-      display: "flex",
-      flexDirection: "column",
-      position: "absolute",
-      top: "72px",
-      left: "0",
-      right: "0",
-      backgroundColor: "var(--bg-secondary)",
-      padding: "20px",
-      borderBottom: "1px solid var(--border-color)",
-    }
+        display: "flex",
+        flexDirection: "column",
+        position: "absolute",
+        top: "72px",
+        left: "0",
+        right: "0",
+        backgroundColor: "var(--bg-secondary)",
+        padding: "20px",
+        borderBottom: "1px solid var(--border-color)",
+      }
     : {};
 
   const mobileNavActionsStyle = isMobileMenuOpen
     ? {
-      display: "flex",
-      flexDirection: "column",
-      position: "absolute",
-      top: "280px",
-      left: "0",
-      right: "0",
-      backgroundColor: "var(--bg-secondary)",
-      padding: "20px",
-      borderBottom: "1px solid var(--border-color)",
-      gap: "16px",
-    }
+        display: "flex",
+        flexDirection: "column",
+        position: "absolute",
+        top: "280px",
+        left: "0",
+        right: "0",
+        backgroundColor: "var(--bg-secondary)",
+        padding: "20px",
+        borderBottom: "1px solid var(--border-color)",
+        gap: "16px",
+      }
     : {};
 
   // 7. Scroll and Tab Handlers
@@ -293,7 +293,7 @@ const LandingPage = () => {
         <div className="glow-orb glow-orb-2"></div>
         <div className="glow-orb glow-orb-3"></div>
       </div>
-
+    
 
       {/* NAVIGATION HEADER */}
       <header className={`main-header ${isScrolled ? "scrolled" : ""}`} id="header">
@@ -1110,59 +1110,74 @@ const LandingPage = () => {
             >
               {/* Testimonial 1 */}
               <div className="testimonial-slide">
-                <p className="testimonial-quote">
-                  "SmartSpace AI has saved me hundreds of dollars per month and given me more creative control over how
-                  my properties are presented. This tool has become an essential part of my marketing strategy, and I
-                  can't recommend it enough."
-                </p>
-                <div className="testimonial-profile">
-                  <img
-                    src="https://d37vt2dds2nfmk.cloudfront.net/20250825/bdc74339-08e5-4d5c-946a-875f069c7e84.webp"
-                    alt="Linda Jennings"
-                    className="testimonial-avatar"
-                  />
-                  <div className="testimonial-meta">
-                    <span className="testimonial-name">Linda Jennings</span>
-                    <span className="testimonial-role">Real Estate Agent, Elite Realty</span>
+                <div className="testimonial-content-wrapper">
+                  <svg className="quote-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
+                  </svg>
+                  <p className="testimonial-quote">
+                    "SmartSpace AI has saved me hundreds of dollars per month and given me more creative control over how
+                    my properties are presented. This tool has become an essential part of my marketing strategy, and I
+                    can't recommend it enough."
+                  </p>
+                  <div className="testimonial-profile">
+                    <img
+                      src="https://d37vt2dds2nfmk.cloudfront.net/20250825/bdc74339-08e5-4d5c-946a-875f069c7e84.webp"
+                      alt="Linda Jennings"
+                      className="testimonial-avatar"
+                    />
+                    <div className="testimonial-meta">
+                      <span className="testimonial-name">Linda Jennings</span>
+                      <span className="testimonial-role">Real Estate Agent, Elite Realty</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Testimonial 2 */}
               <div className="testimonial-slide">
-                <p className="testimonial-quote">
-                  "The speed of twilight conversion is insane. What used to take hours of manual photoshop editing is
-                  completed in seconds with a quality level that buyers can't distinguish from authentic sunset shots."
-                </p>
-                <div className="testimonial-profile">
-                  <img
-                    src="https://d37vt2dds2nfmk.cloudfront.net/20250825/eb6c55cb-f273-426c-bf60-1ae8c5e28f02.webp"
-                    alt="Ron Givon"
-                    className="testimonial-avatar"
-                  />
-                  <div className="testimonial-meta">
-                    <span className="testimonial-name">Ron Givon</span>
-                    <span className="testimonial-role">Real Estate Photographer</span>
+                <div className="testimonial-content-wrapper">
+                  <svg className="quote-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
+                  </svg>
+                  <p className="testimonial-quote">
+                    "The speed of twilight conversion is insane. What used to take hours of manual photoshop editing is
+                    completed in seconds with a quality level that buyers can't distinguish from authentic sunset shots."
+                  </p>
+                  <div className="testimonial-profile">
+                    <img
+                      src="https://d37vt2dds2nfmk.cloudfront.net/20250825/eb6c55cb-f273-426c-bf60-1ae8c5e28f02.webp"
+                      alt="Ron Givon"
+                      className="testimonial-avatar"
+                    />
+                    <div className="testimonial-meta">
+                      <span className="testimonial-name">Ron Givon</span>
+                      <span className="testimonial-role">Real Estate Photographer</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Testimonial 3 */}
               <div className="testimonial-slide">
-                <p className="testimonial-quote">
-                  "Virtual staging with SmartSpace AI allowed me to list properties 3 days faster than working with local
-                  contractors. Properties command 20% higher offers when staged correctly. Essential SaaS for any modern
-                  broker."
-                </p>
-                <div className="testimonial-profile">
-                  <img
-                    src="https://d37vt2dds2nfmk.cloudfront.net/20250825/329fd64a-b004-4d40-9bb2-e98de1b2c324.webp"
-                    alt="Joseph Allegra"
-                    className="testimonial-avatar"
-                  />
-                  <div className="testimonial-meta">
-                    <span className="testimonial-name">Joseph Allegra</span>
-                    <span className="testimonial-role">Realtor, RE/MAX Group</span>
+                <div className="testimonial-content-wrapper">
+                  <svg className="quote-icon" width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
+                  </svg>
+                  <p className="testimonial-quote">
+                    "Virtual staging with SmartSpace AI allowed me to list properties 3 days faster than working with local
+                    contractors. Properties command 20% higher offers when staged correctly. Essential SaaS for any modern
+                    broker."
+                  </p>
+                  <div className="testimonial-profile">
+                    <img
+                      src="https://d37vt2dds2nfmk.cloudfront.net/20250825/329fd64a-b004-4d40-9bb2-e98de1b2c324.webp"
+                      alt="Joseph Allegra"
+                      className="testimonial-avatar"
+                    />
+                    <div className="testimonial-meta">
+                      <span className="testimonial-name">Joseph Allegra</span>
+                      <span className="testimonial-role">Realtor, RE/MAX Group</span>
+                    </div>
                   </div>
                 </div>
               </div>
