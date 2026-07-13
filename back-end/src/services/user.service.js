@@ -50,8 +50,8 @@ const updateProfile = async (userId, updateFields, file) => {
         }
       });
     }
-    // Store relative path in DB (e.g., uploads/profile-12345.jpg)
-    user.profile.avatar = `uploads/${file.filename}`;
+    // Store relative path in DB (e.g., uploads/profiles/profile-12345.jpg)
+    user.profile.avatar = `uploads/profiles/${file.filename}`;
   }
 
   // Update text fields

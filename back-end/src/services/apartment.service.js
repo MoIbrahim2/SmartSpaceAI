@@ -17,7 +17,7 @@ const createApartment = async (userId, apartmentData, file) => {
   let coverImage = undefined;
   if (file) {
     coverImage = {
-      url: `uploads/${file.filename}`,
+      url: `uploads/apartments/${file.filename}`,
       storageProvider: 'local',
       fileName: file.filename,
       uploadedAt: new Date()
@@ -37,16 +37,14 @@ const createApartment = async (userId, apartmentData, file) => {
 };
 
 /**
- * Fetch apartments with search, filters, and pagination
+ * Fetch apartments with search, filters, and pagination for the authenticated user
+ * @param {string} userId - Requesting user ID
  * @param {Object} query - Express request query object
  * @returns {Promise<Object>} Paginated apartments list
  */
-const getApartments = async (query = {}) => {
-  const filter = {};
+const getApartments = async (userId, query = {}) => {
+  const filter = { ownerId: userId };
 
-  if (query.ownerId) {
-    filter.ownerId = query.ownerId;
-  }
   if (query.status) {
     filter.status = query.status;
   }
@@ -79,14 +77,19 @@ const getApartments = async (query = {}) => {
 };
 
 /**
- * Fetch a single apartment by ID
+ * Fetch a single apartment by ID, enforcing ownership
+ * @param {string} userId - Requesting user ID
  * @param {string} apartmentId
  * @returns {Promise<Object>} Apartment document
  */
-const getApartmentById = async (apartmentId) => {
+const getApartmentById = async (userId, apartmentId) => {
   const apartment = await Apartment.findById(apartmentId).populate('ownerId', 'profile');
   if (!apartment) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'apartment.not_found');
+  }
+  const ownerId = apartment.ownerId._id ? apartment.ownerId._id.toString() : apartment.ownerId.toString();
+  if (ownerId !== userId.toString()) {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'apartment.forbidden');
   }
   return apartment;
 };
@@ -115,13 +118,13 @@ const updateApartment = async (userId, apartmentId, updateFields, file) => {
   // Handle cover image upload replacement
   if (file) {
     if (apartment.coverImage && apartment.coverImage.fileName) {
-      const oldImagePath = path.join(process.cwd(), 'uploads', apartment.coverImage.fileName);
+      const oldImagePath = path.join(process.cwd(), 'uploads', 'apartments', apartment.coverImage.fileName);
       fs.unlink(oldImagePath, (err) => {
         if (err) console.error(`Failed to delete old cover image: ${err.message}`);
       });
     }
     apartment.coverImage = {
-      url: `uploads/${file.filename}`,
+      url: `uploads/apartments/${file.filename}`,
       storageProvider: 'local',
       fileName: file.filename,
       uploadedAt: new Date()
@@ -168,7 +171,7 @@ const deleteApartment = async (userId, apartmentId) => {
 
   // Clean up cover image file
   if (apartment.coverImage && apartment.coverImage.fileName) {
-    const imagePath = path.join(process.cwd(), 'uploads', apartment.coverImage.fileName);
+    const imagePath = path.join(process.cwd(), 'uploads', 'apartments', apartment.coverImage.fileName);
     fs.unlink(imagePath, (err) => {
       if (err) console.error(`Failed to delete cover image: ${err.message}`);
     });

@@ -20,9 +20,9 @@ const parseRoomBody = (req, res, next) => {
   next();
 };
 
-// Public retrieval routes
-router.get('/', roomController.getRooms);
-router.get('/:id', roomController.getRoomById);
+// Protected retrieval routes
+router.get('/', protect, roomController.getRooms);
+router.get('/:id', protect, roomController.getRoomById);
 
 // Protected mutation routes
 router.post('/', protect, uploadRoomSourceImages, parseRoomBody, validate(createRoomSchema), roomController.createRoom);
