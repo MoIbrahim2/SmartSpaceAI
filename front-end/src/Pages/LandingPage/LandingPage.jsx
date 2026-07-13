@@ -5,25 +5,25 @@ import "./LandingPage.css";
 
 const toolsData = {
   staging: {
-    before: "/img/img2.jpeg",
-    after: "/img/img3.jpeg",
+    before: "/img/image-before2.png",
+    after: "/img/image-after2.png",
     beforeLabel: "Original",
     afterLabel: "Staged",
   },
   twilight: {
-    before: "/img/img4.jpeg",
-    after: "/img/img5.jpeg",
+    before: "/img/image-before.png",
+    after: "/img/image-after.png",
     beforeLabel: "Daytime",
     afterLabel: "Twilight",
   },
   lawn: {
     before: "/img/img6.jpeg",
-    after: "/img/8_1.webp",
+    after: "/img/image11.png",
     beforeLabel: "Patchy Lawn",
     afterLabel: "Green Lawn",
   },
   weather: {
-    before: "/img/15.webp",
+    before: "/img/image12.png",
     after: "/img/image.png",
     beforeLabel: "Gloom / Clouds",
     afterLabel: "Sunny Sky",
@@ -525,7 +525,7 @@ const LandingPage = () => {
 
           {/* Floating Badge 1 (Left - Add Furniture) */}
           <div className="floating-badge floating-badge-1 glass-card">
-            <img src="/img/img3.jpeg" alt="Add Furniture" className="floating-thumb" />
+            <img src="/img/image1.png" alt="Add Furniture" className="floating-thumb" />
             <div className="floating-info">
               <span className="floating-title">Add Furniture</span>
               <span className="floating-desc">Instantly stage empty spaces with 3D furniture.</span>
@@ -534,7 +534,7 @@ const LandingPage = () => {
 
           {/* Floating Badge 2 (Right - Rain to Shine) */}
           <div className="floating-badge floating-badge-2 glass-card">
-            <img src="/img/15.webp" alt="Rain to Shine" className="floating-thumb" />
+            <img src="/img/image12.png" alt="Rain to Shine" className="floating-thumb" />
             <div className="floating-info">
               <span className="floating-title">Rain to Shine</span>
               <span className="floating-desc">Remove rain, dark clouds, and gloom instantly.</span>
@@ -748,12 +748,12 @@ const LandingPage = () => {
               <div className="visual-card-stack">
                 {/* Staged Room Preview */}
                 <div className="visual-card main-card">
-                  <img src="/img/img3.jpeg" alt="Staged Living Space Preview" />
+                  <img src="/img/image-after.png" alt="Staged Living Space Preview" />
                   <div className="visual-badge">Staged</div>
                 </div>
                 {/* Original Room Preview */}
                 <div className="visual-card secondary-card">
-                  <img src="/img/img2.jpeg" alt="Original Empty Living Space" />
+                  <img src="/img/image-before.png" alt="Original Empty Living Space" />
                   <div className="visual-badge">Empty</div>
                 </div>
               </div>
@@ -993,42 +993,42 @@ const LandingPage = () => {
               </div>
             </div>
             <div className="gallery-item">
-              <img src="/img/15.webp" alt="Staged Bedroom Design" />
+              <img src="/img/bedroom.png" alt="Staged Bedroom Design" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">Bedroom</span>
                 <h4 className="gallery-title">Minimalist Scandinavian Retreat</h4>
               </div>
             </div>
             <div className="gallery-item">
-              <img src="/img/8_1.webp" alt="Twilight Staged House Patio" />
+              <img src="/img/Outdoor-Patio.png" alt="Twilight Staged House Patio" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">Outdoor Patio</span>
                 <h4 className="gallery-title">Sunset Garden Oasis</h4>
               </div>
             </div>
             <div className="gallery-item">
-              <img src="/img/img2.jpeg" alt="Staged Dining Room" />
+              <img src="/img/dining-room.png" alt="Staged Dining Room" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">Dining Room</span>
                 <h4 className="gallery-title">Contemporary Bistro Layout</h4>
               </div>
             </div>
             <div className="gallery-item">
-              <img src="/img/img3.jpeg" alt="Staged Living Room Space" />
+              <img src="/img/image1.png" alt="Staged Living Room Space" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">Living Space</span>
                 <h4 className="gallery-title">Urban Loft Lounge</h4>
               </div>
             </div>
             <div className="gallery-item">
-              <img src="/img/img4.jpeg" alt="Enhanced Photo Quality Study" />
+              <img src="/img/office.png" alt="Enhanced Photo Quality Study" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">Office / Study</span>
                 <h4 className="gallery-title">Executive Workspace</h4>
               </div>
             </div>
             <div className="gallery-item">
-              <img src="/img/img5.jpeg" alt="Kitchen Material Overlay" />
+              <img src="/img/kitchen.png" alt="Kitchen Material Overlay" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">Kitchen</span>
                 <h4 className="gallery-title">High-End Quartz Island</h4>
@@ -1083,7 +1083,7 @@ const LandingPage = () => {
             <div className="video-modal-body">
               <iframe
                 id="video-iframe"
-                src="https://www.youtube.com/embed/T48zE9UfUhs?autoplay=1"
+                src="https://www.youtube.com/embed/kVDoOivVNQc?si=AYqmEaJ_pU6qfrKt&autoplay=1"
                 title="SmartSpace AI Video Guide"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
