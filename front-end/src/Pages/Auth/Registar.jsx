@@ -55,9 +55,9 @@ const Register = () => {
     <div className="min-h-screen overflow-x-hidden selection:bg-primary selection:text-white">
       <AuthHeader />
       <main className="flex min-h-screen w-full flex-col pt-20 md:flex-row">
-        <section className="relative flex h-64 w-full items-center justify-center overflow-hidden md:h-screen md:w-1/2">
+        <section className="relative flex h-64 w-full items-center justify-center overflow-hidden md:min-h-[calc(100vh-5rem)] md:h-auto md:w-1/2">
           <div
-            className="absolute inset-0 z-0 scale-105 bg-cover"
+            className="absolute inset-0 z-0 scale-105 bg-cover bg-center"
             style={{
               backgroundImage:
                 "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAECV86QIDbLqCj-StzHK5q__v117f5ZgBsJ4uhI4u6On-yr5QvLPhY52-wbXn4gveHo4K-UY6Gi8gh4yUjPDJYKAHabrGeU1OVW0dX6PFBwCxCLlqDy7ciP_OO5iDLnZsQ24V3Nk7p4o59o799Swytsdd8pGXnimbumr9HGMpDyqo5ENaJG0piSHp0dSGQfNyILR6cnSryRDJmcsOkh3rJNjj3insrpjFaycxbVK0quAl2VqA7d8Jt')",

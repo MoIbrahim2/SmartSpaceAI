@@ -39,9 +39,9 @@ const Login = () => {
     <div className="min-h-screen overflow-x-hidden text-on-surface selection:bg-primary selection:text-white">
       <AuthHeader />
       <main className="flex min-h-screen w-full flex-col pt-20 md:flex-row">
-        <section className="relative flex h-64 w-full items-center justify-center overflow-hidden md:h-screen md:w-1/2">
+        <section className="relative flex h-64 w-full items-center justify-center overflow-hidden md:min-h-[calc(100vh-5rem)] md:h-auto md:w-1/2">
           <div
-            className="absolute inset-0 z-0 scale-105 bg-cover"
+            className="absolute inset-0 z-0 scale-105 bg-cover bg-center"
             style={{
               backgroundImage:
                 "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCHp4ZIqIomzFkHSjBBx14sVRUI7ZV5UQ2xYqSnT3TciafPr8JbngCQYkI9sjc7MNjDCoCOfVjAIzaz31KBUS1HAjI09UC6p5d-Kfaf-WBOiq5xLx9kT2lA5-UCViGPC45P6upgRaSSQleuHUmXKVTlbB6yd12GNfR4YENrCcjBsq5FnrHisUnpQV9hRwMQ0dF3q9EMCvJGtxRV1-gKlylmQZdPkco6kgTQH7iWAkE-1InA5ZadwwzI')",
