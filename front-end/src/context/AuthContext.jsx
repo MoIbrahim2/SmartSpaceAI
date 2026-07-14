@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { signin as signinApi, signup as signupApi, logout as logoutApi } from "../api";
+import { signin as signinApi, signup as signupApi, logout as logoutApi, getProfile } from "../api";
 
 const AuthContext = createContext(null);
 
@@ -13,7 +13,21 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (token) {
-      setLoading(false);
+      const syncProfile = async () => {
+        try {
+          const { data } = await getProfile();
+          if (data.success && data.data) {
+            const updatedUser = data.data.user || data.data;
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setUser(updatedUser);
+          }
+        } catch (err) {
+          console.error("Profile sync failed:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      syncProfile();
     } else {
       setUser(null);
       setLoading(false);

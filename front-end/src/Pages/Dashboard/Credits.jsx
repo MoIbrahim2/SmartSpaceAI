@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { createCheckout, getPaymentHistory } from "../../api";
+import { createCheckout, getPaymentHistory, getProfile } from "../../api";
 import Icon from "../../Components/Icon";
 
 const priceFormat = (amountPiasters) =>
@@ -68,8 +68,23 @@ const Credits = () => {
         setHistoryLoading(false);
       }
     };
+
+    const fetchProfile = async () => {
+      try {
+        const { data } = await getProfile();
+        if (data.success && data.data) {
+          const updatedUser = data.data.user || data.data;
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+      } catch (err) {
+        console.error("Failed to sync profile:", err);
+      }
+    };
+
     fetchHistory();
-  }, []);
+    fetchProfile();
+  }, [setUser]);
 
   const handleCheckout = async (tier) => {
     if (loadingTier) return;
