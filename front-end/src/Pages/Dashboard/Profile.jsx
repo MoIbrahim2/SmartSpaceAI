@@ -12,10 +12,10 @@ const Profile = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    dateOfBirth: "",
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    email: user?.email || "",
+    dateOfBirth: user?.dateOfBirth ? user.dateOfBirth.slice(0, 10) : "",
   });
   const [profileImage, setProfileImage] = useState(null);
 
@@ -25,11 +25,18 @@ const Profile = () => {
         const { data } = await getProfile();
         if (data.success && data.data?.user) {
           const u = data.data.user;
+          const firstName = u.profile?.firstName || u.firstName || "";
+          const lastName = u.profile?.lastName || u.lastName || "";
+          const email = u.authentication?.email || u.email || "";
+          const dateOfBirth = u.profile?.dateOfBirth 
+            ? u.profile.dateOfBirth.slice(0, 10) 
+            : (u.dateOfBirth ? u.dateOfBirth.slice(0, 10) : "");
+
           setForm({
-            firstName: u.firstName || "",
-            lastName: u.lastName || "",
-            email: u.email || "",
-            dateOfBirth: u.dateOfBirth ? u.dateOfBirth.slice(0, 10) : "",
+            firstName,
+            lastName,
+            email,
+            dateOfBirth,
           });
           setUser(u);
         }

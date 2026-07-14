@@ -36,6 +36,8 @@ import {
   Diamond,
   DoorOpen,
   Inbox,
+  CheckCircle2,
+  Receipt,
 } from "lucide-react";
 
 const iconMap = {
@@ -76,6 +78,8 @@ const iconMap = {
   diamond: Diamond,
   meeting_room: DoorOpen,
   inbox: Inbox,
+  check_circle: CheckCircle2,
+  receipt_long: Receipt,
 };
 
 export default function Icon({ name, size = 24, className = "", ...props }) {
