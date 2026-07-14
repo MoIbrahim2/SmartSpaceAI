@@ -10,6 +10,7 @@ import RoomDetail from "../Pages/Dashboard/RoomDetail";
 import MyRooms from "../Pages/Dashboard/MyRooms";
 import Profile from "../Pages/Dashboard/Profile";
 import RoomGeneration from "../Pages/Dashboard/RoomGeneration";
+import PaymentSuccess from "../Pages/Dashboard/PaymentSuccess";
 import NotFound from "../Pages/NotFound";
 import LandingPage from "../Pages/LandingPage/LandingPage";
 import ProtectedRoute from "../Components/ProtectedRoute";
@@ -43,6 +44,7 @@ const router = createBrowserRouter([
       { path: "/credits", element: <Credits /> },
       { path: "/billing", element: <Credits /> },
       { path: "/profile", element: <Profile /> },
+      { path: "/payment-success", element: <PaymentSuccess /> },
     ],
   },
   {

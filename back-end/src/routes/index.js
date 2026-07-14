@@ -6,6 +6,7 @@ const apartmentRoutes = require('./apartment.routes');
 const roomRoutes = require('./room.routes');
 const generationRoutes = require('./generation.routes');
 const contactRoutes = require('./contact.routes');
+const billingRoutes = require('./billing.routes');
 
 // Health check for azure vm
 router.get("/health", (req, res) => {
@@ -23,5 +24,6 @@ router.use('/apartments', apartmentRoutes);
 router.use('/rooms', roomRoutes);
 router.use('/generations', generationRoutes);
 router.use('/contact', contactRoutes);
+router.use('/billing', billingRoutes);
 
 module.exports = router;

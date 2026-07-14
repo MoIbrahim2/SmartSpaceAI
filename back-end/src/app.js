@@ -32,6 +32,9 @@ app.use(i18nMiddleware);
 // Apply Rate Limiting
 app.use('/api', limiter);
 
+// Stripe webhook needs raw body for signature verification (must be before express.json)
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
+
 // Parse JSON request bodies
 app.use(express.json({ limit: '10kb' }));
 

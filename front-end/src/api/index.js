@@ -3,4 +3,5 @@ export * from "./ApartmentApi";
 export * from "./RoomApi";
 export * from "./GenerationApi";
 export * from "./UserApi";
+export * from "./BillingApi";
 export { default, API_HOST, BASE_URL } from "./axios";
