@@ -12,6 +12,7 @@ import RoomDetail from "./Pages/Dashboard/RoomDetail";
 import MyRooms from "./Pages/Dashboard/MyRooms";
 import Profile from "./Pages/Dashboard/Profile";
 import RoomGeneration from "./Pages/Dashboard/RoomGeneration";
+import PaymentSuccess from "./Pages/Dashboard/PaymentSuccess";
 import NotFound from "./Pages/NotFound";
 import LandingPage from "./Pages/LandingPage/LandingPage";
 
@@ -42,6 +43,7 @@ function App() {
             <Route path="/credits" element={<Credits />} />
             <Route path="/billing" element={<Credits />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
