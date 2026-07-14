@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Icon from "./Icon";
 import { createApartment } from "../api";
+import { useTranslation } from "react-i18next";
 
 export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -56,7 +58,7 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
         onCreated(data.data.apartment);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to create apartment.";
+      const msg = err.response?.data?.message || t("createModal.failedCreateApartment");
       setError(msg);
     } finally {
       setLoading(false);
@@ -78,7 +80,7 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
-            Create Apartment
+            {t("createModal.createApartmentTitle")}
           </h2>
           <button
             onClick={onClose}
@@ -99,13 +101,13 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
           {/* Name */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-on-surface pl-1">
-              Name <span className="text-error">*</span>
+              {t("createModal.nameLabel")} <span className="text-error">*</span>
             </label>
             <input
               type="text"
               name="name"
               required
-              placeholder="e.g. My Studio Apartment"
+              placeholder={t("createModal.namePlaceholderApt")}
               className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
               value={formData.name}
               onChange={handleChange}
@@ -114,11 +116,11 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">Description</label>
+            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.descriptionLabel")}</label>
             <textarea
               name="description"
               rows={2}
-              placeholder="Brief description of your apartment..."
+              placeholder={t("createModal.descriptionPlaceholderApt")}
               className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0 resize-none"
               value={formData.description}
               onChange={handleChange}
@@ -129,13 +131,13 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-on-surface pl-1">
-                Country <span className="text-error">*</span>
+                {t("createModal.countryLabel")} <span className="text-error">*</span>
               </label>
               <input
                 type="text"
                 name="country"
                 required
-                placeholder="e.g. Egypt"
+                placeholder={t("createModal.countryPlaceholder")}
                 className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
                 value={formData.country}
                 onChange={handleChange}
@@ -143,13 +145,13 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-on-surface pl-1">
-                City <span className="text-error">*</span>
+                {t("createModal.cityLabel")} <span className="text-error">*</span>
               </label>
               <input
                 type="text"
                 name="city"
                 required
-                placeholder="e.g. Cairo"
+                placeholder={t("createModal.cityPlaceholder")}
                 className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
                 value={formData.city}
                 onChange={handleChange}
@@ -160,22 +162,22 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
           {/* Location: District & Street */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">District</label>
+              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.districtLabel")}</label>
               <input
                 type="text"
                 name="district"
-                placeholder="e.g. Maadi"
+                placeholder={t("createModal.districtPlaceholder")}
                 className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
                 value={formData.district}
                 onChange={handleChange}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">Street</label>
+              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.streetLabel")}</label>
               <input
                 type="text"
                 name="street"
-                placeholder="e.g. 15 Nile St"
+                placeholder={t("createModal.streetPlaceholder")}
                 className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
                 value={formData.street}
                 onChange={handleChange}
@@ -186,33 +188,33 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
           {/* Building, Floor, Apt Number */}
           <div className="grid grid-cols-3 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">Building</label>
+              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.buildingLabel")}</label>
               <input
                 type="text"
                 name="building"
-                placeholder="e.g. A"
+                placeholder={t("createModal.buildingPlaceholder")}
                 className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
                 value={formData.building}
                 onChange={handleChange}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">Floor</label>
+              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.floorLabel")}</label>
               <input
                 type="number"
                 name="floor"
-                placeholder="e.g. 3"
+                placeholder={t("createModal.floorPlaceholder")}
                 className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
                 value={formData.floor}
                 onChange={handleChange}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">Apt #</label>
+              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.aptNumberLabel")}</label>
               <input
                 type="text"
                 name="apartmentNumber"
-                placeholder="e.g. 5B"
+                placeholder={t("createModal.aptNumberPlaceholder")}
                 className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
                 value={formData.apartmentNumber}
                 onChange={handleChange}
@@ -222,14 +224,14 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
 
           {/* Cover Image */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">Cover Image</label>
+            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.coverImageLabel")}</label>
             <div
               onClick={() => document.getElementById("apt-cover-input").click()}
               className="flex cursor-pointer items-center gap-3 rounded-xl bg-surface-bright px-4 py-3 text-sm neo-inset transition-colors hover:bg-surface-bright/80"
             >
               <Icon name="image" size={20} className="text-primary" />
               <span className="text-on-surface-variant">
-                {coverImage ? coverImage.name : "Click to upload an image..."}
+                {coverImage ? coverImage.name : t("createModal.clickToUploadImage")}
               </span>
               <input
                 type="file"
@@ -252,7 +254,7 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
             ) : (
               <>
                 <Icon name="add" size={20} />
-                Create Apartment
+                {t("createModal.createApartmentBtn")}
               </>
             )}
           </button>

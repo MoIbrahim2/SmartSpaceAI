@@ -3,9 +3,11 @@ import { Link, useNavigate, Navigate } from "react-router-dom";
 import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const Register = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signup, user, loading: authLoading } = useAuth();
 
@@ -33,11 +35,11 @@ const Register = () => {
     e.preventDefault();
     setError("");
     if (!agree) {
-      setError("You must agree to the Terms of Service.");
+      setError(t("auth.termsError"));
       return;
     }
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("auth.passwordsMatchError"));
       return;
     }
     setLoading(true);
@@ -45,7 +47,7 @@ const Register = () => {
       await signup(form);
       navigate("/home", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Registration failed. Please try again.");
+      setError(err.response?.data?.message || err.message || t("auth.regFailed"));
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,7 @@ const Register = () => {
     <div className="min-h-screen overflow-x-hidden selection:bg-primary selection:text-white">
       <AuthHeader />
       <main className="flex min-h-screen w-full flex-col pt-20 md:flex-row">
-        <section className="relative flex h-64 w-full items-center justify-center overflow-hidden md:min-h-[calc(100vh-5rem)] md:h-auto md:w-1/2">
+        <section className="relative flex min-h-[300px] w-full items-center justify-center overflow-hidden md:w-1/2 md:min-h-[calc(100vh-5rem)] md:h-auto">
           <div
             className="absolute inset-0 z-0 scale-105 bg-cover bg-center"
             style={{
@@ -65,22 +67,22 @@ const Register = () => {
           >
             <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
           </div>
-          <div className="relative z-10 px-6 text-center">
+          <div className="relative z-10 px-6 text-center py-20">
             <h1 className="text-4xl font-headline font-extrabold tracking-tight text-white drop-shadow-2xl md:text-6xl">
-              SmartSpace AI
+              {t("common.logoMain")}
             </h1>
             <p className="mx-auto mt-4 max-w-md text-lg font-medium text-white/90 drop-shadow-lg">
-              Experience the future of interior design with intelligent spatial awareness.
+              {t("landing.heroLead")}
             </p>
           </div>
         </section>
 
-        <section className="flex w-full flex-col items-center justify-center overflow-y-auto bg-surface p-8 md:w-1/2 md:p-16 lg:p-24">
+        <section className="flex w-full flex-col items-center justify-center bg-surface p-8 md:w-1/2 md:p-16 lg:p-24">
           <div className="w-full max-w-md">
-            <header className="mb-10 pb-2 text-center md:text-left">
-              <h2 className="text-3xl font-headline font-semibold text-on-surface">Create Account</h2>
+            <header className="mb-10 pb-2 text-center md:text-left rtl:md:text-right">
+              <h2 className="text-3xl font-headline font-semibold text-on-surface">{t("auth.createAccount")}</h2>
               <p className="mt-2 font-medium text-on-surface-variant">
-                Join our community of visionaries today.
+                {t("auth.joinVisionaries")}
               </p>
             </header>
 
@@ -93,7 +95,7 @@ const Register = () => {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="flex flex-col gap-2">
-                  <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-firstname">First Name</label>
+                  <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-firstname">{t("auth.firstName")}</label>
                   <input
                     className="h-12 w-full rounded-full border-none bg-surface px-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="John"
@@ -107,7 +109,7 @@ const Register = () => {
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-lastname">Last Name</label>
+                  <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-lastname">{t("auth.lastName")}</label>
                   <input
                     className="h-12 w-full rounded-full border-none bg-surface px-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="Doe"
@@ -123,11 +125,11 @@ const Register = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-email">Email</label>
+                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-email">{t("auth.emailAddress")}</label>
                 <div className="relative flex items-center">
-                  <Icon name="mail" className="absolute left-5 text-outline" />
+                  <Icon name="mail" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="john.doe@example.com"
                     type="email"
                     autoComplete="email"
@@ -141,11 +143,11 @@ const Register = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-dob">Date of Birth</label>
+                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-dob">{t("auth.dateOfBirth")}</label>
                 <div className="relative flex items-center">
-                  <Icon name="calendar_today" className="absolute left-5 text-outline" />
+                  <Icon name="calendar_today" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all focus:ring-2 focus:ring-primary/20 neo-inset"
                     type="date"
                     autoComplete="bday"
                     name="dateOfBirth"
@@ -158,11 +160,11 @@ const Register = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-password">Password</label>
+                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-password">{t("auth.password")}</label>
                 <div className="relative flex items-center">
-                  <Icon name="lock" className="absolute left-5 text-outline" />
+                  <Icon name="lock" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="••••••••"
                     type="password"
                     autoComplete="new-password"
@@ -176,11 +178,11 @@ const Register = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-confirm">Confirm Password</label>
+                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-confirm">{t("auth.confirmPassword")}</label>
                 <div className="relative flex items-center">
-                  <Icon name="shield" className="absolute left-5 text-outline" />
+                  <Icon name="shield" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="••••••••"
                     type="password"
                     autoComplete="new-password"
@@ -204,10 +206,7 @@ const Register = () => {
                   {agree && <Icon name="check" className="font-bold text-primary" />}
                 </div>
                 <span className="text-sm font-medium text-on-surface-variant">
-                  I agree to the{" "}
-                  <Link className="text-primary hover:underline" to="/">
-                    Terms of Service
-                  </Link>
+                  {t("auth.agreeToTerms")}
                 </span>
               </label>
 
@@ -216,16 +215,16 @@ const Register = () => {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? "Creating account..." : "Register"}
-                {!loading && <Icon name="arrow_forward" />}
+                {loading ? t("auth.creatingAccount") : t("auth.createAccount")}
+                {!loading && <Icon name="arrow_forward" className="rtl:rotate-180" />}
               </button>
             </form>
 
             <footer className="mt-10 text-center">
               <p className="text-sm font-medium text-on-surface-variant">
-                Already have an account?
-                <Link className="ml-1 font-bold text-primary transition-all hover:underline" to="/login">
-                  Login
+                {t("auth.alreadyHaveAccount")}
+                <Link className="ml-1 rtl:mr-1 font-bold text-primary transition-all hover:underline" to="/login">
+                  {t("common.logIn")}
                 </Link>
               </p>
             </footer>
@@ -234,7 +233,7 @@ const Register = () => {
           <div className="mt-12 flex w-full max-w-md items-center gap-4">
             <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
             <span className="px-2 text-xs font-semibold uppercase tracking-wider text-outline">
-              OR CONTINUE WITH
+              {t("auth.orContinueWith")}
             </span>
             <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
           </div>
@@ -246,11 +245,11 @@ const Register = () => {
                 className="h-5 w-5"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0iZ08QqXPT_57FQNabTR52r9m5yVAETYLB0RtwDtn6V6O1HcmkLmfwO33RTfR-ww1icUtLBpIUp6o-E1JHGGxVKtEmLgIwq18Zj27ymfSVyR9O85cCyGEwARHECx0x75vRCW59e0Pw3JpQwxKgLJ9ti5Vi2Rg6bIZbtQBLg6Atifa25EcViRpkabbM-6dFmhapwDhA1it1g_4Lyjz0hjZkniz8xj1cE-PWyenL_vWOzZPZirWRy9y"
               />
-              <span className="text-sm font-semibold text-on-surface">Google</span>
+              <span className="text-sm font-semibold text-on-surface">{t("auth.google")}</span>
             </button>
             <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
               <Icon name="apps" className="text-on-surface" />
-              <span className="text-sm font-semibold text-on-surface">Apple</span>
+              <span className="text-sm font-semibold text-on-surface">{t("auth.apple")}</span>
             </button>
           </div>
         </section>

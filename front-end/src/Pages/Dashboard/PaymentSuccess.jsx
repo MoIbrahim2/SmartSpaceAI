@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getProfile } from "../../api";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const PaymentSuccess = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const [status, setStatus] = useState("verifying"); // verifying | success | failed
@@ -76,10 +78,10 @@ const PaymentSuccess = () => {
               </svg>
             </div>
             <h2 className="text-2xl font-extrabold text-on-surface">
-              Verifying Payment…
+              {t("dashboard.verifyingPayment")}
             </h2>
             <p className="text-on-surface-variant">
-              Please wait while we confirm your payment and update your credits.
+              {t("dashboard.verifyingPaymentDesc")}
             </p>
           </>
         ) : (
@@ -88,10 +90,10 @@ const PaymentSuccess = () => {
               <Icon name="check_circle" size={48} />
             </div>
             <h2 className="text-2xl font-extrabold text-on-surface">
-              Payment Successful!
+              {t("dashboard.paymentSuccessful")}
             </h2>
             <p className="text-on-surface-variant">
-              Your credits have been added. Redirecting to billing page…
+              {t("dashboard.paymentSuccessfulDesc")}
             </p>
           </>
         )}

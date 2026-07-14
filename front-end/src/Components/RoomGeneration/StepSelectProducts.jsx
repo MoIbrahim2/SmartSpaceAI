@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 
 const StepSelectProducts = ({
@@ -11,13 +12,23 @@ const StepSelectProducts = ({
   baseBudget,
   percent,
 }) => {
+  const { t, i18n } = useTranslation();
+
+  const formatCurrency = (val) => {
+    return new Intl.NumberFormat(i18n.language, {
+      style: "currency",
+      currency: i18n.language.startsWith("ar") ? "EGP" : "USD",
+      maximumFractionDigits: 0
+    }).format(val);
+  };
+
   return (
     <div className="bg-background rounded-[2rem] p-8 lg:p-10 neomorph-raised flex-grow flex flex-col">
       {/* Instructions Panel */}
       <div className="neomorph-inset rounded-2xl p-6 md:p-8 mb-6">
-        <h1 className="font-headline text-2xl font-bold mb-2">Step Three: Choose Products</h1>
+        <h1 className="font-headline text-2xl font-bold mb-2">{t("dashboard.stepThreeTitle")}</h1>
         <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
-          Review the suggested items for your space based on your prompt and budget. You can add or remove items from different categories to customize the final generation. Ensure you stay within your allocated budget for optimal results.
+          {t("dashboard.stepThreeDesc")}
         </p>
       </div>
 
@@ -35,7 +46,7 @@ const StepSelectProducts = ({
                   isCatActive ? "neomorph-inset text-primary" : "neomorph-raised text-on-surface-variant hover:text-primary"
                 }`}
               >
-                {category}
+                {t(`dashboard.category${category}`)}
               </button>
             );
           })}
@@ -44,12 +55,12 @@ const StepSelectProducts = ({
         {/* Budget Indicator */}
         <div className="w-full md:w-64 flex flex-col gap-2 shrink-0">
           <div className="flex justify-between text-xs font-semibold text-on-surface-variant">
-            <span>Budget</span>
-            <span>${currentSpent.toLocaleString()} / ${baseBudget.toLocaleString()}</span>
+            <span>{t("dashboard.budget")}</span>
+            <span className="rtl:flex-row-reverse">{formatCurrency(currentSpent)} / {formatCurrency(baseBudget)}</span>
           </div>
           <div className="h-3 w-full neomorph-inset rounded-full overflow-hidden relative">
             <div
-              className="absolute top-0 left-0 h-full bg-primary rounded-full shadow-[inset_-2px_0px_4px_rgba(0,0,0,0.2)] transition-all duration-300"
+              className="absolute top-0 left-0 rtl:right-0 rtl:left-auto h-full bg-primary rounded-full shadow-[inset_-2px_0px_4px_rgba(0,0,0,0.2)] transition-all duration-300"
               style={{ width: `${percent}%` }}
             ></div>
           </div>
@@ -68,12 +79,11 @@ const StepSelectProducts = ({
               }`}
             >
               <div className="relative w-full h-48 rounded-xl overflow-hidden neomorph-inset p-2 bg-background">
-                <img alt={product.title} className="w-full h-full object-cover rounded-lg" src={product.img} />
+                <img alt={t(`dashboard.productTitle_${product.id}`)} className="w-full h-full object-cover rounded-lg" src={product.img} />
                 <button
                   onClick={() => toggleProduct(product.id)}
-                  className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10 ${
-                    isAdded ? "bg-primary text-white shadow-md" : "bg-background text-primary neomorph-raised hover:text-primary-variant"
-                  }`}
+                  className="absolute top-4 right-4 rtl:right-auto rtl:left-4 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-10 bg-background text-primary neomorph-raised hover:text-primary-variant"
+                  style={isAdded ? { backgroundColor: "var(--md-sys-color-primary)", color: "white" } : {}}
                 >
                   {isAdded ? (
                     <span className="font-bold text-lg leading-none">-</span>
@@ -83,12 +93,12 @@ const StepSelectProducts = ({
                 </button>
               </div>
               <div className="flex flex-col flex-grow">
-                <h3 className="font-headline font-bold text-lg mb-1 text-on-surface">{product.title}</h3>
-                <p className="text-sm text-on-surface-variant line-clamp-2 flex-grow">{product.desc}</p>
-                <p className="font-bold text-primary mt-2 text-base">{product.price}</p>
+                <h3 className="font-headline font-bold text-lg mb-1 text-on-surface">{t(`dashboard.productTitle_${product.id}`)}</h3>
+                <p className="text-sm text-on-surface-variant line-clamp-2 flex-grow">{t(`dashboard.productDesc_${product.id}`)}</p>
+                <p className="font-bold text-primary mt-2 text-base">{formatCurrency(product.numericPrice)}</p>
               </div>
               <button className="w-full py-2.5 rounded-xl neomorph-raised text-sm font-semibold text-on-surface hover:text-primary active:neomorph-inset transition-all mt-auto">
-                View Details
+                {t("dashboard.viewDetails")}
               </button>
             </div>
           );
@@ -101,15 +111,15 @@ const StepSelectProducts = ({
           onClick={() => setStep(2)}
           className="px-6 py-3 rounded-xl font-headline font-semibold text-on-surface-variant bg-background neomorph-raised hover:text-primary active:neomorph-inset transition-all flex items-center gap-2"
         >
-          <Icon name="arrow_forward" size={16} className="rotate-180" />
-          Go Back
+          <Icon name="arrow_forward" size={16} className="rotate-180 rtl:rotate-0" />
+          {t("common.goBack")}
         </button>
         <button
           onClick={() => setStep(4)}
           className="px-8 py-3 rounded-xl font-headline font-semibold text-primary bg-background neomorph-raised hover:text-primary-variant active:neomorph-inset transition-all flex items-center gap-2 group"
         >
-          Next Step
-          <Icon name="arrow_forward" size={16} className="transition-transform group-hover:translate-x-1" />
+          {t("common.nextStep")}
+          <Icon name="arrow_forward" size={16} className="transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
         </button>
       </div>
     </div>

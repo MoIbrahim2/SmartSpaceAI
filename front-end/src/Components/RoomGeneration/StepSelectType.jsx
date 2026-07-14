@@ -1,14 +1,17 @@
+import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 
 const StepSelectType = ({ setForm, setStep, error }) => {
+  const { t } = useTranslation();
+
   return (
     <main className="relative flex flex-grow flex-col items-center justify-center overflow-hidden bg-background p-8 md:p-12 lg:p-16">
       <div className="relative z-10 mb-16 text-center">
         <h1 className="mb-6 text-4xl font-bold uppercase tracking-tight text-on-surface md:text-5xl">
-          Room Generation
+          {t("dashboard.roomGeneration")}
         </h1>
         <p className="mx-auto max-w-lg text-lg text-on-surface-variant">
-          Transform your living spaces with AI-powered interior design. Start from a blank canvas or enhance your existing room photos.
+          {t("dashboard.roomGenerationDesc")}
         </p>
       </div>
 
@@ -29,12 +32,12 @@ const StepSelectType = ({ setForm, setStep, error }) => {
           <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-background text-primary neomorph-inset">
             <Icon name="auto_awesome" size={48} />
           </div>
-          <h3 className="mb-4 text-2xl font-bold text-on-surface">Create from Scratch</h3>
+          <h3 className="mb-4 text-2xl font-bold text-on-surface">{t("dashboard.createFromScratch")}</h3>
           <p className="mb-8 text-center leading-relaxed text-on-surface-variant">
-            Generate entirely new room concepts using our advanced AI engine. Input dimensions, style preferences, and mood.
+            {t("dashboard.createFromScratchDesc")}
           </p>
           <div className="rounded-xl px-8 py-3 font-bold text-primary transition-all duration-300 group-active:neomorph-inset neomorph-raised">
-            Get Started
+            {t("dashboard.getStarted")}
           </div>
         </button>
 
@@ -48,12 +51,12 @@ const StepSelectType = ({ setForm, setStep, error }) => {
           <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-background text-tertiary neomorph-inset">
             <Icon name="photo_camera" size={48} />
           </div>
-          <h3 className="mb-4 text-2xl font-bold text-on-surface">Enhance Room</h3>
+          <h3 className="mb-4 text-2xl font-bold text-on-surface">{t("dashboard.enhanceRoom")}</h3>
           <p className="mb-8 text-center leading-relaxed text-on-surface-variant">
-            Upload a photo of your current space and let SmartSpace AI reimagine the furniture, lighting, and decor seamlessly.
+            {t("dashboard.enhanceRoomDesc")}
           </p>
           <div className="rounded-xl px-8 py-3 font-bold text-tertiary transition-all duration-300 group-active:neomorph-inset neomorph-raised">
-            Upload Photo
+            {t("dashboard.uploadPhotoBtn")}
           </div>
         </button>
       </div>

@@ -1,16 +1,19 @@
+import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 
 const StepRoomGenerationResult = ({ setStep, regenerating, handleRegenerate }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="bg-background rounded-[2rem] p-8 lg:p-10 neomorph-raised flex-grow flex flex-col">
-      <h1 className="text-2xl font-headline font-bold text-on-surface mb-6">Step Four: Room Generation</h1>
+      <h1 className="text-2xl font-headline font-bold text-on-surface mb-6">{t("dashboard.stepFourTitle")}</h1>
 
       {/* Generated Image Display */}
       <div className="flex-grow bg-background rounded-2xl neomorph-inset overflow-hidden flex items-center justify-center min-h-[400px] mb-6 relative">
         {regenerating && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 z-20">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
-            <p className="text-sm font-semibold text-on-surface-variant">Generating room design...</p>
+            <p className="text-sm font-semibold text-on-surface-variant">{t("dashboard.generatingRoomDesign")}</p>
           </div>
         )}
         <img
@@ -26,19 +29,19 @@ const StepRoomGenerationResult = ({ setStep, regenerating, handleRegenerate }) =
           onClick={() => setStep(3)}
           className="px-6 py-2.5 rounded-xl bg-background text-on-surface-variant font-semibold text-sm transition-all neomorph-raised hover:text-on-surface active:neomorph-inset"
         >
-          Go Back
+          {t("common.goBack")}
         </button>
         <button
           onClick={handleRegenerate}
           className="px-6 py-2.5 rounded-xl bg-background text-on-surface-variant font-semibold text-sm transition-all neomorph-raised hover:text-on-surface active:neomorph-inset"
         >
-          Regenerate
+          {t("dashboard.regenerate")}
         </button>
         <button
-          onClick={() => alert("Process Finished!")}
+          onClick={() => alert(t("dashboard.processFinished") || "Process Finished!")}
           className="px-6 py-2.5 rounded-xl bg-background text-primary font-bold text-sm transition-all neomorph-raised hover:text-primary-variant active:neomorph-inset flex items-center gap-2"
         >
-          Finish
+          {t("common.finish")}
           <Icon name="check" size={18} className="text-primary" />
         </button>
       </div>

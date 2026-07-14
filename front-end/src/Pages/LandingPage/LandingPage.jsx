@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 import "./LandingPage.css";
 
@@ -31,6 +32,8 @@ const toolsData = {
 };
 
 const LandingPage = () => {
+  const { t, i18n } = useTranslation();
+
   // Theme Toggle
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -273,7 +276,7 @@ const LandingPage = () => {
     const btn = e.currentTarget;
     const rect = btn.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
+    const y = e.clientY - rect.top - btn.offsetHeight / 2; // Keep compatibility
 
     btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
   };
@@ -282,6 +285,22 @@ const LandingPage = () => {
     const btn = e.currentTarget;
     btn.style.transform = "translate(0, 0)";
   };
+
+  const getBeforeAfterLabels = () => {
+    switch (activeTab) {
+      case "staging":
+        return { before: t("landing.original"), after: t("landing.staged") };
+      case "twilight":
+        return { before: t("landing.daytime"), after: t("landing.twilight") };
+      case "lawn":
+        return { before: t("landing.patchyLawn"), after: t("landing.greenLawn") };
+      case "weather":
+        return { before: t("landing.gloomySky"), after: t("landing.sunnySky") };
+      default:
+        return { before: "", after: "" };
+    }
+  };
+  const labels = getBeforeAfterLabels();
 
   const currentToolData = toolsData[activeTab];
 
@@ -303,7 +322,7 @@ const LandingPage = () => {
             <span className="logo-main">
               SmartSpace<span>.ai</span>
             </span>
-            <span className="logo-sub">INTELLIGENT DESIGN</span>
+            <span className="logo-sub">{t("common.logoSub")}</span>
           </div>
 
           {/* Navigation Links */}
@@ -315,7 +334,7 @@ const LandingPage = () => {
                   className="nav-link"
                   onClick={(e) => scrollToSection(e, "virtual-staging")}
                 >
-                  AI Virtual Staging
+                  {t("landing.tabVirtualStaging")}
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M1 1L5 5L9 1"
@@ -333,24 +352,24 @@ const LandingPage = () => {
                     className="dropdown-link"
                     onClick={(e) => scrollToSection(e, "virtual-staging")}
                   >
-                    <span className="dropdown-title">Add Furniture</span>
-                    <span className="dropdown-desc">Instantly stage empty spaces with high-end designer furniture.</span>
+                    <span className="dropdown-title">{t("landing.addFurnitureTitle")}</span>
+                    <span className="dropdown-desc">{t("landing.dropdownAddFurnitureDesc")}</span>
                   </a>
                   <a
                     href="#virtual-staging"
                     className="dropdown-link"
                     onClick={(e) => scrollToSection(e, "virtual-staging")}
                   >
-                    <span className="dropdown-title">Furniture Eraser</span>
-                    <span className="dropdown-desc">Remove existing items with seamless AI replacement.</span>
+                    <span className="dropdown-title">{t("landing.dropdownFurnitureEraserTitle")}</span>
+                    <span className="dropdown-desc">{t("landing.dropdownFurnitureEraserDesc")}</span>
                   </a>
                   <a
                     href="#virtual-staging"
                     className="dropdown-link"
                     onClick={(e) => scrollToSection(e, "virtual-staging")}
                   >
-                    <span className="dropdown-title">Room Declutter</span>
-                    <span className="dropdown-desc">Clear any room completely to showcase full space.</span>
+                    <span className="dropdown-title">{t("landing.dropdownRoomDeclutterTitle")}</span>
+                    <span className="dropdown-desc">{t("landing.dropdownRoomDeclutterDesc")}</span>
                   </a>
                 </div>
               </li>
@@ -360,7 +379,7 @@ const LandingPage = () => {
                   className="nav-link"
                   onClick={(e) => scrollToSection(e, "comparison")}
                 >
-                  AI Tools
+                  {t("landing.dropdownAiToolsTitle")}
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path
                       d="M1 1L5 5L9 1"
@@ -377,24 +396,24 @@ const LandingPage = () => {
                     className="dropdown-link"
                     onClick={(e) => handleTabScroll(e, "twilight", "comparison")}
                   >
-                    <span className="dropdown-title">Twilight Conversion</span>
-                    <span className="dropdown-desc">Convert day photos to premium evening shots.</span>
+                    <span className="dropdown-title">{t("landing.tabTwilightConversion")}</span>
+                    <span className="dropdown-desc">{t("landing.dropdownTwilightDesc")}</span>
                   </a>
                   <a
                     href="#comparison"
                     className="dropdown-link"
                     onClick={(e) => handleTabScroll(e, "lawn", "comparison")}
                   >
-                    <span className="dropdown-title">Lawn Replacement</span>
-                    <span className="dropdown-desc">Swap dead patches with lush green lawns.</span>
+                    <span className="dropdown-title">{t("landing.tabLawnReplacement")}</span>
+                    <span className="dropdown-desc">{t("landing.dropdownLawnDesc")}</span>
                   </a>
                   <a
                     href="#comparison"
                     className="dropdown-link"
                     onClick={(e) => handleTabScroll(e, "weather", "comparison")}
                   >
-                    <span className="dropdown-title">Weather Control</span>
-                    <span className="dropdown-desc">Remove heavy clouds, fog, and rainy gloom.</span>
+                    <span className="dropdown-title">{t("landing.tabWeatherControl")}</span>
+                    <span className="dropdown-desc">{t("landing.dropdownWeatherDesc")}</span>
                   </a>
                 </div>
               </li>
@@ -404,7 +423,7 @@ const LandingPage = () => {
                   className="nav-link"
                   onClick={(e) => scrollToSection(e, "gallery")}
                 >
-                  Showcase
+                  {t("common.gallery")}
                 </a>
               </li>
               <li className="nav-item">
@@ -413,7 +432,7 @@ const LandingPage = () => {
                   className="nav-link"
                   onClick={(e) => scrollToSection(e, "pricing")}
                 >
-                  Pricing
+                  {t("common.pricing")}
                 </a>
               </li>
               <li className="nav-item">
@@ -422,7 +441,7 @@ const LandingPage = () => {
                   className="nav-link"
                   onClick={(e) => scrollToSection(e, "faq")}
                 >
-                  FAQ
+                  {t("common.faq")}
                 </a>
               </li>
             </ul>
@@ -430,6 +449,24 @@ const LandingPage = () => {
 
           {/* Nav Actions */}
           <div className="nav-actions" style={mobileNavActionsStyle}>
+            <button
+              className="btn btn-lang-toggle"
+              onClick={() => i18n.changeLanguage(i18n.language.startsWith("ar") ? "en" : "ar")}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-primary)",
+                fontSize: "14px",
+                fontWeight: "700",
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "8px",
+              }}
+              aria-label="Toggle Language"
+            >
+              {i18n.language.startsWith("ar") ? "EN" : "العربية"}
+            </button>
             <button
               className="btn btn-theme-toggle"
               onClick={toggleTheme}
@@ -448,7 +485,7 @@ const LandingPage = () => {
               <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={22} />
             </button>
             <Link to="/login" className="btn btn-login">
-              Log In
+              {t("common.logIn")}
             </Link>
             <Link
               to="/register"
@@ -456,7 +493,7 @@ const LandingPage = () => {
               onMouseMove={handleMagneticMouseMove}
               onMouseLeave={handleMagneticMouseLeave}
             >
-              Design Now
+              {t("common.designNow")}
             </Link>
           </div>
 
@@ -501,16 +538,13 @@ const LandingPage = () => {
       <section className="hero">
         <div className="container">
           <div className="hero-content fade-in-up">
-            <span className="hero-pretitle">Next-Gen Virtual Staging</span>
+            <span className="hero-pretitle">{t("landing.heroPretitle")}</span>
             <h1>
-              <span className="serif-title">Redefine space</span>
+              <span className="serif-title">{t("landing.heroTitlePart1")}</span>
               <br />
-              <span className="bronze-highlight">with intelligent design</span>
+              <span className="bronze-highlight">{t("landing.heroTitlePart2")}</span>
             </h1>
-            <p className="lead">
-              Transform any room into your dream space instantly with SmartSpace AI's revolutionary one-click interior
-              design tool. Professional virtual staging made simple.
-            </p>
+            <p className="lead">{t("landing.heroLead")}</p>
             <div className="hero-actions">
               <Link
                 to="/register"
@@ -518,26 +552,26 @@ const LandingPage = () => {
                 onMouseMove={handleMagneticMouseMove}
                 onMouseLeave={handleMagneticMouseLeave}
               >
-                Try It Free
+                {t("landing.tryItFree")}
               </Link>
             </div>
           </div>
 
           {/* Floating Badge 1 (Left - Add Furniture) */}
           <div className="floating-badge floating-badge-1 glass-card">
-            <img src="/img/image1.png" alt="Add Furniture" className="floating-thumb" />
+            <img src="/img/image1.png" alt={t("landing.addFurnitureTitle")} className="floating-thumb" />
             <div className="floating-info">
-              <span className="floating-title">Add Furniture</span>
-              <span className="floating-desc">Instantly stage empty spaces with 3D furniture.</span>
+              <span className="floating-title">{t("landing.addFurnitureTitle")}</span>
+              <span className="floating-desc">{t("landing.addFurnitureDesc")}</span>
             </div>
           </div>
 
           {/* Floating Badge 2 (Right - Rain to Shine) */}
           <div className="floating-badge floating-badge-2 glass-card">
-            <img src="/img/image12.png" alt="Rain to Shine" className="floating-thumb" />
+            <img src="/img/image12.png" alt={t("landing.rainToShineTitle")} className="floating-thumb" />
             <div className="floating-info">
-              <span className="floating-title">Rain to Shine</span>
-              <span className="floating-desc">Remove rain, dark clouds, and gloom instantly.</span>
+              <span className="floating-title">{t("landing.rainToShineTitle")}</span>
+              <span className="floating-desc">{t("landing.rainToShineDesc")}</span>
             </div>
           </div>
         </div>
@@ -545,7 +579,7 @@ const LandingPage = () => {
 
       {/* 3. SOCIAL PROOF / TRUST SECTION */}
       <section className="social-proof">
-        <p>Trusted by Leading Real Estate Professionals</p>
+        <p>{t("landing.trustedBy")}</p>
         <div className="marquee-container">
           <div className="marquee-content" id="logo-ticker">
             <img
@@ -649,28 +683,28 @@ const LandingPage = () => {
       <section className="steps-section">
         <div className="container">
           <div className="section-header fade-in-up">
-            <h2>How it works</h2>
-            <p>Three simple steps to transform your property photography with advanced AI staging.</p>
+            <h2>{t("landing.howItWorksTitle")}</h2>
+            <p>{t("landing.howItWorksSub")}</p>
           </div>
 
           <div className="steps-grid fade-in-up">
             {/* Step 1 */}
             <div className="step-card spotlight-card" onMouseMove={handleSpotlightMouseMove}>
               <div className="step-number">1</div>
-              <h3>Upload Your Photo</h3>
-              <p>Upload a standard photo of an empty room, a patchy yard, or a daylight shot from your device.</p>
+              <h3>{t("landing.step1Title")}</h3>
+              <p>{t("landing.step1Desc")}</p>
             </div>
             {/* Step 2 */}
             <div className="step-card spotlight-card" onMouseMove={handleSpotlightMouseMove}>
               <div className="step-number">2</div>
-              <h3>Choose Style & Action</h3>
-              <p>Select your desired aesthetic—such as Modern, Scandinavian, Industrial—or pick enhancement presets.</p>
+              <h3>{t("landing.step2Title")}</h3>
+              <p>{t("landing.step2Desc")}</p>
             </div>
             {/* Step 3 */}
             <div className="step-card spotlight-card" onMouseMove={handleSpotlightMouseMove}>
               <div className="step-number">3</div>
-              <h3>Get Instant Results</h3>
-              <p>Review the staged photo in seconds. Download in high definition, market-ready quality.</p>
+              <h3>{t("landing.step3Title")}</h3>
+              <p>{t("landing.step3Desc")}</p>
             </div>
           </div>
         </div>
@@ -681,12 +715,9 @@ const LandingPage = () => {
         <div className="container">
           <div className="staging-detail-wrapper">
             <div className="staging-detail-content fade-in-up">
-              <span className="detail-pretitle">Core Technology</span>
-              <h2>AI virtual staging built for B2B scale</h2>
-              <p className="detail-lead">
-                SmartSpace AI staging technology understands depth, lighting, and spatial perspective. Stage empty
-                listings with designer furniture in seconds, and get properties under contract faster.
-              </p>
+              <span className="detail-pretitle">{t("landing.coreTech")}</span>
+              <h2>{t("landing.b2bScaleTitle")}</h2>
+              <p className="detail-lead">{t("landing.b2bScaleLead")}</p>
 
               <ul className="detail-features-list">
                 <li>
@@ -698,11 +729,8 @@ const LandingPage = () => {
                     </svg>
                   </div>
                   <div className="detail-feature-text">
-                    <h4>Perspective Alignment Engine</h4>
-                    <p>
-                      Our algorithms calculate the precise pitch, yaw, and roll of the room to align furniture natively
-                      with floorboards and ceiling heights.
-                    </p>
+                    <h4>{t("landing.perspectiveEngineTitle")}</h4>
+                    <p>{t("landing.perspectiveEngineDesc")}</p>
                   </div>
                 </li>
                 <li>
@@ -720,11 +748,8 @@ const LandingPage = () => {
                     </svg>
                   </div>
                   <div className="detail-feature-text">
-                    <h4>Natural Shadows & Lighting Inheritance</h4>
-                    <p>
-                      Placed objects adapt to window light directions, ambient room temperatures, and ceiling lamps,
-                      casting realistic shadows.
-                    </p>
+                    <h4>{t("landing.naturalShadowsTitle")}</h4>
+                    <p>{t("landing.naturalShadowsDesc")}</p>
                   </div>
                 </li>
                 <li>
@@ -734,11 +759,8 @@ const LandingPage = () => {
                     </svg>
                   </div>
                   <div className="detail-feature-text">
-                    <h4>Curated Designer Collections</h4>
-                    <p>
-                      Choose styles ranging from Contemporary to Scandinavian, Industrial, or Mid-Century, designed by
-                      interior staging experts.
-                    </p>
+                    <h4>{t("landing.curatedCollectionsTitle")}</h4>
+                    <p>{t("landing.curatedCollectionsDesc")}</p>
                   </div>
                 </li>
               </ul>
@@ -749,12 +771,12 @@ const LandingPage = () => {
                 {/* Staged Room Preview */}
                 <div className="visual-card main-card">
                   <img src="/img/image-after.png" alt="Staged Living Space Preview" />
-                  <div className="visual-badge">Staged</div>
+                  <div className="visual-badge">{t("landing.staged")}</div>
                 </div>
                 {/* Original Room Preview */}
                 <div className="visual-card secondary-card">
                   <img src="/img/image-before.png" alt="Original Empty Living Space" />
-                  <div className="visual-badge">Empty</div>
+                  <div className="visual-badge">{t("landing.original")}</div>
                 </div>
               </div>
             </div>
@@ -767,11 +789,8 @@ const LandingPage = () => {
         <div className="container">
           <div className="comparison-wrapper">
             <div className="comparison-info fade-in-up">
-              <h2>Drag to reveal the transformation</h2>
-              <p>
-                Interact with our custom before-after comparison tool below to see the realistic staging results produced
-                by our AI algorithm.
-              </p>
+              <h2>{t("landing.dragToReveal")}</h2>
+              <p>{t("landing.dragDesc")}</p>
 
               <div className="comparison-tabs">
                 <button
@@ -781,7 +800,7 @@ const LandingPage = () => {
                     setSliderPosition(50);
                   }}
                 >
-                  Virtual Staging
+                  {t("landing.tabVirtualStaging")}
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "twilight" ? "active" : ""}`}
@@ -790,7 +809,7 @@ const LandingPage = () => {
                     setSliderPosition(50);
                   }}
                 >
-                  Twilight Conversion
+                  {t("landing.tabTwilightConversion")}
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "lawn" ? "active" : ""}`}
@@ -799,7 +818,7 @@ const LandingPage = () => {
                     setSliderPosition(50);
                   }}
                 >
-                  Lawn Replacement
+                  {t("landing.tabLawnReplacement")}
                 </button>
                 <button
                   className={`tab-btn ${activeTab === "weather" ? "active" : ""}`}
@@ -808,7 +827,7 @@ const LandingPage = () => {
                     setSliderPosition(50);
                   }}
                 >
-                  Weather Control
+                  {t("landing.tabWeatherControl")}
                 </button>
               </div>
             </div>
@@ -860,8 +879,8 @@ const LandingPage = () => {
       <section className="features-section">
         <div className="container">
           <div className="section-header fade-in-up">
-            <h2>Intelligent AI staging toolkit</h2>
-            <p>A full suite of real estate photography enhancement features tailored to boost conversion rates.</p>
+            <h2>{t("landing.toolkitTitle")}</h2>
+            <p>{t("landing.toolkitSub")}</p>
           </div>
 
           <div className="features-grid fade-in-up">
@@ -882,11 +901,8 @@ const LandingPage = () => {
                   <path d="M9 21V9h6v12" />
                 </svg>
               </div>
-              <h3>Add / Remove Furniture</h3>
-              <p>
-                Whether you need to furnish an empty listing or replace existing, outdated decor, our deep-learning
-                staging engine creates seamless, perspective-accurate renders in seconds.
-              </p>
+              <h3>{t("landing.toolkitAddRemoveTitle")}</h3>
+              <p>{t("landing.toolkitAddRemoveDesc")}</p>
             </div>
 
             {/* Feature 2 */}
@@ -906,11 +922,8 @@ const LandingPage = () => {
                   <path d="M12 2v20M2 12h20" />
                 </svg>
               </div>
-              <h3>Twilight Conversion</h3>
-              <p>
-                Turn flat daytime listing photos into eye-catching sunset or twilight views, raising buyer interest and
-                CTR.
-              </p>
+              <h3>{t("landing.toolkitTwilightTitle")}</h3>
+              <p>{t("landing.toolkitTwilightDesc")}</p>
             </div>
 
             {/* Feature 3 */}
@@ -929,8 +942,8 @@ const LandingPage = () => {
                   <path d="M12 2L2 22h20L12 2z" />
                 </svg>
               </div>
-              <h3>Lawn Replacement</h3>
-              <p>Easily swap brown patches, dry dirt, or messy weeds for lush, hyper-realistic green Bermuda grass.</p>
+              <h3>{t("landing.toolkitLawnTitle")}</h3>
+              <p>{t("landing.toolkitLawnDesc")}</p>
             </div>
 
             {/* Feature 4 */}
@@ -949,8 +962,8 @@ const LandingPage = () => {
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
               </div>
-              <h3>Style Swap</h3>
-              <p>Re-furnish a whole room in one click using styles ranging from Mid-Century Modern to Contemporary or Rustic.</p>
+              <h3>{t("landing.toolkitStyleSwapTitle")}</h3>
+              <p>{t("landing.toolkitStyleSwapDesc")}</p>
             </div>
 
             {/* Feature 5 */}
@@ -969,8 +982,8 @@ const LandingPage = () => {
                   <path d="M12 2v2M4.93 4.93l1.41 1.41M2 12h2M6.34 17.66l-1.41 1.41M12 20v2M17.66 17.66l1.41 1.41M20 12h2M17.66 6.34l-1.41-1.41" />
                 </svg>
               </div>
-              <h3>Weather Control</h3>
-              <p>Remove heavy clouds, fog, and rainy gloom, shifting the sky automatically to bright, sunlit blue skies.</p>
+              <h3>{t("landing.toolkitWeatherTitle")}</h3>
+              <p>{t("landing.toolkitWeatherDesc")}</p>
             </div>
           </div>
         </div>
@@ -980,65 +993,65 @@ const LandingPage = () => {
       <section className="gallery-section" id="gallery">
         <div className="container">
           <div className="section-header fade-in-up">
-            <h2>Staged to perfection</h2>
-            <p>Explore high-resolution, photorealistic staging designs generated dynamically by SmartSpace AI using our local assets.</p>
+            <h2>{t("landing.gallerySectionTitle")}</h2>
+            <p>{t("landing.gallerySectionSub")}</p>
           </div>
 
           <div className="gallery-grid fade-in-up">
             <div className="gallery-item">
               <img src="/img/image.png" alt="Staged Living Room View" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Living Room</span>
-                <h4 className="gallery-title">Modern Luxury Suite</h4>
+                <span className="gallery-tag">{t("landing.galleryTagLivingRoom")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleLivingRoom")}</h4>
               </div>
             </div>
             <div className="gallery-item">
               <img src="/img/bedroom.png" alt="Staged Bedroom Design" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Bedroom</span>
-                <h4 className="gallery-title">Minimalist Scandinavian Retreat</h4>
+                <span className="gallery-tag">{t("landing.galleryTagBedroom")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleBedroom")}</h4>
               </div>
             </div>
             <div className="gallery-item">
               <img src="/img/Outdoor-Patio.png" alt="Twilight Staged House Patio" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Outdoor Patio</span>
-                <h4 className="gallery-title">Sunset Garden Oasis</h4>
+                <span className="gallery-tag">{t("landing.galleryTagPatio")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitlePatio")}</h4>
               </div>
             </div>
             <div className="gallery-item">
               <img src="/img/dining-room.png" alt="Staged Dining Room" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Dining Room</span>
-                <h4 className="gallery-title">Contemporary Bistro Layout</h4>
+                <span className="gallery-tag">{t("landing.galleryTagDining")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleDining")}</h4>
               </div>
             </div>
             <div className="gallery-item">
               <img src="/img/image1.png" alt="Staged Living Room Space" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Living Space</span>
-                <h4 className="gallery-title">Urban Loft Lounge</h4>
+                <span className="gallery-tag">{t("landing.galleryTagLivingSpace")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleLivingSpace")}</h4>
               </div>
             </div>
             <div className="gallery-item">
               <img src="/img/office.png" alt="Enhanced Photo Quality Study" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Office / Study</span>
-                <h4 className="gallery-title">Executive Workspace</h4>
+                <span className="gallery-tag">{t("landing.galleryTagOffice")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleOffice")}</h4>
               </div>
             </div>
             <div className="gallery-item">
               <img src="/img/kitchen.png" alt="Kitchen Material Overlay" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Kitchen</span>
-                <h4 className="gallery-title">High-End Quartz Island</h4>
+                <span className="gallery-tag">{t("landing.galleryTagKitchen")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleKitchen")}</h4>
               </div>
             </div>
             <div className="gallery-item">
               <img src="/img/img6.jpeg" alt="Staged Lawn Front Yard" />
               <div className="gallery-overlay">
-                <span className="gallery-tag">Front Yard</span>
-                <h4 className="gallery-title">Lush Emerald Curb Appeal</h4>
+                <span className="gallery-tag">{t("landing.galleryTagFrontYard")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleFrontYard")}</h4>
               </div>
             </div>
           </div>
@@ -1049,8 +1062,8 @@ const LandingPage = () => {
       <section className="video-walkthrough-section" id="how-to-use">
         <div className="container">
           <div className="section-header fade-in-up">
-            <h2>See how easy it is to use</h2>
-            <p>Watch our 2-minute product walkthrough to master empty-room virtual staging, style swapping, and decluttering.</p>
+            <h2>{t("landing.videoTitle")}</h2>
+            <p>{t("landing.videoSub")}</p>
           </div>
 
           <div className="video-container fade-in-up">
@@ -1067,7 +1080,7 @@ const LandingPage = () => {
                 </svg>
               </button>
 
-              <span className="video-duration">2:14 Walkthrough</span>
+              <span className="video-duration">{t("landing.videoDurationText")}</span>
             </div>
           </div>
         </div>
@@ -1098,8 +1111,8 @@ const LandingPage = () => {
       <section className="testimonials-section">
         <div className="container">
           <div className="section-header fade-in-up">
-            <h2>Loved by top agents</h2>
-            <p>See how realtors and brokerages save hundreds of dollars using SmartSpace AI.</p>
+            <h2>{t("landing.testimonialsTitle")}</h2>
+            <p>{t("landing.testimonialsSub")}</p>
           </div>
 
           <div className="testimonials-carousel fade-in-up">
@@ -1115,19 +1128,17 @@ const LandingPage = () => {
                     <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
                   </svg>
                   <p className="testimonial-quote">
-                    "SmartSpace AI has saved me hundreds of dollars per month and given me more creative control over how
-                    my properties are presented. This tool has become an essential part of my marketing strategy, and I
-                    can't recommend it enough."
+                    {t("landing.testimonial1Quote")}
                   </p>
                   <div className="testimonial-profile">
                     <img
                       src="https://d37vt2dds2nfmk.cloudfront.net/20250825/bdc74339-08e5-4d5c-946a-875f069c7e84.webp"
-                      alt="Linda Jennings"
+                      alt={t("landing.testimonial1Author")}
                       className="testimonial-avatar"
                     />
                     <div className="testimonial-meta">
-                      <span className="testimonial-name">Linda Jennings</span>
-                      <span className="testimonial-role">Real Estate Agent, Elite Realty</span>
+                      <span className="testimonial-name">{t("landing.testimonial1Author")}</span>
+                      <span className="testimonial-role">{t("landing.testimonial1Role")}</span>
                     </div>
                   </div>
                 </div>
@@ -1140,18 +1151,17 @@ const LandingPage = () => {
                     <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
                   </svg>
                   <p className="testimonial-quote">
-                    "The speed of twilight conversion is insane. What used to take hours of manual photoshop editing is
-                    completed in seconds with a quality level that buyers can't distinguish from authentic sunset shots."
+                    {t("landing.testimonial2Quote")}
                   </p>
                   <div className="testimonial-profile">
                     <img
                       src="https://d37vt2dds2nfmk.cloudfront.net/20250825/eb6c55cb-f273-426c-bf60-1ae8c5e28f02.webp"
-                      alt="Ron Givon"
+                      alt={t("landing.testimonial2Author")}
                       className="testimonial-avatar"
                     />
                     <div className="testimonial-meta">
-                      <span className="testimonial-name">Ron Givon</span>
-                      <span className="testimonial-role">Real Estate Photographer</span>
+                      <span className="testimonial-name">{t("landing.testimonial2Author")}</span>
+                      <span className="testimonial-role">{t("landing.testimonial2Role")}</span>
                     </div>
                   </div>
                 </div>
@@ -1164,19 +1174,17 @@ const LandingPage = () => {
                     <path d="M14.417 19H17.834L22.958 9V5H14.417V19ZM3.333 19H6.75L11.875 9V5H3.333V19Z" fill="currentColor"/>
                   </svg>
                   <p className="testimonial-quote">
-                    "Virtual staging with SmartSpace AI allowed me to list properties 3 days faster than working with local
-                    contractors. Properties command 20% higher offers when staged correctly. Essential SaaS for any modern
-                    broker."
+                    {t("landing.testimonial3Quote")}
                   </p>
                   <div className="testimonial-profile">
                     <img
                       src="https://d37vt2dds2nfmk.cloudfront.net/20250825/329fd64a-b004-4d40-9bb2-e98de1b2c324.webp"
-                      alt="Joseph Allegra"
+                      alt={t("landing.testimonial3Author")}
                       className="testimonial-avatar"
                     />
                     <div className="testimonial-meta">
-                      <span className="testimonial-name">Joseph Allegra</span>
-                      <span className="testimonial-role">Realtor, RE/MAX Group</span>
+                      <span className="testimonial-name">{t("landing.testimonial3Author")}</span>
+                      <span className="testimonial-role">{t("landing.testimonial3Role")}</span>
                     </div>
                   </div>
                 </div>
@@ -1197,8 +1205,8 @@ const LandingPage = () => {
       <section className="pricing-section" id="pricing">
         <div className="container">
           <div className="section-header fade-in-up">
-            <h2>Top Up Credits</h2>
-            <p>Choose the right credit package to power your virtual staging needs. One-time purchases, no monthly subscription required.</p>
+            <h2>{t("landing.creditsPricingTitle")}</h2>
+            <p>{t("landing.creditsPricingSub")}</p>
           </div>
 
           <div className="pricing-grid fade-in-up">
@@ -1207,101 +1215,45 @@ const LandingPage = () => {
               <div className="plan-icon-container" style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "var(--accent)" }}>
                 <Icon name="token" size={48} />
               </div>
-              <span className="plan-name">Basic Boost</span>
-              <p className="plan-desc">Great for testing and staging a few listings.</p>
+              <span className="plan-name">{t("landing.basicBoostTitle")}</span>
+              <p className="plan-desc">{t("landing.basicBoostDesc")}</p>
               <div className="plan-price-container" style={{ margin: "20px 0" }}>
                 <span className="plan-price" style={{ fontSize: "40px", fontWeight: "800" }}>500</span>
-                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>Credits</span>
+                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>{t("landing.creditsLabel")}</span>
               </div>
               <div className="plan-bonus" style={{ color: "var(--accent)", fontWeight: "700", marginBottom: "20px", fontSize: "14px" }}>
-                +100 FREE Credits
+                {t("landing.basicBoostBonus")}
               </div>
-              <ul className="plan-features" style={{ textAlign: "left", marginBottom: "30px" }}>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  600 Total Credits
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Standard Staging Tool
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Standard Resolution
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  24/7 Email Support
-                </li>
-              </ul>
+
               <Link to="/register" className="btn-pricing magnetic-btn" onMouseMove={handleMagneticMouseMove} onMouseLeave={handleMagneticMouseLeave}>
-                Buy for $29
+                {t("landing.buyForPrice", { price: "375.00" })}
               </Link>
             </div>
 
             {/* Growth Pack */}
             <div className="pricing-card featured spotlight-card" onMouseMove={handleSpotlightMouseMove}>
               <div className="card-glow"></div>
-              <span className="plan-badge">BEST VALUE</span>
+              <span className="plan-badge">{t("landing.bestValueLabel")}</span>
               <div className="plan-icon-container" style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "var(--accent)" }}>
                 <Icon name="database" size={48} />
               </div>
-              <span className="plan-name">Growth Pack</span>
-              <p className="plan-desc">Designed for active agents and photographers.</p>
+              <span className="plan-name">{t("landing.growthPackTitle")}</span>
+              <p className="plan-desc">{t("landing.growthPackDesc")}</p>
               <div className="plan-price-container" style={{ margin: "20px 0" }}>
                 <span className="plan-price" style={{ fontSize: "40px", fontWeight: "800" }}>2,000</span>
-                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>Credits</span>
+                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>{t("landing.creditsLabel")}</span>
               </div>
               <div className="plan-bonus" style={{ color: "var(--accent)", fontWeight: "700", marginBottom: "20px", fontSize: "14px" }}>
-                +500 FREE Credits
+                {t("landing.growthPackBonus")}
               </div>
-              <ul className="plan-features" style={{ textAlign: "left", marginBottom: "30px" }}>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  2,500 Total Credits
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Full Staging & Eraser Tools
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Twilight & Lawn Replacement
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  HD Resolution Output
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Priority 24/7 Support
-                </li>
-              </ul>
+
               <Link
                 to="/register"
-                className="btn-pricing magnetic-btn shine-effect"
+                className="btn-pricing magnetic-btn"
                 onMouseMove={handleMagneticMouseMove}
                 onMouseLeave={handleMagneticMouseLeave}
               >
-                Buy for $99
+                {t("landing.buyForPrice", { price: "1,500.00" })}
               </Link>
             </div>
 
@@ -1310,54 +1262,23 @@ const LandingPage = () => {
               <div className="plan-icon-container" style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "var(--accent)" }}>
                 <Icon name="diamond" size={48} />
               </div>
-              <span className="plan-name">Master Volume</span>
-              <p className="plan-desc">Perfect for brokerages and scaling agencies.</p>
+              <span className="plan-name">{t("landing.masterVolumeTitle")}</span>
+              <p className="plan-desc">{t("landing.masterVolumeDesc")}</p>
               <div className="plan-price-container" style={{ margin: "20px 0" }}>
                 <span className="plan-price" style={{ fontSize: "40px", fontWeight: "800" }}>5,000</span>
-                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>Credits</span>
+                <span className="plan-period" style={{ fontSize: "16px", fontWeight: "600", marginLeft: "4px" }}>{t("landing.creditsLabel")}</span>
               </div>
               <div className="plan-bonus" style={{ color: "var(--accent)", fontWeight: "700", marginBottom: "20px", fontSize: "14px" }}>
-                +1,700 FREE Credits
+                {t("landing.masterVolumeBonus")}
               </div>
-              <ul className="plan-features" style={{ textAlign: "left", marginBottom: "30px" }}>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  6,700 Total Credits
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Unlimited Staging API Access
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Custom Design Style Templates
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Dedicated Account Manager
-                </li>
-                <li>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Ultra-HD Resolution Output
-                </li>
-              </ul>
+              
               <Link
                 to="/register"
                 className="btn-pricing magnetic-btn"
                 onMouseMove={handleMagneticMouseMove}
                 onMouseLeave={handleMagneticMouseLeave}
               >
-                Buy for $199
+                {t("landing.buyForPrice", { price: "3,750.00" })}
               </Link>
             </div>
           </div>
@@ -1368,21 +1289,25 @@ const LandingPage = () => {
       <section className="faq-section" id="faq">
         <div className="container">
           <h2 className="faq-header fade-in-up">
-            <span className="faq-serif">Frequently</span> Asked Questions
+            {i18n.language.startsWith("ar") ? (
+              t("landing.faqTitle")
+            ) : (
+              <>
+                <span className="faq-serif">Frequently</span> Asked Questions
+              </>
+            )}
           </h2>
 
           <div className="faq-list fade-in-up">
             {/* FAQ Item 1 */}
             <div className={`faq-item ${activeFaq === 0 ? "active" : ""}`}>
               <div className="faq-trigger" onClick={() => toggleFaq(0)}>
-                <span className="faq-question">What do you offer?</span>
+                <span className="faq-question">{t("landing.faqQOffer")}</span>
                 <span className="faq-icon">{activeFaq === 0 ? "-" : "+"}</span>
               </div>
               <div className="faq-content">
                 <p className="faq-answer">
-                  We provide a suite of AI-powered design tools, including AI Virtual Staging, AI Photo Editing, and AI
-                  Virtual Tours, designed to help real estate professionals and businesses market properties faster and
-                  more cost-effectively.
+                  {t("landing.faqAOffer")}
                 </p>
               </div>
             </div>
@@ -1390,14 +1315,12 @@ const LandingPage = () => {
             {/* FAQ Item 2 */}
             <div className={`faq-item ${activeFaq === 1 ? "active" : ""}`}>
               <div className="faq-trigger" onClick={() => toggleFaq(1)}>
-                <span className="faq-question">How do your AI products work?</span>
+                <span className="faq-question">{t("landing.faqQWork")}</span>
                 <span className="faq-icon">{activeFaq === 1 ? "-" : "+"}</span>
               </div>
               <div className="faq-content">
                 <p className="faq-answer">
-                  Our state-of-the-art deep learning model analyzes empty or furnished room photos, calculates
-                  perspective lines and lighting, and places realistic, high-definition 3D furniture. Other tools
-                  automatically replace lawns, remove objects, and adjust lighting to produce stunning twilight renders.
+                  {t("landing.faqAWork")}
                 </p>
               </div>
             </div>
@@ -1405,13 +1328,12 @@ const LandingPage = () => {
             {/* FAQ Item 3 */}
             <div className={`faq-item ${activeFaq === 2 ? "active" : ""}`}>
               <div className="faq-trigger" onClick={() => toggleFaq(2)}>
-                <span className="faq-question">Do you offer a free trial?</span>
+                <span className="faq-question">{t("landing.faqQFree")}</span>
                 <span className="faq-icon">{activeFaq === 2 ? "-" : "+"}</span>
               </div>
               <div className="faq-content">
                 <p className="faq-answer">
-                  Yes, you can sign up for a free trial to test our tools. No credit card is required. You get 3 free
-                  credits to stage rooms, convert daylight to twilight, or swap flooring styles.
+                  {t("landing.faqAFree")}
                 </p>
               </div>
             </div>
@@ -1419,14 +1341,12 @@ const LandingPage = () => {
             {/* FAQ Item 4 */}
             <div className={`faq-item ${activeFaq === 3 ? "active" : ""}`}>
               <div className="faq-trigger" onClick={() => toggleFaq(3)}>
-                <span className="faq-question">How does your pricing work?</span>
+                <span className="faq-question">{t("landing.faqQPricing")}</span>
                 <span className="faq-icon">{activeFaq === 3 ? "-" : "+"}</span>
               </div>
               <div className="faq-content">
                 <p className="faq-answer">
-                  We offer both monthly and annual subscription plans depending on your usage requirements. The pricing
-                  scales based on the number of rendering credits needed per month. Custom enterprise API access is
-                  also available.
+                  {t("landing.faqAPricing")}
                 </p>
               </div>
             </div>
@@ -1438,10 +1358,9 @@ const LandingPage = () => {
       <section className="cta-section" id="cta">
         <div className="cta-glow"></div>
         <div className="container fade-in-up">
-          <h2>Start Your Journey Today</h2>
+          <h2>{t("landing.ctaTitle")}</h2>
           <p>
-            Transform empty rooms into stunning, market-ready homes with our cutting-edge virtual staging AI. Join
-            thousands of high-converting brokerages.
+            {t("landing.ctaSub")}
           </p>
           <Link
             to="/register"
@@ -1449,7 +1368,7 @@ const LandingPage = () => {
             onMouseMove={handleMagneticMouseMove}
             onMouseLeave={handleMagneticMouseLeave}
           >
-            Design Now
+            {t("landing.ctaButton")}
           </Link>
         </div>
       </section>
@@ -1461,24 +1380,24 @@ const LandingPage = () => {
             <div className="landing-footer-brand">
               <div className="landing-footer-logo">SmartSpace AI</div>
               <p>
-                Revolutionizing interior design through the power of intelligent spatial awareness and AI-driven creativity.
+                {t("landing.footerDesc")}
               </p>
             </div>
             <div className="landing-footer-col">
-              <h4>Company</h4>
-              <a href="#">About Us</a>
-              <a href="#">Contact Support</a>
-              <a href="#">Careers</a>
+              <h4>{t("landing.footerCompany")}</h4>
+              <a href="#">{t("landing.footerAboutUs")}</a>
+              <a href="#">{t("landing.footerContactSupport")}</a>
+              <a href="#">{t("landing.footerCareers")}</a>
             </div>
             <div className="landing-footer-col">
-              <h4>Legal</h4>
-              <a href="#">Privacy Policy</a>
-              <a href="#">Terms of Service</a>
-              <a href="#">Cookie Policy</a>
+              <h4>{t("landing.footerLegal")}</h4>
+              <a href="#">{t("landing.footerPrivacyPolicy")}</a>
+              <a href="#">{t("landing.footerTermsOfService")}</a>
+              <a href="#">{t("landing.footerCookiePolicy")}</a>
             </div>
           </div>
           <div className="landing-footer-bottom">
-            <span>© 2024 SmartSpace AI. All rights reserved.</span>
+            <span>{t("common.copyright")}</span>
             <div className="landing-footer-icons">
               <span className="landing-footer-icon-btn"><Icon name="public" size={20} /></span>
               <span className="landing-footer-icon-btn"><Icon name="share" size={20} /></span>

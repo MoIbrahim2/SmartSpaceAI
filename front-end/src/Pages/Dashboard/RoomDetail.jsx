@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRoomById } from "../../api";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const RoomDetail = () => {
+  const { t } = useTranslation();
   const { apartmentId, roomId } = useParams();
   const navigate = useNavigate();
 
@@ -22,14 +24,14 @@ const RoomDetail = () => {
         }
       } catch (err) {
         if (err.response?.status !== 401) {
-          setError("Failed to load room data.");
+          setError(t("dashboard.failedLoadRoomData") || "Failed to load room data.");
         }
       } finally {
         setLoading(false);
       }
     };
     fetchRoom();
-  }, [roomId]);
+  }, [roomId, t]);
 
   if (loading) {
     return (
@@ -49,8 +51,8 @@ const RoomDetail = () => {
           onClick={() => navigate(`/apartments/${apartmentId}`)}
           className="flex items-center gap-2 rounded-xl bg-background px-4 py-2 text-sm font-semibold text-primary neomorph-raised"
         >
-          <Icon name="arrow_back" size={16} />
-          Go Back
+          <Icon name="arrow_back" size={16} className="rtl:rotate-180" />
+          {t("common.goBack")}
         </button>
       </div>
     );
@@ -64,8 +66,8 @@ const RoomDetail = () => {
           onClick={() => navigate(`/apartments/${apartmentId}`)}
           className="mb-8 flex items-center gap-2 rounded-xl bg-background px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:text-primary neomorph-raised active:neomorph-inset"
         >
-          <Icon name="arrow_back" size={16} />
-          Back to Rooms
+          <Icon name="arrow_back" size={16} className="rtl:rotate-180" />
+          {t("dashboard.backToRooms")}
         </button>
 
         {/* Room Info Header */}
@@ -104,17 +106,17 @@ const RoomDetail = () => {
             <Icon name="auto_awesome" size={56} className="text-primary/60" />
           </div>
           <h2 className="mb-3 text-2xl font-extrabold text-on-surface">
-            No Room Design Generated Yet
+            {t("dashboard.noRoomDesignTitle")}
           </h2>
           <p className="mb-8 max-w-md text-on-surface-variant leading-relaxed">
-            This room doesn't have an AI-generated design yet. Start the generation process to bring your vision to life with SmartSpace AI.
+            {t("dashboard.noRoomDesignDesc")}
           </p>
           <button
             onClick={() => navigate(`/room-generation?roomId=${roomId}&apartmentId=${apartmentId}`)}
             className="flex h-14 items-center justify-center gap-2 rounded-full bg-primary px-10 font-bold text-white transition-all hover:bg-on-primary-fixed-variant hover:scale-[1.02] active:scale-[0.98] neomorph-raised"
           >
             <Icon name="auto_awesome" size={20} />
-            Create Now
+            {t("common.createNow")}
           </button>
         </div>
       </main>

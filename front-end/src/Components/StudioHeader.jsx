@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
 const StudioHeader = () => {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -57,7 +59,7 @@ const StudioHeader = () => {
               />
             </svg>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-on-surface">SmartSpace AI</h1>
+          <h1 className="text-xl font-bold tracking-tight text-on-surface">SmartSpace</h1>
         </div>
         <div className="flex items-center gap-6 md:gap-8">
           <nav className="hidden md:block space-x-6">
@@ -73,6 +75,13 @@ const StudioHeader = () => {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
+            <button
+              className="px-3 h-10 rounded-xl bg-surface-bright text-on-surface-variant font-bold text-sm transition-all hover:text-primary neo-shadow neo-button flex items-center justify-center"
+              onClick={() => i18n.changeLanguage(i18n.language.startsWith("ar") ? "en" : "ar")}
+              aria-label="Toggle Language"
+            >
+              {i18n.language.startsWith("ar") ? "EN" : "العربية"}
+            </button>
             <button
               className="size-10 rounded-xl bg-surface-bright text-on-surface-variant transition-all hover:text-primary neo-shadow neo-button"
               onClick={toggleTheme}
@@ -105,7 +114,9 @@ const StudioHeader = () => {
               </button>
               {menuOpen && (
                 <div
-                  className="absolute right-0 z-50 mt-4 w-56 rounded-2xl bg-background p-3 neomorph-raised"
+                  className={`absolute z-50 mt-4 w-56 rounded-2xl bg-background p-3 neomorph-raised ${
+                    i18n.language.startsWith("ar") ? "left-0" : "right-0"
+                  }`}
                   onMouseLeave={() => setMenuOpen(false)}
                 >
                   <div className="mb-2 px-4 py-2 text-sm font-medium text-on-surface border-b border-outline/20">
@@ -119,14 +130,14 @@ const StudioHeader = () => {
                     to="/profile"
                   >
                     <Icon name="settings" size={20} />
-                    Settings
+                    {t("common.settings")}
                   </Link>
                   <button
                     onClick={() => { handleLogout(); setMenuOpen(false); }}
                     className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-error transition-all hover:neomorph-inset"
                   >
                     <Icon name="logout" size={20} />
-                    Logout
+                    {t("common.logout")}
                   </button>
                 </div>
               )}

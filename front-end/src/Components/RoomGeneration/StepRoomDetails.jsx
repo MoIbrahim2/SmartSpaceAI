@@ -1,16 +1,19 @@
+import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 
 const StepRoomDetails = ({ form, setForm, setStep, handleFileChange, handleDrop }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="neomorph-raised rounded-[2rem] p-8 lg:p-10 bg-background flex flex-col h-full relative">
-      <h2 className="font-headline font-bold text-2xl mb-2 text-on-surface">Step One: Room Details</h2>
+      <h2 className="font-headline font-bold text-2xl mb-2 text-on-surface">{t("dashboard.stepOneTitle")}</h2>
       <p className="text-on-surface-variant text-sm mb-8 neomorph-inset p-4 rounded-xl bg-background leading-relaxed">
-        Please provide accurate measurements and a clear photo of your space. This ensures the AI generates realistic and proportional design concepts within your budget.
+        {t("dashboard.stepOneDesc")}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-on-surface pl-1">Length (ft)</label>
+          <label className="text-sm font-semibold text-on-surface pl-1 rtl:pl-0 rtl:pr-1">{t("dashboard.lengthFt")}</label>
           <input
             type="number"
             placeholder="e.g. 12"
@@ -20,7 +23,7 @@ const StepRoomDetails = ({ form, setForm, setStep, handleFileChange, handleDrop 
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-on-surface pl-1">Width (ft)</label>
+          <label className="text-sm font-semibold text-on-surface pl-1 rtl:pl-0 rtl:pr-1">{t("dashboard.widthFt")}</label>
           <input
             type="number"
             placeholder="e.g. 10"
@@ -30,7 +33,7 @@ const StepRoomDetails = ({ form, setForm, setStep, handleFileChange, handleDrop 
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-on-surface pl-1">Height (ft)</label>
+          <label className="text-sm font-semibold text-on-surface pl-1 rtl:pl-0 rtl:pr-1">{t("dashboard.heightFt")}</label>
           <input
             type="number"
             placeholder="e.g. 9"
@@ -42,7 +45,7 @@ const StepRoomDetails = ({ form, setForm, setStep, handleFileChange, handleDrop 
       </div>
 
       <div className="flex flex-col gap-2 mb-8 md:w-1/3">
-        <label className="text-sm font-semibold text-on-surface pl-1">Budget ($)</label>
+        <label className="text-sm font-semibold text-on-surface pl-1 rtl:pl-0 rtl:pr-1">{t("dashboard.budget")}</label>
         <input
           type="number"
           placeholder="e.g. 5000"
@@ -54,7 +57,7 @@ const StepRoomDetails = ({ form, setForm, setStep, handleFileChange, handleDrop 
 
       {/* Upload Area */}
       <div className="flex-grow flex flex-col mb-8">
-        <label className="text-sm font-semibold text-on-surface pl-1 mb-2">Upload Room Photo</label>
+        <label className="text-sm font-semibold text-on-surface pl-1 rtl:pl-0 rtl:pr-1 mb-2">{t("dashboard.uploadRoomPhoto")}</label>
         <div
           onClick={() => document.getElementById("file-upload-input").click()}
           onDragOver={(e) => e.preventDefault()}
@@ -71,12 +74,14 @@ const StepRoomDetails = ({ form, setForm, setStep, handleFileChange, handleDrop 
           />
           <Icon name="photo_camera" size={40} className="text-primary mb-4" />
           <h4 className="font-semibold text-on-surface mb-1">
-            {form.images && form.images.length > 0 ? `${form.images.length} file(s) selected` : "Drag and drop or click to browse"}
+            {form.images && form.images.length > 0 
+              ? t("dashboard.filesSelected", { count: form.images.length }) 
+              : t("dashboard.dragDropClick")}
           </h4>
           <p className="text-xs text-on-surface-variant">
             {form.images && form.images.length > 0
               ? Array.from(form.images).map((f) => f.name).join(", ")
-              : "JPG, PNG up to 10MB"}
+              : t("dashboard.uploadLimits")}
           </p>
         </div>
       </div>
@@ -87,15 +92,15 @@ const StepRoomDetails = ({ form, setForm, setStep, handleFileChange, handleDrop 
           onClick={() => setStep(0)}
           className="px-6 py-3 rounded-xl font-headline font-semibold text-on-surface-variant bg-background neomorph-raised hover:text-primary active:neomorph-inset transition-all flex items-center gap-2"
         >
-          <Icon name="arrow_forward" size={16} className="rotate-180" />
-          Go Back
+          <Icon name="arrow_forward" size={16} className="rotate-180 rtl:rotate-0" />
+          {t("common.goBack")}
         </button>
         <button
           onClick={() => setStep(2)}
           className="px-8 py-3 rounded-xl font-headline font-semibold text-primary bg-background neomorph-raised hover:text-primary-variant active:neomorph-inset transition-all flex items-center gap-2"
         >
-          Next
-          <Icon name="arrow_forward" size={16} />
+          {t("common.next")}
+          <Icon name="arrow_forward" size={16} className="rtl:rotate-180" />
         </button>
       </div>
     </div>

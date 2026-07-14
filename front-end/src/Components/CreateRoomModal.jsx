@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Icon from "./Icon";
 import { createRoom } from "../api";
+import { useTranslation } from "react-i18next";
 
 export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentId }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     roomType: "",
@@ -68,7 +70,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
         onCreated(data.data.room);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to create room.";
+      const msg = err.response?.data?.message || t("createModal.failedCreateRoom");
       setError(msg);
     } finally {
       setLoading(false);
@@ -90,7 +92,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
-            Create Room
+            {t("createModal.createRoomTitle")}
           </h2>
           <button
             onClick={onClose}
@@ -111,13 +113,13 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
           {/* Name */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-on-surface pl-1">
-              Room Name <span className="text-error">*</span>
+              {t("createModal.roomNameLabel")} <span className="text-error">*</span>
             </label>
             <input
               type="text"
               name="name"
               required
-              placeholder="e.g. Master Bedroom"
+              placeholder={t("createModal.namePlaceholderRoom")}
               className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
               value={formData.name}
               onChange={handleChange}
@@ -127,29 +129,33 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
           {/* Room Type */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-on-surface pl-1">
-              Room Type <span className="text-error">*</span>
+              {t("createModal.roomTypeLabel")} <span className="text-error">*</span>
             </label>
-            <select
-              name="roomType"
-              required
-              className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface border-none outline-none neo-inset focus:ring-0 appearance-none cursor-pointer"
-              value={formData.roomType}
-              onChange={handleChange}
-            >
-              <option value="" disabled>Select room type...</option>
-              {roomTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                name="roomType"
+                required
+                className="w-full rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface border-none outline-none neo-inset focus:ring-0 appearance-none cursor-pointer"
+                value={formData.roomType}
+                onChange={handleChange}
+              >
+                <option value="" disabled>{t("createModal.selectRoomType")}</option>
+                {roomTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`createModal.roomType_${type.toLowerCase().replace(" ", "")}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">Description</label>
+            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.descriptionLabel")}</label>
             <textarea
               name="description"
               rows={2}
-              placeholder="Brief description of the room..."
+              placeholder={t("createModal.descriptionPlaceholderRoom")}
               className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0 resize-none"
               value={formData.description}
               onChange={handleChange}
@@ -159,11 +165,11 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
           {/* Dimensions */}
           <div>
             <label className="text-sm font-semibold text-on-surface pl-1 mb-2 block">
-              Dimensions <span className="text-error">*</span>
+              {t("createModal.dimensionsLabel")} <span className="text-error">*</span>
             </label>
             <div className="grid grid-cols-4 gap-3">
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">Width</span>
+                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.widthLabel")}</span>
                 <input
                   type="number"
                   name="width"
@@ -175,7 +181,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">Length</span>
+                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.lengthLabel")}</span>
                 <input
                   type="number"
                   name="length"
@@ -187,7 +193,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">Height</span>
+                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.heightLabel")}</span>
                 <input
                   type="number"
                   name="height"
@@ -199,7 +205,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">Unit</span>
+                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.unitLabel")}</span>
                 <select
                   name="unit"
                   className="rounded-xl bg-surface-bright px-3 py-2.5 text-sm text-on-surface border-none outline-none neo-inset focus:ring-0 appearance-none cursor-pointer"
@@ -215,7 +221,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
 
           {/* Source Images */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">Room Photos</label>
+            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.roomPhotosLabel")}</label>
             <div
               onClick={() => document.getElementById("room-images-input").click()}
               className="flex cursor-pointer items-center gap-3 rounded-xl bg-surface-bright px-4 py-3 text-sm neo-inset transition-colors hover:bg-surface-bright/80"
@@ -223,8 +229,8 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
               <Icon name="photo_camera" size={20} className="text-primary" />
               <span className="text-on-surface-variant">
                 {sourceImages
-                  ? `${sourceImages.length} file(s) selected`
-                  : "Click to upload room photos..."}
+                  ? t("dashboard.filesSelected", { count: sourceImages.length })
+                  : t("createModal.clickToUploadPhotos")}
               </span>
               <input
                 type="file"
@@ -248,7 +254,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
             ) : (
               <>
                 <Icon name="add" size={20} />
-                Create Room
+                {t("createModal.createRoomBtn")}
               </>
             )}
           </button>

@@ -4,9 +4,13 @@ import ApartmentCard from "../../Components/ApartmentCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
 import CreateApartmentModal from "../../Components/CreateApartmentModal";
 import { getApartments, deleteApartment } from "../../api";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const Dashboard = () => {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -38,24 +42,24 @@ const Dashboard = () => {
       }
     } catch (err) {
       if (err.response?.status !== 401) {
-        setError("Failed to load apartments.");
+        setError(t("dashboard.failedLoadApartments") || "Failed to load apartments.");
       }
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, page]);
+  }, [debouncedSearch, page, t]);
 
   useEffect(() => {
     fetchApartments();
   }, [fetchApartments]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this apartment?")) return;
+    if (!window.confirm(t("common.confirmDeleteApartment"))) return;
     try {
       await deleteApartment(id);
       fetchApartments();
     } catch {
-      setError("Failed to delete apartment.");
+      setError(t("common.failedDeleteApartment"));
     }
   };
 
@@ -72,8 +76,8 @@ const Dashboard = () => {
             <div className="relative flex h-14 items-center rounded-full bg-surface-bright px-6 neo-inset">
               <Icon name="search" className="text-outline" />
               <input
-                className="ml-3 w-full bg-transparent text-base text-on-surface placeholder:text-outline outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus:ring-transparent"
-                placeholder="Search your apartments..."
+                className="ml-3 rtl:ml-0 rtl:mr-3 w-full bg-transparent text-base text-on-surface placeholder:text-outline outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus:ring-transparent"
+                placeholder={t("dashboard.searchApartments")}
                 type="text"
                 aria-label="Search apartments"
                 autoComplete="off"
@@ -88,12 +92,12 @@ const Dashboard = () => {
             className="flex h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button"
           >
             <Icon name="add" />
-            Create New Apartment
+            {t("dashboard.createNewApartment")}
           </button>
         </div>
 
         <h2 className="mb-8 text-3xl font-extrabold tracking-tight text-on-surface">
-          My Apartments
+          {t("dashboard.myApartments")}
         </h2>
 
         {error && (
@@ -109,8 +113,8 @@ const Dashboard = () => {
         ) : apartments.length === 0 ? (
           <EmptyState
             icon="domain"
-            title="No Apartments Yet"
-            description="Create your first apartment to get started with AI-powered room design."
+            title={t("dashboard.noApartmentsTitle")}
+            description={t("dashboard.noApartmentsDesc")}
           />
         ) : (
           <>
@@ -120,7 +124,7 @@ const Dashboard = () => {
                   <ApartmentCard apartment={apartment} />
                   <button
                     onClick={() => handleDelete(apartment._id)}
-                    className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
+                    className="absolute top-4 right-4 rtl:right-auto rtl:left-4 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
                     aria-label="Delete apartment"
                   >
                     <Icon name="delete" size={14} />
@@ -135,17 +139,17 @@ const Dashboard = () => {
                   disabled={page <= 1}
                   className="rounded-full bg-surface-bright px-6 py-3 font-bold text-primary neo-shadow neo-button disabled:opacity-40"
                 >
-                  Previous
+                  {t("common.previous")}
                 </button>
                 <span className="text-sm font-medium text-on-surface-variant">
-                  Page {page} of {totalPages}
+                  {t("common.pageOf", { page, totalPages })}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
                   className="rounded-full bg-surface-bright px-6 py-3 font-bold text-primary neo-shadow neo-button disabled:opacity-40"
                 >
-                  Next
+                  {t("common.next")}
                 </button>
               </div>
             )}

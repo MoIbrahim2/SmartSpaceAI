@@ -3,9 +3,11 @@ import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const Login = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { signin, user, loading: authLoading } = useAuth();
@@ -29,7 +31,7 @@ const Login = () => {
       await signin(email, password);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Login failed. Please try again.");
+      setError(err.response?.data?.message || err.message || t("auth.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -51,20 +53,20 @@ const Login = () => {
           </div>
           <div className="relative z-10 px-6 text-center">
             <h1 className="text-4xl font-headline font-extrabold tracking-tight text-white drop-shadow-2xl md:text-6xl">
-              SmartSpace AI
+              {t("common.logoMain")}
             </h1>
             <p className="mx-auto mt-4 max-w-md text-lg font-medium text-white/90 drop-shadow-lg">
-              Experience the future of interior design with intelligent spatial awareness.
+              {t("landing.heroLead")}
             </p>
           </div>
         </section>
 
         <section className="flex w-full flex-col items-center justify-center overflow-y-auto bg-surface p-8 md:w-1/2 md:p-16 lg:p-24">
           <div className="w-full max-w-md">
-            <header className="mb-10 pb-2 text-center md:text-left">
-              <h3 className="text-3xl font-headline font-semibold text-on-surface">Welcome back</h3>
+            <header className="mb-10 pb-2 text-center md:text-left rtl:md:text-right">
+              <h3 className="text-3xl font-headline font-semibold text-on-surface">{t("auth.welcomeBack")}</h3>
               <p className="mt-2 font-medium text-on-surface-variant">
-                Access your AI-powered design studio
+                {t("auth.accessStudio")}
               </p>
             </header>
             {error && (
@@ -74,11 +76,11 @@ const Login = () => {
             )}
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="login-email">Email Address</label>
+                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="login-email">{t("auth.emailAddress")}</label>
                 <div className="group relative flex items-center">
-                  <Icon name="mail" className="absolute left-5 text-outline transition-colors group-focus-within:text-primary" />
+                  <Icon name="mail" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline transition-colors group-focus-within:text-primary" />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="name@company.com"
                     type="email"
                     autoComplete="email"
@@ -93,15 +95,15 @@ const Login = () => {
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between px-2">
-                  <label className="text-sm font-semibold text-on-surface-variant" htmlFor="login-password">Password</label>
+                  <label className="text-sm font-semibold text-on-surface-variant" htmlFor="login-password">{t("auth.password")}</label>
                   <Link className="text-xs font-bold text-primary hover:underline" to="/login">
-                    Forgot?
+                    {t("auth.passwordForgot") || "Forgot?"}
                   </Link>
                 </div>
                 <div className="group relative flex items-center">
-                  <Icon name="lock" className="absolute left-5 text-outline transition-colors group-focus-within:text-primary" />
+                  <Icon name="lock" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline transition-colors group-focus-within:text-primary" />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-12 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-12 rtl:pl-12 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
@@ -112,7 +114,7 @@ const Login = () => {
                     required
                   />
                   <button
-                    className="absolute right-5 text-outline hover:text-on-surface focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:rounded"
+                    className="absolute right-5 rtl:right-auto rtl:left-5 text-outline hover:text-on-surface focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:rounded"
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
                     aria-label={showPassword ? "Hide password" : "Show password"}
@@ -133,7 +135,7 @@ const Login = () => {
                   {remember && <Icon name="check" className="font-bold text-primary" />}
                 </div>
                 <span className="select-none text-sm font-medium text-on-surface-variant">
-                  Remember this device
+                  {t("auth.rememberDevice")}
                 </span>
               </label>
 
@@ -142,15 +144,15 @@ const Login = () => {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? "Signing in..." : "Sign In"}
-                {!loading && <Icon name="arrow_forward" />}
+                {loading ? t("auth.signingIn") : t("auth.signIn")}
+                {!loading && <Icon name="arrow_forward" className="rtl:rotate-180" />}
               </button>
             </form>
 
             <div className="mt-12 flex w-full max-w-md items-center gap-4">
               <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
               <span className="px-2 text-xs font-semibold uppercase tracking-wider text-outline">
-                Or continue with
+                {t("auth.orContinueWith")}
               </span>
               <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
             </div>
@@ -162,18 +164,18 @@ const Login = () => {
                   className="size-5 grayscale transition-all group-hover:grayscale-0"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1WHxP0IAmCNaoD_IGsba1bIXc0RaxQiF4cLTRC0OG21TTxTF4eGE_HARWI0oQHTnaE6W4A-vMoy35pKciHtWx8yaxdwD2UBkCfI3B_0XdRza7nwkmfacFmfXrEDX7eZl1ifM70OQOV9JihyK1Usm7c2_OYqkY2JMgPgkZl5pDT6yJQJqH-jL19Wqn_y6ph5LUSpuppDHVUV1cIVhBOplULNcDMJT7SzCTYn_zA3J-P2pkLhtuhUic"
                 />
-                <span className="text-sm font-semibold text-on-surface">Google</span>
+                <span className="text-sm font-semibold text-on-surface">{t("auth.google")}</span>
               </button>
               <button className="group flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
                 <Icon name="laptop_mac" className="text-on-surface grayscale transition-all group-hover:grayscale-0" />
-                <span className="text-sm font-semibold text-on-surface">Apple</span>
+                <span className="text-sm font-semibold text-on-surface">{t("auth.apple")}</span>
               </button>
             </div>
 
             <p className="mt-12 text-center text-sm font-medium text-on-surface-variant">
-              New to SmartSpace?
-              <Link className="ml-1 font-bold text-primary transition-all hover:underline" to="/register">
-                Create an account
+              {t("auth.newToSmartSpace")}
+              <Link className="ml-1 rtl:mr-1 font-bold text-primary transition-all hover:underline" to="/register">
+                {t("auth.createAccount")}
               </Link>
             </p>
           </div>

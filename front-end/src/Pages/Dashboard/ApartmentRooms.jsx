@@ -4,9 +4,11 @@ import RoomCard from "../../Components/RoomCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
 import CreateRoomModal from "../../Components/CreateRoomModal";
 import { getApartmentById, getRooms, deleteRoom } from "../../api";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const ApartmentRooms = () => {
+  const { t } = useTranslation();
   const { apartmentId } = useParams();
   const navigate = useNavigate();
 
@@ -32,24 +34,24 @@ const ApartmentRooms = () => {
       }
     } catch (err) {
       if (err.response?.status !== 401) {
-        setError("Failed to load apartment data.");
+        setError(t("dashboard.failedLoadApartmentData") || "Failed to load apartment data.");
       }
     } finally {
       setLoading(false);
     }
-  }, [apartmentId]);
+  }, [apartmentId, t]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this room?")) return;
+    if (!window.confirm(t("common.confirmDeleteRoom"))) return;
     try {
       await deleteRoom(id);
       fetchData();
     } catch {
-      setError("Failed to delete room.");
+      setError(t("common.failedDeleteRoom"));
     }
   };
 
@@ -73,14 +75,14 @@ const ApartmentRooms = () => {
             onClick={() => navigate("/home")}
             className="mb-6 flex items-center gap-2 rounded-xl bg-background px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:text-primary neomorph-raised active:neomorph-inset"
           >
-            <Icon name="arrow_back" size={16} />
-            Back to Apartments
+            <Icon name="arrow_back" size={16} className="rtl:rotate-180" />
+            {t("dashboard.backToApartments") || "Back to Apartments"}
           </button>
 
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight text-on-surface">
-                {loading ? "Loading..." : apartment?.name || "Apartment"}
+                {loading ? t("common.loading") : apartment?.name || "Apartment"}
               </h1>
               {locationStr && (
                 <p className="mt-1 flex items-center gap-1 text-on-surface-variant">
@@ -94,7 +96,7 @@ const ApartmentRooms = () => {
               className="flex h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neomorph-active neomorph-raised"
             >
               <Icon name="add" />
-              Create Room
+              {t("common.createNewRoom")}
             </button>
           </div>
         </div>
@@ -112,8 +114,8 @@ const ApartmentRooms = () => {
         ) : rooms.length === 0 ? (
           <EmptyState
             icon="meeting_room"
-            title="No Rooms Yet"
-            description="This apartment has no rooms. Create a room to start designing with AI."
+            title={t("dashboard.noRoomsTitle")}
+            description={t("dashboard.noRoomsDesc")}
           />
         ) : (
           <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
@@ -125,7 +127,7 @@ const ApartmentRooms = () => {
                     e.stopPropagation();
                     handleDelete(room._id);
                   }}
-                  className="absolute top-8 right-8 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
+                  className="absolute top-8 right-8 rtl:right-auto rtl:left-8 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
                   aria-label="Delete room"
                 >
                   <Icon name="delete" size={14} />

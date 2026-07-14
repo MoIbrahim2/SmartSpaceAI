@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getProfile, editProfile } from "../../api";
+import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const Profile = () => {
+  const { t } = useTranslation();
   const { user, setUser } = useAuth();
   const fileRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -41,13 +43,13 @@ const Profile = () => {
           setUser(u);
         }
       } catch {
-        setError("Failed to load profile.");
+        setError(t("dashboard.failedLoadProfile") || "Failed to load profile.");
       } finally {
         setLoading(false);
       }
     };
     fetchProfile();
-  }, [setUser]);
+  }, [setUser, t]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -72,10 +74,10 @@ const Profile = () => {
       const { data } = await editProfile(fd);
       if (data.success && data.data?.user) {
         setUser(data.data.user);
-        setSuccess("Profile updated successfully.");
+        setSuccess(t("dashboard.profileUpdatedSuccess") || "Profile updated successfully.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile.");
+      setError(err.response?.data?.message || t("dashboard.failedUpdateProfile") || "Failed to update profile.");
     } finally {
       setSaving(false);
     }
@@ -97,14 +99,14 @@ const Profile = () => {
             <div className="flex flex-col gap-2 rounded-3xl bg-surface-bright p-6 neo-shadow">
               <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-bold text-primary neo-inset">
                 <Icon name="person" />
-                <span>Profile</span>
+                <span>{t("dashboard.profile")}</span>
               </button>
               <Link
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-on-surface-variant transition-all hover:text-primary neo-button"
                 to="/credits"
               >
                 <Icon name="payments" />
-                <span>Billing</span>
+                <span>{t("dashboard.billing")}</span>
               </Link>
             </div>
           </aside>
@@ -123,7 +125,7 @@ const Profile = () => {
               )}
               <form className="space-y-8" onSubmit={handleSubmit}>
                 <div className="flex flex-col items-start gap-4">
-                  <label className="px-1 text-sm font-semibold text-on-surface-variant">Profile Photo</label>
+                  <label className="px-1 text-sm font-semibold text-on-surface-variant">{t("dashboard.profilePhoto")}</label>
                   <div className="flex items-center gap-8">
                     <div className="group relative">
                       <div className="h-32 w-32 rounded-full p-2 neo-inset">
@@ -142,7 +144,7 @@ const Profile = () => {
                       <button
                         type="button"
                         onClick={() => fileRef.current?.click()}
-                        className="absolute bottom-0 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white neo-shadow neo-button"
+                        className="absolute bottom-0 right-0 rtl:right-auto rtl:left-0 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white neo-shadow neo-button"
                         aria-label="Edit profile photo"
                       >
                         <Icon name="edit" size={20} />
@@ -154,9 +156,9 @@ const Profile = () => {
                         onClick={() => fileRef.current?.click()}
                         className="rounded-full bg-surface-bright px-6 py-2 text-sm font-bold text-primary neo-shadow neo-button"
                       >
-                        Upload New Photo
+                        {t("dashboard.uploadNewPhoto")}
                       </button>
-                      <p className="text-xs font-medium text-on-surface-variant">JPG, GIF or PNG. Max size 2MB</p>
+                      <p className="text-xs font-medium text-on-surface-variant">{t("dashboard.photoHint")}</p>
                     </div>
                     <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                   </div>
@@ -164,7 +166,7 @@ const Profile = () => {
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                   <div className="flex flex-col gap-2">
-                    <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="first_name">First Name</label>
+                    <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="first_name">{t("auth.firstName")}</label>
                     <input
                       className="w-full rounded-2xl border-none bg-surface-bright px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neo-inset"
                       id="first_name"
@@ -177,7 +179,7 @@ const Profile = () => {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="last_name">Last Name</label>
+                    <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="last_name">{t("auth.lastName")}</label>
                     <input
                       className="w-full rounded-2xl border-none bg-surface-bright px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neo-inset"
                       id="last_name"
@@ -192,7 +194,7 @@ const Profile = () => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="email">Email Address</label>
+                  <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="email">{t("auth.emailAddress")}</label>
                   <input
                     className="w-full rounded-2xl border-none bg-surface-bright px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neo-inset"
                     id="email"
@@ -204,7 +206,7 @@ const Profile = () => {
 
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                   <div className="flex flex-col gap-2">
-                    <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="dob">Date of Birth</label>
+                    <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="dob">{t("auth.dateOfBirth")}</label>
                     <div className="relative">
                       <input
                         className="w-full rounded-2xl border-none bg-surface-bright px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neo-inset"
@@ -225,14 +227,14 @@ const Profile = () => {
                     onClick={() => window.location.reload()}
                     className="text-sm font-bold text-error transition-colors hover:text-error/80"
                   >
-                    Discard changes
+                    {t("dashboard.discardChanges")}
                   </button>
                   <button
                     className="rounded-full bg-surface-bright px-10 py-3 font-bold tracking-wide text-primary neo-shadow neo-button disabled:opacity-50"
                     type="submit"
                     disabled={saving}
                   >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? t("common.saving") : t("dashboard.saveChanges")}
                   </button>
                 </div>
               </form>

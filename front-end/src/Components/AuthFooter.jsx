@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
 const AuthFooter = () => {
+  const { t } = useTranslation();
   return (
     <footer className="w-full border-t border-surface-container bg-surface px-6 py-12 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] md:px-12">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 md:grid-cols-4">
@@ -9,37 +11,37 @@ const AuthFooter = () => {
             SmartSpace AI
           </div>
           <p className="max-w-xs text-sm font-medium text-on-surface-variant">
-            Revolutionizing interior design through the power of intelligent spatial awareness and AI-driven creativity.
+            {t("landing.footerDesc")}
           </p>
         </div>
         <div className="flex flex-col gap-4">
-          <h4 className="font-headline font-bold text-on-surface">Company</h4>
+          <h4 className="font-headline font-bold text-on-surface">{t("landing.footerCompany")}</h4>
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
-            About Us
+            {t("landing.footerAboutUs")}
           </a>
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
-            Contact Support
+            {t("landing.footerContactSupport")}
           </a>
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
-            Careers
+            {t("landing.footerCareers")}
           </a>
         </div>
         <div className="flex flex-col gap-4">
-          <h4 className="font-headline font-bold text-on-surface">Legal</h4>
+          <h4 className="font-headline font-bold text-on-surface">{t("landing.footerLegal")}</h4>
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
-            Privacy Policy
+            {t("landing.footerPrivacyPolicy")}
           </a>
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
-            Terms of Service
+            {t("landing.footerTermsOfService")}
           </a>
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
-            Cookie Policy
+            {t("landing.footerCookiePolicy")}
           </a>
         </div>
       </div>
       <div className="mx-auto mt-12 flex max-w-7xl flex-col items-center justify-between gap-4 border-t border-surface-container pt-8 md:flex-row">
         <p className="text-sm font-medium text-on-surface-variant">
-          © 2024 SmartSpace AI. All rights reserved.
+          {t("common.copyright")}
         </p>
         <div className="flex gap-6">
           <Icon name="public" className="cursor-pointer text-on-surface-variant hover:text-primary" aria-label="Language" />
