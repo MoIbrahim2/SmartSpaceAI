@@ -196,35 +196,15 @@ const LandingPage = () => {
 
   // 6. Mobile Menu Toggler
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdowns, setOpenDropdowns] = useState({});
 
-  const mobileNavMenuStyle = isMobileMenuOpen
-    ? {
-        display: "flex",
-        flexDirection: "column",
-        position: "absolute",
-        top: "72px",
-        left: "0",
-        right: "0",
-        backgroundColor: "var(--bg-secondary)",
-        padding: "20px",
-        borderBottom: "1px solid var(--border-color)",
-      }
-    : {};
-
-  const mobileNavActionsStyle = isMobileMenuOpen
-    ? {
-        display: "flex",
-        flexDirection: "column",
-        position: "absolute",
-        top: "280px",
-        left: "0",
-        right: "0",
-        backgroundColor: "var(--bg-secondary)",
-        padding: "20px",
-        borderBottom: "1px solid var(--border-color)",
-        gap: "16px",
-      }
-    : {};
+  const toggleDropdown = (e, menu) => {
+    e.preventDefault();
+    setOpenDropdowns((prev) => ({
+      ...prev,
+      [menu]: !prev[menu],
+    }));
+  };
 
   // 7. Scroll and Tab Handlers
   const scrollToSection = (e, id) => {
@@ -325,17 +305,46 @@ const LandingPage = () => {
             <span className="logo-sub">{t("common.logoSub")}</span>
           </div>
 
-          {/* Navigation Links */}
-          <nav style={mobileNavMenuStyle}>
-            <ul className="nav-menu" style={isMobileMenuOpen ? { display: "flex" } : {}}>
-              <li className="nav-item">
+          {/* Mobile Overlay */}
+          <div 
+            className={`mobile-overlay ${isMobileMenuOpen ? 'open' : ''}`} 
+            onClick={() => setIsMobileMenuOpen(false)}
+          ></div>
+
+          {/* Navigation Wrapper (Sidebar on Mobile, Normal on Desktop) */}
+          <div className={`nav-wrapper ${isMobileMenuOpen ? "mobile-open" : ""}`}>
+            {/* Mobile Header (Hidden on Desktop) */}
+            <div className="mobile-drawer-header">
+              <div className="logo" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setIsMobileMenuOpen(false); }}>
+                <span className="logo-main">SmartSpace<span>.ai</span></span>
+              </div>
+              <button className="mobile-drawer-close" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Navigation Links */}
+            <nav>
+              <ul className="nav-menu">
+                <li className="nav-item">
                 <a
                   href="#virtual-staging"
                   className="nav-link"
-                  onClick={(e) => scrollToSection(e, "virtual-staging")}
+                  onClick={(e) => {
+                    if (window.innerWidth <= 768) {
+                      toggleDropdown(e, "staging");
+                    } else {
+                      scrollToSection(e, "virtual-staging");
+                    }
+                  }}
                 >
                   {t("landing.tabVirtualStaging")}
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg 
+                    className={`dropdown-chevron ${openDropdowns["staging"] ? "open" : ""}`}
+                    width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       d="M1 1L5 5L9 1"
                       stroke="currentColor"
@@ -346,7 +355,7 @@ const LandingPage = () => {
                   </svg>
                 </a>
                 {/* Dropdown */}
-                <div className="dropdown">
+                <div className={`dropdown ${openDropdowns["staging"] ? "mobile-expanded" : ""}`}>
                   <a
                     href="#virtual-staging"
                     className="dropdown-link"
@@ -377,10 +386,19 @@ const LandingPage = () => {
                 <a
                   href="#comparison"
                   className="nav-link"
-                  onClick={(e) => scrollToSection(e, "comparison")}
+                  onClick={(e) => {
+                    if (window.innerWidth <= 768) {
+                      toggleDropdown(e, "tools");
+                    } else {
+                      scrollToSection(e, "comparison");
+                    }
+                  }}
                 >
                   {t("landing.dropdownAiToolsTitle")}
-                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg 
+                    className={`dropdown-chevron ${openDropdowns["tools"] ? "open" : ""}`}
+                    width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"
+                  >
                     <path
                       d="M1 1L5 5L9 1"
                       stroke="currentColor"
@@ -390,7 +408,7 @@ const LandingPage = () => {
                     />
                   </svg>
                 </a>
-                <div className="dropdown">
+                <div className={`dropdown ${openDropdowns["tools"] ? "mobile-expanded" : ""}`}>
                   <a
                     href="#comparison"
                     className="dropdown-link"
@@ -448,42 +466,44 @@ const LandingPage = () => {
           </nav>
 
           {/* Nav Actions */}
-          <div className="nav-actions" style={mobileNavActionsStyle}>
-            <button
-              className="btn btn-lang-toggle"
-              onClick={() => i18n.changeLanguage(i18n.language.startsWith("ar") ? "en" : "ar")}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--text-primary)",
-                fontSize: "14px",
-                fontWeight: "700",
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "8px",
-              }}
-              aria-label="Toggle Language"
-            >
-              {i18n.language.startsWith("ar") ? "EN" : "العربية"}
-            </button>
-            <button
-              className="btn btn-theme-toggle"
-              onClick={toggleTheme}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--text-primary)",
-                fontSize: "20px",
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "8px",
-              }}
-              aria-label="Toggle Theme"
-            >
-              <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={22} />
-            </button>
+          <div className="nav-actions">
+            <div className="nav-toggles-row">
+              <button
+                className="btn btn-lang-toggle"
+                onClick={() => i18n.changeLanguage(i18n.language.startsWith("ar") ? "en" : "ar")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-primary)",
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "8px",
+                }}
+                aria-label="Toggle Language"
+              >
+                {i18n.language.startsWith("ar") ? "EN" : "العربية"}
+              </button>
+              <button
+                className="btn btn-theme-toggle"
+                onClick={toggleTheme}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-primary)",
+                  fontSize: "20px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "8px",
+                }}
+                aria-label="Toggle Theme"
+              >
+                <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={22} />
+              </button>
+            </div>
             <Link to="/login" className="btn btn-login">
               {t("common.logIn")}
             </Link>
@@ -496,6 +516,7 @@ const LandingPage = () => {
               {t("common.designNow")}
             </Link>
           </div>
+        </div>
 
           {/* Mobile Nav Toggle */}
           <button
