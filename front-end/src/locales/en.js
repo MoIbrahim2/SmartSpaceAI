@@ -427,6 +427,23 @@ const en = {
     roomType_office: "Office",
     roomType_studio: "Studio",
     roomType_other: "Other",
+  },
+  contact: {
+    title: "Get in Touch",
+    subtitle: "Have questions, feedback, or need a custom enterprise solution? Send us a message.",
+    nameLabel: "Full Name",
+    namePlaceholder: "Enter your name",
+    emailLabel: "Email Address",
+    emailPlaceholder: "name@company.com",
+    messageLabel: "Message",
+    messagePlaceholder: "Write your message here...",
+    submitBtn: "Send Message",
+    submitting: "Sending...",
+    successMsg: "Thank you! Your message has been sent successfully. We will get back to you soon.",
+    errorMsg: "Failed to send message. Please check the fields and try again.",
+    nameRequired: "Name must be at least 2 characters long",
+    emailRequired: "Please provide a valid email address",
+    messageRequired: "Message must be at least 10 characters long"
   }
 };
 

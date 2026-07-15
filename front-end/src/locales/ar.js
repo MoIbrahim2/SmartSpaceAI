@@ -427,6 +427,23 @@ const ar = {
     roomType_office: "مكتب",
     roomType_studio: "استوديو",
     roomType_other: "آخر",
+  },
+  contact: {
+    title: "تواصل معنا",
+    subtitle: "لديك استفسارات أو ملاحظات أو تحتاج إلى حلول مخصصة للشركات؟ أرسل لنا رسالة.",
+    nameLabel: "الاسم الكامل",
+    namePlaceholder: "أدخل اسمك الكامل",
+    emailLabel: "البريد الإلكتروني",
+    emailPlaceholder: "name@company.com",
+    messageLabel: "الرسالة",
+    messagePlaceholder: "اكتب رسالتك هنا...",
+    submitBtn: "إرسال الرسالة",
+    submitting: "جاري الإرسال...",
+    successMsg: "شكرًا لك! تم إرسال رسالتك بنجاح. سنتواصل معك قريبًا.",
+    errorMsg: "فشل في إرسال الرسالة. يرجى التحقق من الحقول والمحاولة مرة أخرى.",
+    nameRequired: "يجب أن يكون الاسم حرفين على الأقل",
+    emailRequired: "يرجى تقديم عنوان بريد إلكتروني صالح",
+    messageRequired: "يجب أن تكون الرسالة 10 أحرف على الأقل"
   }
 };
 

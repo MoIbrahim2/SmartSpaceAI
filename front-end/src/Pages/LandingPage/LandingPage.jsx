@@ -352,7 +352,7 @@ const LandingPage = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                  </svg>
+                  </svg> 
                 </a>
                 {/* Dropdown */}
                 <div className={`dropdown ${openDropdowns["staging"] ? "mobile-expanded" : ""}`}>
@@ -461,6 +461,11 @@ const LandingPage = () => {
                 >
                   {t("common.faq")}
                 </a>
+              </li>
+              <li className="nav-item">
+                <Link to="/contact" className="nav-link">
+                  {t("common.contactUs")}
+                </Link>
               </li>
             </ul>
           </nav>
@@ -1302,6 +1307,31 @@ const LandingPage = () => {
                 {t("landing.buyForPrice", { price: "3,750.00" })}
               </Link>
             </div>
+
+            {/* Custom Volume Card/Banner */}
+            <div className="pricing-card spotlight-card col-span-full mt-8 p-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-surface-bright border border-surface-container rounded-3xl neo-raised" style={{ width: "100%" }} onMouseMove={handleSpotlightMouseMove}>
+              <div className="flex items-center gap-4 text-left rtl:text-right">
+                <div className="flex items-center justify-center size-12 rounded-2xl bg-surface-bright text-accent neo-raised flex-shrink-0">
+                  <Icon name="bolt" size={24} />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-on-surface">{t("landing.customVolumeTitle")}</h4>
+                  <p className="text-sm font-medium text-on-surface-variant mt-1 max-w-2xl">
+                    {t("landing.customVolumeDesc")}
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/contact"
+                className="btn-pricing magnetic-btn flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-bold bg-surface text-primary border border-surface-container neo-raised"
+                onMouseMove={handleMagneticMouseMove}
+                onMouseLeave={handleMagneticMouseLeave}
+              >
+                <Icon name="mail" size={16} />
+                {t("landing.contactSales")}
+              </Link>
+            </div>
+
           </div>
         </div>
       </section>
@@ -1407,7 +1437,7 @@ const LandingPage = () => {
             <div className="landing-footer-col">
               <h4>{t("landing.footerCompany")}</h4>
               <a href="#">{t("landing.footerAboutUs")}</a>
-              <a href="#">{t("landing.footerContactSupport")}</a>
+              <Link to="/contact">{t("landing.footerContactSupport")}</Link>
               <a href="#">{t("landing.footerCareers")}</a>
             </div>
             <div className="landing-footer-col">

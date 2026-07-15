@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import Icon from "./Icon";
 
 const AuthFooter = () => {
@@ -19,9 +20,9 @@ const AuthFooter = () => {
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
             {t("landing.footerAboutUs")}
           </a>
-          <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
+          <Link className="text-sm text-on-surface-variant transition-colors hover:text-primary" to="/contact">
             {t("landing.footerContactSupport")}
-          </a>
+          </Link>
           <a className="text-sm text-on-surface-variant transition-colors hover:text-primary" href="#">
             {t("landing.footerCareers")}
           </a>

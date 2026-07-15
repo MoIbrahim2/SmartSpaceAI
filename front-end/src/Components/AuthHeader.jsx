@@ -1,8 +1,32 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import Icon from "./Icon";
 
 const AuthHeader = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
+
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme;
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const nextTheme = prev === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", nextTheme);
+      return nextTheme;
+    });
+  };
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between bg-surface/80 px-6 py-4 shadow-[0px_4px_12px_rgba(0,0,0,0.02)] backdrop-blur-md md:px-12">
@@ -16,12 +40,12 @@ const AuthHeader = () => {
         >
           Pricing
         </Link>
-        <a
+        <Link
           className="font-body text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
-          href="mailto:support@smartspace.ai"
+          to="/contact"
         >
           Contact Us
-        </a>
+        </Link>
         <Link
           className="font-body text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
           to="/projects"
@@ -37,8 +61,15 @@ const AuthHeader = () => {
         >
           {i18n.language.startsWith("ar") ? "EN" : "العربية"}
         </button>
+        <button
+          className="size-10 rounded-full bg-surface text-on-surface-variant transition-all hover:text-primary neo-raised neo-button-active flex items-center justify-center"
+          onClick={toggleTheme}
+          aria-label="Toggle Theme"
+        >
+          <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={20} />
+        </button>
         <Link
-          className="rounded-full px-4 py-2 text-sm font-bold text-on-surface-variant transition-all hover:text-primary"
+          className="rounded-full bg-surface px-6 py-2 text-sm font-bold text-primary transition-all hover:opacity-90 neo-raised neo-button-active"
           to="/login"
         >
           Log In

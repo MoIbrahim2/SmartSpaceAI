@@ -15,6 +15,7 @@ import RoomGeneration from "./Pages/Dashboard/RoomGeneration";
 import PaymentSuccess from "./Pages/Dashboard/PaymentSuccess";
 import NotFound from "./Pages/NotFound";
 import LandingPage from "./Pages/LandingPage/LandingPage";
+import ContactUs from "./Pages/ContactUs/contactUs";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/contact" element={<ContactUs />} />
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

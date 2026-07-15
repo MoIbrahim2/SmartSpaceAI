@@ -13,12 +13,17 @@ import RoomGeneration from "../Pages/Dashboard/RoomGeneration";
 import PaymentSuccess from "../Pages/Dashboard/PaymentSuccess";
 import NotFound from "../Pages/NotFound";
 import LandingPage from "../Pages/LandingPage/LandingPage";
+import ContactUs from "../Pages/ContactUs/contactUs";
 import ProtectedRoute from "../Components/ProtectedRoute";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <LandingPage />,
+  },
+  {
+    path: "/contact",
+    element: <ContactUs />,
   },
   {
     element: <AuthLayout />,
