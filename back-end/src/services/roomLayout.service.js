@@ -54,7 +54,7 @@ const validateAndCreateRoomLayout = async (userId, layoutData, file, language = 
   // If AI deems the image invalid, delete it and return 400
   if (!aiResult.is_valid) {
     fs.unlink(file.path, () => {});
-    const rejectionReason = (language === 'ar')
+    const rejectionReason = (language && language.toLowerCase().startsWith('ar'))
       ? (aiResult.rejection_reason_ar || aiResult.rejection_reason || 'لم تجتز الصورة فحص الذكاء الاصطناعي.')
       : (aiResult.rejection_reason || 'Image did not pass AI validation.');
 

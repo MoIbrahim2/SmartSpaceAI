@@ -9,11 +9,12 @@ const asyncHandler = require('../utils/asyncHandler');
  * then saves a RoomLayout document if the image passes validation.
  */
 const validateRoom = asyncHandler(async (req, res) => {
+  const detectedLanguage = req.language || req.lng || (req.languages && req.languages[0]) || 'en';
   const result = await roomLayoutService.validateAndCreateRoomLayout(
     req.user._id,
     req.body,
     req.file,
-    req.language
+    detectedLanguage
   );
 
   return sendSuccess(

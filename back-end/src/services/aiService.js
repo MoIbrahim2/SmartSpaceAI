@@ -56,7 +56,7 @@ Determine if this image is suitable for generating an interior design rendering.
           description: 'The exact same 1-sentence rejection explanation translated to Arabic, or null if is_valid is true'
         }
       },
-      required: ['is_corner_shot', 'lighting_quality', 'is_empty_enough', 'is_valid']
+      required: ['is_corner_shot', 'lighting_quality', 'is_empty_enough', 'is_valid', 'rejection_reason', 'rejection_reason_ar']
     }
   };
 
