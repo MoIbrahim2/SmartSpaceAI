@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
+import { validateRoomLayout, getRoomLayout } from "../../api";
 
 // Import step sub-components
 import Stepper from "../../Components/RoomGeneration/Stepper";
@@ -10,10 +11,16 @@ import StepRoomDetails from "../../Components/RoomGeneration/StepRoomDetails";
 import StepDesignInstructions from "../../Components/RoomGeneration/StepDesignInstructions";
 import StepSelectProducts from "../../Components/RoomGeneration/StepSelectProducts";
 import StepRoomGenerationResult from "../../Components/RoomGeneration/StepRoomGenerationResult";
+import ValidationOverlay from "../../Components/RoomGeneration/ValidationOverlay";
 
 const RoomGeneration = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Read roomId from URL query params (e.g. /room-generation?roomId=xxx&apartmentId=yyy)
+  const urlRoomId = searchParams.get("roomId") || "";
+
   const [step, setStep] = useState(0); // 0 = main choice, 1 = details, 2 = instructions, 3 = products, 4 = generation
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -21,8 +28,16 @@ const RoomGeneration = () => {
   const [addedProducts, setAddedProducts] = useState([1]); // ID 1 (Soundbar) is added by default
   const [regenerating, setRegenerating] = useState(false);
 
+  // Validation state
+  const [validating, setValidating] = useState(false);
+  const [validationStatus, setValidationStatus] = useState("none"); // "none" | "valid" | "rejected"
+  const [savedLayout, setSavedLayout] = useState(null);
+
+  // Snapshot of the form at last successful validation — used to detect changes
+  const validatedSnapshotRef = useRef(null);
+
   const [form, setForm] = useState({
-    roomId: "",
+    roomId: urlRoomId,
     generationType: "CREATE_FROM_SCRATCH",
     prompt: "",
     settings: JSON.stringify({
@@ -38,7 +53,195 @@ const RoomGeneration = () => {
     width: "",
     height: "",
     budget: "",
+    _rejectionReason: "",
   });
+
+  /**
+   * On mount (or when urlRoomId changes), try to load existing validated layout
+   */
+  useEffect(() => {
+    if (!urlRoomId) return;
+
+    const loadExistingLayout = async () => {
+      try {
+        const { data } = await getRoomLayout(urlRoomId);
+        if (data.success && data.data.roomLayout) {
+          const layout = data.data.roomLayout;
+          setSavedLayout(layout);
+          setValidationStatus("valid");
+
+          // Populate the form with saved values
+          setForm((prev) => ({
+            ...prev,
+            roomId: urlRoomId,
+            length: String(layout.length_cm),
+            width: String(layout.width_cm),
+            height: String(layout.height_cm),
+            budget: String(layout.budget_egp),
+            images: null, // No file selected; image is already saved on server
+          }));
+
+          // Save snapshot of the validated state
+          validatedSnapshotRef.current = {
+            length: String(layout.length_cm),
+            width: String(layout.width_cm),
+            height: String(layout.height_cm),
+            budget: String(layout.budget_egp),
+            hasNewImage: false,
+          };
+        }
+      } catch (err) {
+        // No layout found — that's fine, user starts fresh
+        console.log("No existing layout for room:", urlRoomId);
+      }
+    };
+
+    loadExistingLayout();
+  }, [urlRoomId]);
+
+  /**
+   * Determine if the user has changed anything since the last validation
+   */
+  const hasFormChanged = useCallback(() => {
+    if (!validatedSnapshotRef.current) return true; // Never validated
+
+    const snap = validatedSnapshotRef.current;
+    if (form.length !== snap.length) return true;
+    if (form.width !== snap.width) return true;
+    if (form.height !== snap.height) return true;
+    if (form.budget !== snap.budget) return true;
+    if (form.images) return true; // New file was selected
+
+    return false;
+  }, [form]);
+
+  /**
+   * Handle "Next" click from Step 1.
+   * If already validated and nothing changed → skip to step 2.
+   * If changed or not validated → run validation.
+   */
+  const handleValidateAndNext = async () => {
+    // If validated and nothing changed, skip directly
+    if (validationStatus === "valid" && !hasFormChanged()) {
+      setStep(2);
+      return;
+    }
+
+    // Basic client-side checks
+    if (!form.length || !form.width || !form.height || !form.budget) {
+      setError(t("dashboard.fillAllFields") || "Please fill in all dimensions and budget.");
+      return;
+    }
+
+    // Must have an image: either a new file or an existing saved image
+    if (!form.images && !savedLayout?.room_image_path) {
+      setError(t("dashboard.imageRequired") || "Please upload a room image.");
+      return;
+    }
+
+    // If nothing changed but we have a saved image and no new file, skip
+    if (!hasFormChanged() && validationStatus === "valid") {
+      setStep(2);
+      return;
+    }
+
+    // If dimensions/budget changed but no new image was uploaded and there's a saved one,
+    // we still need to re-validate, but we can't re-upload without a file.
+    // In this case, require a new image upload.
+    if (!form.images && hasFormChanged()) {
+      setError(t("dashboard.reuploadImage") || "Please re-upload a room image since you changed the room details.");
+      return;
+    }
+
+    setError("");
+    setValidating(true);
+    setValidationStatus("none");
+
+    try {
+      const formData = new FormData();
+      formData.append("roomId", form.roomId || urlRoomId);
+      formData.append("length_cm", form.length);
+      formData.append("width_cm", form.width);
+      formData.append("height_cm", form.height);
+      formData.append("budget_egp", form.budget);
+
+      // Append the first image file
+      if (form.images && form.images.length > 0) {
+        formData.append("image", form.images[0]);
+      }
+
+      const { data } = await validateRoomLayout(formData);
+
+      if (data.success) {
+        setSavedLayout(data.data.roomLayout);
+        setValidationStatus("valid");
+
+        // Save snapshot
+        validatedSnapshotRef.current = {
+          length: form.length,
+          width: form.width,
+          height: form.height,
+          budget: form.budget,
+          hasNewImage: false,
+        };
+
+        // Clear the file selection (image is now saved on server)
+        setForm((prev) => ({ ...prev, images: null, _rejectionReason: "" }));
+
+        // Move to step 2
+        setStep(2);
+      }
+    } catch (err) {
+      const response = err.response?.data;
+      if (response && response.success === false) {
+        const reason =
+          response.message ||
+          response.errors?.[0]?.rejection_reason ||
+          "Image validation failed.";
+        setValidationStatus("rejected");
+        setForm((prev) => ({ ...prev, _rejectionReason: reason }));
+      } else {
+        setError(t("dashboard.validationError") || "Validation failed. Please try again.");
+      }
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setForm((p) => ({ ...p, images: e.target.files }));
+      // If user picks a new file, reset the validation status
+      if (validationStatus === "valid") {
+        setValidationStatus("none");
+      }
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setForm((p) => ({ ...p, images: e.dataTransfer.files }));
+      if (validationStatus === "valid") {
+        setValidationStatus("none");
+      }
+    }
+  };
+
+  const toggleProduct = (id) => {
+    if (addedProducts.includes(id)) {
+      setAddedProducts(addedProducts.filter((pId) => pId !== id));
+    } else {
+      setAddedProducts([...addedProducts, id]);
+    }
+  };
+
+  const handleRegenerate = () => {
+    setRegenerating(true);
+    setTimeout(() => {
+      setRegenerating(false);
+    }, 2000);
+  };
 
   const productData = {
     Electronics: [
@@ -58,34 +261,6 @@ const RoomGeneration = () => {
     ]
   };
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setForm((p) => ({ ...p, images: e.target.files }));
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setForm((p) => ({ ...p, images: e.dataTransfer.files }));
-    }
-  };
-
-  const toggleProduct = (id) => {
-    if (addedProducts.includes(id)) {
-      setAddedProducts(addedProducts.filter((pId) => pId !== id));
-    } else {
-      setAddedProducts([...addedProducts, id]);
-    }
-  };
-
-  const handleRegenerate = () => {
-    setRegenerating(true);
-    setTimeout(() => {
-      setRegenerating(false);
-    }, 2000);
-  };
-
   // Spent calculations for Step 3
   const baseBudget = form.budget ? parseFloat(form.budget) : 70000;
   const baseSpent = 29150;
@@ -100,6 +275,9 @@ const RoomGeneration = () => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-on-surface pb-24 md:pb-0">
+      {/* Validation Loading Overlay */}
+      {validating && <ValidationOverlay />}
+
       {step === 0 ? (
         <StepSelectType setForm={setForm} setStep={setStep} error={error} />
       ) : (
@@ -107,6 +285,12 @@ const RoomGeneration = () => {
           <Stepper currentStep={step} />
 
           <section className="flex-grow flex flex-col gap-6 w-full md:w-3/4 lg:w-4/5">
+            {error && step === 1 && (
+              <div className="rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+                {error}
+              </div>
+            )}
+
             {step === 1 && (
               <StepRoomDetails
                 form={form}
@@ -114,6 +298,10 @@ const RoomGeneration = () => {
                 setStep={setStep}
                 handleFileChange={handleFileChange}
                 handleDrop={handleDrop}
+                validationStatus={validationStatus}
+                savedLayout={savedLayout}
+                onValidateAndNext={handleValidateAndNext}
+                validating={validating}
               />
             )}
 

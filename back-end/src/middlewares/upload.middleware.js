@@ -23,6 +23,8 @@ const storage = multer.diskStorage({
       subfolder = 'rooms';
     } else if (file.fieldname === 'images') {
       subfolder = 'generations';
+    } else if (file.fieldname === 'image') {
+      subfolder = 'room-layouts';
     }
     const targetDir = path.join(uploadDir, subfolder);
     if (!fs.existsSync(targetDir)) {
@@ -42,6 +44,8 @@ const storage = multer.diskStorage({
       prefix = 'room';
     } else if (file.fieldname === 'images') {
       prefix = 'generation';
+    } else if (file.fieldname === 'image') {
+      prefix = 'room-layout';
     }
     cb(null, `${prefix}-${uniqueSuffix}${ext}`);
   }
@@ -69,11 +73,13 @@ const uploadProfileImage = upload.single('profileImage');
 const uploadCoverImage = upload.single('coverImage');
 const uploadRoomSourceImages = upload.array('sourceImages', 10);
 const uploadGenerationImages = upload.array('images', 10);
+const uploadRoomLayoutImage = upload.single('image');
 
 module.exports = {
   uploadProfileImage,
   uploadCoverImage,
   uploadRoomSourceImages,
   uploadGenerationImages,
+  uploadRoomLayoutImage,
   upload
 };
