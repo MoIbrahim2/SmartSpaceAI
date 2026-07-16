@@ -192,6 +192,7 @@ const RoomGeneration = () => {
         setStep(2);
       }
     } catch (err) {
+      console.error("Validation error:", err);
       const response = err.response?.data;
       if (response && response.success === false) {
         const reason =
@@ -201,7 +202,9 @@ const RoomGeneration = () => {
         setValidationStatus("rejected");
         setForm((prev) => ({ ...prev, _rejectionReason: reason }));
       } else {
-        setError(t("dashboard.validationError") || "Validation failed. Please try again.");
+        setError(
+          `${t("dashboard.validationError") || "Validation failed. Please try again."} (${err.message})`
+        );
       }
     } finally {
       setValidating(false);

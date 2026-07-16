@@ -70,8 +70,10 @@ const validateAndCreateRoomLayout = async (userId, layoutData, file, language = 
   const existingLayout = await RoomLayout.findOne({ roomId });
   if (existingLayout) {
     // Delete old image file
-    const oldImagePath = path.join(process.cwd(), existingLayout.room_image_path);
-    fs.unlink(oldImagePath, () => {});
+    if (existingLayout.room_image_path && typeof existingLayout.room_image_path === 'string') {
+      const oldImagePath = path.join(process.cwd(), existingLayout.room_image_path);
+      fs.unlink(oldImagePath, () => {});
+    }
     await existingLayout.deleteOne();
   }
 
