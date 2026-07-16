@@ -12,7 +12,9 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
  * @param {string} mimeType - MIME type of the image (e.g. 'image/jpeg')
  * @returns {Promise<Object>} Validation result with is_valid, rejection_reason, etc.
  */
-const validateRoomImage = async (filePath, mimeType) => {
+const validateRoomImage = async (filePath, mimeType, generationType = 'CREATE_FROM_SCRATCH') => {
+  const isEnhance = generationType === 'ENHANCE_ROOM';
+
   // 1. Upload the file to Gemini
   const uploadedFile = await ai.files.upload({
     file: filePath,
@@ -21,7 +23,12 @@ const validateRoomImage = async (filePath, mimeType) => {
 
   // 2. Build the prompt
   const prompt = `Analyze this image of a room. You are an expert architectural evaluator. 
-Determine if this image is suitable for generating an interior design rendering.`;
+Determine if this image is suitable for generating an interior design rendering.
+${
+  isEnhance
+    ? 'Note: This room is being evaluated for the "ENHANCE_ROOM" option. It is completely fine and acceptable if the room has items, furniture, clutter, or existing layouts in it. You should focus on lighting and composition, and you should set is_empty_enough to true.'
+    : 'Note: This room is being evaluated for the "CREATE_FROM_SCRATCH" option. The room MUST be mostly empty or only have minimal clutter.'
+}`;
 
   // 3. Build the config with structured output schema
   const config = {
@@ -39,11 +46,15 @@ Determine if this image is suitable for generating an interior design rendering.
         },
         is_empty_enough: {
           type: Type.BOOLEAN,
-          description: 'true if the room is mostly empty or only has minimal clutter'
+          description: isEnhance
+            ? 'Always true (because ENHANCE_ROOM allows furniture and items in the room)'
+            : 'true if the room is mostly empty or only has minimal clutter'
         },
         is_valid: {
           type: Type.BOOLEAN,
-          description: 'true ONLY if is_corner_shot is true, lighting_quality is good or excellent, and is_empty_enough is true'
+          description: isEnhance
+            ? 'true ONLY if is_corner_shot is true and lighting_quality is good or excellent'
+            : 'true ONLY if is_corner_shot is true, lighting_quality is good or excellent, and is_empty_enough is true'
         },
         rejection_reason: {
           type: Type.STRING,

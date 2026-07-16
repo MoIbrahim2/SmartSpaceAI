@@ -29,6 +29,10 @@ const validateRoomLayoutSchema = Joi.object({
       'number.base': 'budget_egp must be a number',
       'number.positive': 'budget_egp must be a positive number',
       'any.required': 'budget_egp is required'
+    }),
+  generationType: Joi.string().valid('CREATE_FROM_SCRATCH', 'ENHANCE_ROOM').default('CREATE_FROM_SCRATCH')
+    .messages({
+      'any.only': 'generationType must be either CREATE_FROM_SCRATCH or ENHANCE_ROOM'
     })
 });
 

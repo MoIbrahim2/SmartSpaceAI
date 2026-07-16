@@ -22,7 +22,7 @@ const validateAndCreateRoomLayout = async (userId, layoutData, file, language = 
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'An image file is required.');
   }
 
-  const { roomId, length_cm, width_cm, height_cm, budget_egp } = layoutData;
+  const { roomId, length_cm, width_cm, height_cm, budget_egp, generationType } = layoutData;
 
   // Verify room exists and user owns it (via apartment)
   const room = await Room.findById(roomId).populate('apartmentId');
@@ -41,7 +41,7 @@ const validateAndCreateRoomLayout = async (userId, layoutData, file, language = 
   let aiResult;
   try {
     // Call Gemini AI for image validation
-    aiResult = await validateRoomImage(file.path, file.mimetype);
+    aiResult = await validateRoomImage(file.path, file.mimetype, generationType);
   } catch (error) {
     // If AI call fails, clean up the uploaded file and re-throw
     fs.unlink(file.path, () => {});
@@ -85,6 +85,7 @@ const validateAndCreateRoomLayout = async (userId, layoutData, file, language = 
     height_cm: Number(height_cm),
     budget_egp: Number(budget_egp),
     room_image_path: imagePath,
+    generationType,
     ai_analysis: {
       is_corner_shot: aiResult.is_corner_shot,
       lighting_quality: aiResult.lighting_quality,

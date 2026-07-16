@@ -32,6 +32,11 @@ const roomLayoutSchema = new mongoose.Schema({
     is_empty_enough: { type: Boolean },
     is_valid: { type: Boolean }
   },
+  generationType: {
+    type: String,
+    enum: ['CREATE_FROM_SCRATCH', 'ENHANCE_ROOM'],
+    default: 'CREATE_FROM_SCRATCH'
+  },
   is_processed: {
     type: Boolean,
     default: false

@@ -164,6 +164,7 @@ const RoomGeneration = () => {
       formData.append("width_cm", form.width);
       formData.append("height_cm", form.height);
       formData.append("budget_egp", form.budget);
+      formData.append("generationType", form.generationType);
 
       // Append the first image file
       if (form.images && form.images.length > 0) {
