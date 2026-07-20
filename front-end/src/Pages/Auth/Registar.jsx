@@ -47,7 +47,24 @@ const Register = () => {
       await signup(form);
       navigate("/home", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || err.message || t("auth.regFailed"));
+      const errors = err.response?.data?.errors;
+      const message = err.response?.data?.message;
+      if (Array.isArray(errors) && errors.length) {
+        const first = errors[0];
+        if (typeof first === "string") {
+          setError(first);
+        } else if (first?.message) {
+          setError(first.message);
+        } else if (message) {
+          setError(message);
+        } else {
+          setError(t("auth.regFailed"));
+        }
+      } else if (message) {
+        setError(message);
+      } else {
+        setError(err.message || t("auth.regFailed"));
+      }
     } finally {
       setLoading(false);
     }
@@ -175,6 +192,9 @@ const Register = () => {
                     required
                   />
                 </div>
+                <p className="px-2 text-xs text-on-surface-variant/70">
+                  {t("auth.passwordHint", { defaultValue: "Must be at least 8 characters, include an uppercase, a lowercase, a number, and a special character." })}
+                </p>
               </div>
 
               <div className="flex flex-col gap-2">
