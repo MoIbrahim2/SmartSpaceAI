@@ -12,9 +12,16 @@ const Register = () => {
   const { signup, user, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
     const wasDark = document.documentElement.classList.contains("dark");
+    localStorage.setItem("theme", "light");
     document.documentElement.classList.remove("dark");
     return () => {
+      if (savedTheme) {
+        localStorage.setItem("theme", savedTheme);
+      } else {
+        localStorage.removeItem("theme");
+      }
       if (wasDark) document.documentElement.classList.add("dark");
     };
   }, []);
@@ -62,6 +69,7 @@ const Register = () => {
         if (typeof first === "string") {
           setError(first);
         } else if (first?.message) {
+          // setError(message);
           setError(first.message);
         } else if (message) {
           setError(message);

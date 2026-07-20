@@ -61,13 +61,7 @@ const AuthHeader = () => {
         >
           {i18n.language.startsWith("ar") ? "EN" : "العربية"}
         </button>
-        <button
-          className="size-10 rounded-full bg-surface text-on-surface-variant transition-all hover:text-primary neo-raised neo-button-active flex items-center justify-center"
-          onClick={toggleTheme}
-          aria-label="Toggle Theme"
-        >
-          <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={20} />
-        </button>
+        
         <Link
           className="rounded-full bg-surface px-6 py-2 text-sm font-bold text-primary transition-all hover:opacity-90 neo-raised neo-button-active"
           to="/login"

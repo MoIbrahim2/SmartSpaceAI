@@ -20,9 +20,16 @@ const Login = () => {
   const from = location.state?.from?.pathname || "/home";
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
     const wasDark = document.documentElement.classList.contains("dark");
+    localStorage.setItem("theme", "light");
     document.documentElement.classList.remove("dark");
     return () => {
+      if (savedTheme) {
+        localStorage.setItem("theme", savedTheme);
+      } else {
+        localStorage.removeItem("theme");
+      }
       if (wasDark) document.documentElement.classList.add("dark");
     };
   }, []);
