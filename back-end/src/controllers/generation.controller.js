@@ -48,10 +48,19 @@ const deleteGeneration = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'generation.delete_success', {}, HTTP_STATUS.OK);
 });
 
+/**
+ * Extract user design preferences using Gemini AI
+ */
+const extractPreferences = asyncHandler(async (req, res) => {
+  const result = await generationService.extractUserPreferences(req.user._id, req.body);
+  return sendSuccess(res, 'generation.preferences_extracted', { generation: result.generation }, HTTP_STATUS.OK);
+});
+
 module.exports = {
   createGeneration,
   getGenerations,
   getGenerationById,
   updateGeneration,
-  deleteGeneration
+  deleteGeneration,
+  extractPreferences
 };

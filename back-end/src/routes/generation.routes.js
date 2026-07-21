@@ -4,7 +4,7 @@ const generationController = require('../controllers/generation.controller');
 const protect = require('../middlewares/auth.middleware');
 const { uploadGenerationImages } = require('../middlewares/upload.middleware');
 const validate = require('../middlewares/validation.middleware');
-const { createGenerationSchema, updateGenerationSchema } = require('../validators/generation.validator');
+const { createGenerationSchema, updateGenerationSchema, extractPreferencesSchema } = require('../validators/generation.validator');
 
 /**
  * Middleware to parse stringified objects if submitted via multipart/form-data
@@ -32,6 +32,7 @@ router.get('/', generationController.getGenerations);
 router.get('/:id', generationController.getGenerationById);
 
 // Protected mutation routes
+router.post('/extract-preferences', protect, validate(extractPreferencesSchema), generationController.extractPreferences);
 router.post('/', protect, uploadGenerationImages, parseGenerationBody, validate(createGenerationSchema), generationController.createGeneration);
 router.patch('/:id', protect, uploadGenerationImages, parseGenerationBody, validate(updateGenerationSchema), generationController.updateGeneration);
 router.delete('/:id', protect, generationController.deleteGeneration);

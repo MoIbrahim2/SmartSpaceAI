@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 
-const funMessages = [
+const defaultMessages = [
   "dashboard.validationMsg1",
   "dashboard.validationMsg2",
   "dashboard.validationMsg3",
@@ -10,7 +10,7 @@ const funMessages = [
   "dashboard.validationMsg5",
 ];
 
-const fallbackMessages = [
+const defaultFallbackMessages = [
   "Analyzing room corners & angles…",
   "Checking lighting quality…",
   "Ensuring the room is clear…",
@@ -18,18 +18,29 @@ const fallbackMessages = [
   "Polishing the results…",
 ];
 
-const ValidationOverlay = () => {
+const ValidationOverlay = ({
+  title,
+  titleKey = "dashboard.validatingRoom",
+  titleFallback = "Validating Your Room",
+  messages,
+  fallbackMessages,
+  subTextKey = "dashboard.validationHint",
+  subTextFallback = "This usually takes 10–20 seconds",
+}) => {
   const { t } = useTranslation();
   const [msgIndex, setMsgIndex] = useState(0);
   const [dots, setDots] = useState("");
 
+  const activeMessages = messages || defaultMessages;
+  const activeFallbacks = fallbackMessages || defaultFallbackMessages;
+
   // Rotate through fun messages
   useEffect(() => {
     const interval = setInterval(() => {
-      setMsgIndex((prev) => (prev + 1) % funMessages.length);
+      setMsgIndex((prev) => (prev + 1) % activeMessages.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeMessages.length]);
 
   // Animated dots
   useEffect(() => {
@@ -39,8 +50,11 @@ const ValidationOverlay = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const translated = t(funMessages[msgIndex]);
-  const message = translated === funMessages[msgIndex] ? fallbackMessages[msgIndex] : translated;
+  const translated = t(activeMessages[msgIndex]);
+  const message = translated === activeMessages[msgIndex] ? activeFallbacks[msgIndex] : translated;
+
+  const displayTitle = title || t(titleKey) || titleFallback;
+  const displaySubText = t(subTextKey) || subTextFallback;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -76,7 +90,7 @@ const ValidationOverlay = () => {
         {/* Title */}
         <div className="text-center">
           <h3 className="mb-2 font-headline text-xl font-bold text-on-surface">
-            {t("dashboard.validatingRoom") || "Validating Your Room"}
+            {displayTitle}
             <span className="inline-block w-6 text-left">{dots}</span>
           </h3>
           <p
@@ -101,7 +115,7 @@ const ValidationOverlay = () => {
         </div>
 
         <p className="text-xs text-on-surface-variant/60">
-          {t("dashboard.validationHint") || "This usually takes 10–20 seconds"}
+          {displaySubText}
         </p>
 
         {/* Keyframe styles */}

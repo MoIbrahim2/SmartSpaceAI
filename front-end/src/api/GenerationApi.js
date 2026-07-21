@@ -18,3 +18,6 @@ export const updateGeneration = (id, formData) =>
 
 export const deleteGeneration = (id) =>
   api.delete(`/generations/${id}`);
+
+export const extractPreferences = (data) =>
+  api.post("/generations/extract-preferences", data);

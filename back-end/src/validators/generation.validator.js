@@ -41,7 +41,20 @@ const updateGenerationSchema = Joi.object({
   selectedImageId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional()
 });
 
+const extractPreferencesSchema = Joi.object({
+  roomType: Joi.string().trim().required(),
+  budget: Joi.number().positive().required(),
+  length: Joi.number().positive().required(),
+  width: Joi.number().positive().required(),
+  height: Joi.number().positive().required(),
+  prompt: Joi.string().trim().min(10).max(2000).required(),
+  generationType: Joi.string().valid('CREATE_FROM_SCRATCH', 'ENHANCE_EXISTING').optional().default('CREATE_FROM_SCRATCH'),
+  roomId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
+  generationId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional()
+});
+
 module.exports = {
   createGenerationSchema,
-  updateGenerationSchema
+  updateGenerationSchema,
+  extractPreferencesSchema
 };

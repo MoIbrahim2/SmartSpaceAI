@@ -1,1135 +1,1459 @@
 {
-	"info": {
-		"_postman_id": "4ed90961-8d51-45e8-8ddb-aef6a4f9e1e5",
-		"name": "SmartSpaceAI REST API",
-		"description": "Postman Collection for SmartSpaceAI Backend REST API. Includes automated JWT access token storage upon login or token refresh, along with support for Accept-Language header localization.",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Auth",
-			"item": [
-				{
-					"name": "Sign Up",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"dateOfBirth\": \"1995-06-15\",\n  \"password\": \"StrongPassword123!\",\n  \"confirmPassword\": \"StrongPassword123!\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/signup",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"signup"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Sign In",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"const response = pm.response.json();",
-									"if (response.success && response.data && response.data.accessToken) {",
-									"    pm.collectionVariables.set(\"accessToken\", response.data.accessToken);",
-									"    console.log(\"Access Token successfully stored in collection variables.\");",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"StrongPassword123!\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/signin",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"signin"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Logout",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/auth/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"logout"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Refresh Token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"const response = pm.response.json();",
-									"if (response.success && response.data && response.data.accessToken) {",
-									"    pm.collectionVariables.set(\"accessToken\", response.data.accessToken);",
-									"    console.log(\"Access Token successfully rotated and stored.\");",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/auth/refresh",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"refresh"
-							]
-						},
-						"description": "Generates a new short-lived access token. Note that the long-lived refresh token will be automatically sent from cookies by Postman."
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Users",
-			"item": [
-				{
-					"name": "Get Profile",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/users/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"users",
-								"profile"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Edit Profile",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "firstName",
-									"value": "Johnny",
-									"type": "text"
-								},
-								{
-									"key": "lastName",
-									"value": "Doe",
-									"type": "text"
-								},
-								{
-									"key": "dateOfBirth",
-									"value": "1995-06-20",
-									"type": "text"
-								},
-								{
-									"key": "profileImage",
-									"type": "file",
-									"src": []
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/users/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"users",
-								"profile"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Apartments",
-			"item": [
-				{
-					"name": "Create Apartment",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"const response = pm.response.json();",
-									"if (response.success && response.data && response.data.apartment && response.data.apartment._id) {",
-									"    pm.collectionVariables.set(\"apartmentId\", response.data.apartment._id);",
-									"    console.log(\"apartmentId successfully stored in collection variables.\");",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "name",
-									"value": "Luxury Sea View Apartment",
-									"type": "text"
-								},
-								{
-									"key": "description",
-									"value": "Beautiful sea view apartment located in Alexandria.",
-									"type": "text"
-								},
-								{
-									"key": "location",
-									"value": "{\n  \"country\": \"Egypt\",\n  \"city\": \"Alexandria\",\n  \"district\": \"Sidi Bishr\",\n  \"street\": \"El Geish Road\",\n  \"building\": \"Tower A\",\n  \"floor\": 12,\n  \"apartmentNumber\": \"1204\"\n}",
-									"type": "text"
-								},
-								{
-									"key": "status",
-									"value": "ACTIVE",
-									"type": "text"
-								},
-								{
-									"key": "coverImage",
-									"type": "file",
-									"src": []
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/apartments",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"apartments"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Apartments",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/apartments?search=&page=1&limit=10",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"apartments"
-							],
-							"query": [
-								{
-									"key": "search",
-									"value": ""
-								},
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Apartment by ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/apartments/{{apartmentId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"apartments",
-								"{{apartmentId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Apartment",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "name",
-									"value": "Updated Luxury Sea View Apartment",
-									"type": "text"
-								},
-								{
-									"key": "location",
-									"value": "{\n  \"country\": \"Egypt\",\n  \"city\": \"Alexandria\",\n  \"district\": \"Sidi Bishr\",\n  \"street\": \"El Geish Road\",\n  \"building\": \"Tower A\",\n  \"floor\": 15,\n  \"apartmentNumber\": \"1504\"\n}",
-									"type": "text"
-								},
-								{
-									"key": "coverImage",
-									"type": "file",
-									"src": []
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/apartments/{{apartmentId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"apartments",
-								"{{apartmentId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Apartment",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/apartments/{{apartmentId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"apartments",
-								"{{apartmentId}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Rooms",
-			"item": [
-				{
-					"name": "Create Room",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"const response = pm.response.json();",
-									"if (response.success && response.data && response.data.room && response.data.room._id) {",
-									"    pm.collectionVariables.set(\"roomId\", response.data.room._id);",
-									"    console.log(\"roomId successfully stored in collection variables.\");",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "apartmentId",
-									"value": "{{apartmentId}}",
-									"type": "text"
-								},
-								{
-									"key": "name",
-									"value": "Master Bedroom",
-									"type": "text"
-								},
-								{
-									"key": "roomType",
-									"value": "BEDROOM",
-									"type": "text"
-								},
-								{
-									"key": "description",
-									"value": "Spacious master bedroom with modern layout.",
-									"type": "text"
-								},
-								{
-									"key": "dimensions",
-									"value": "{\n  \"width\": 4.5,\n  \"length\": 5.0,\n  \"height\": 3.0,\n  \"unit\": \"meters\"\n}",
-									"type": "text"
-								},
-								{
-									"key": "sourceImages",
-									"type": "file",
-									"src": []
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/rooms",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"rooms"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Rooms",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/rooms?apartmentId={{apartmentId}}&page=1&limit=10",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"rooms"
-							],
-							"query": [
-								{
-									"key": "apartmentId",
-									"value": "{{apartmentId}}"
-								},
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Room by ID",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/rooms/{{roomId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"rooms",
-								"{{roomId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Room",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "name",
-									"value": "Updated Master Bedroom",
-									"type": "text"
-								},
-								{
-									"key": "dimensions",
-									"value": "{\n  \"width\": 4.8,\n  \"length\": 5.2,\n  \"height\": 3.0,\n  \"unit\": \"meters\"\n}",
-									"type": "text"
-								},
-								{
-									"key": "coverImageId",
-									"value": "",
-									"description": "Optional: set cover image ID from sourceImages list",
-									"type": "text",
-									"disabled": true
-								},
-								{
-									"key": "selectedGenerationId",
-									"value": "{{generationId}}",
-									"description": "Optional: link the final selected AI generation design ID",
-									"type": "text",
-									"disabled": true
-								},
-								{
-									"key": "deleteImageIds",
-									"value": "[\"IMAGE_ID_TO_DELETE\"]",
-									"description": "Optional: JSON array of sourceImage IDs to delete",
-									"type": "text",
-									"disabled": true
-								},
-								{
-									"key": "sourceImages",
-									"description": "Optional: upload/append new source images",
-									"type": "file",
-									"disabled": true,
-									"src": []
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/rooms/{{roomId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"rooms",
-								"{{roomId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Room",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/rooms/{{roomId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"rooms",
-								"{{roomId}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Generations",
-			"item": [
-				{
-					"name": "Create Generation",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"const response = pm.response.json();",
-									"if (response.success && response.data && response.data.generation && response.data.generation._id) {",
-									"    pm.collectionVariables.set(\"generationId\", response.data.generation._id);",
-									"    console.log(\"generationId successfully stored in collection variables.\");",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "roomId",
-									"value": "{{roomId}}",
-									"type": "text"
-								},
-								{
-									"key": "generationType",
-									"value": "CREATE_FROM_SCRATCH",
-									"type": "text"
-								},
-								{
-									"key": "prompt",
-									"value": "Scandinavian cozy design style bedroom",
-									"type": "text"
-								},
-								{
-									"key": "settings",
-									"value": "{\n  \"creativity\": 80,\n  \"preserveLayout\": true,\n  \"colorPalette\": \"light-wood-white-grey\",\n  \"lighting\": \"bright-natural\",\n  \"quality\": \"high\",\n  \"aspectRatio\": \"16:9\"\n}",
-									"type": "text"
-								},
-								{
-									"key": "images",
-									"type": "file",
-									"src": []
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/generations",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"generations"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Generations",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/generations?roomId={{roomId}}&page=1&limit=10",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"generations"
-							],
-							"query": [
-								{
-									"key": "roomId",
-									"value": "{{roomId}}"
-								},
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Generation by ID",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/generations/{{generationId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"generations",
-								"{{generationId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Generation",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "status",
-									"value": "COMPLETED",
-									"type": "text"
-								},
-								{
-									"key": "selectedImageId",
-									"value": "GENERATED_IMAGE_ID_HERE",
-									"description": "Optional: mark a specific generated image as selected",
-									"type": "text",
-									"disabled": true
-								},
-								{
-									"key": "deleteImageIds",
-									"value": "[\"IMAGE_ID_TO_DELETE\"]",
-									"description": "Optional: JSON array of generated image IDs to delete",
-									"type": "text",
-									"disabled": true
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/generations/{{generationId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"generations",
-								"{{generationId}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Delete Generation",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{accessToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/generations/{{generationId}}",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"generations",
-								"{{generationId}}"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Contact",
-			"item": [
-				{
-					"name": "Submit Contact Message",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept-Language",
-								"value": "{{accept_language}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"message\": \"Hello, I would like to get more information about SmartSpace AI services. Please reach out to me.\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}/contact",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"contact"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:3000/api",
-			"type": "string"
-		},
-		{
-			"key": "accessToken",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "accept_language",
-			"value": "ar",
-			"type": "string"
-		},
-		{
-			"key": "apartmentId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "roomId",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "generationId",
-			"value": "",
-			"type": "string"
-		}
-	]
+  "info": {
+    "_postman_id": "4ed90961-8d51-45e8-8ddb-aef6a4f9e1e5",
+    "name": "SmartSpaceAI REST API",
+    "description": "Postman Collection for SmartSpaceAI Backend REST API. Includes automated JWT access token storage upon login or token refresh, along with support for Accept-Language header localization.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Health check endpoint for application status and uptime monitoring."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"dateOfBirth\": \"1995-06-15\",\n  \"password\": \"StrongPassword123!\",\n  \"confirmPassword\": \"StrongPassword123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/signup",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "signup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sign In",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"accessToken\", response.data.accessToken);",
+                  "    console.log(\"Access Token successfully stored in collection variables.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"StrongPassword123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/signin",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "signin"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"accessToken\", response.data.accessToken);",
+                  "    console.log(\"Access Token successfully rotated and stored.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Generates a new short-lived access token. Note that the long-lived refresh token will be automatically sent from cookies by Postman."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Edit Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "firstName",
+                  "value": "Johnny",
+                  "type": "text"
+                },
+                {
+                  "key": "lastName",
+                  "value": "Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "dateOfBirth",
+                  "value": "1995-06-20",
+                  "type": "text"
+                },
+                {
+                  "key": "profileImage",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/users/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Apartments",
+      "item": [
+        {
+          "name": "Create Apartment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.apartment && response.data.apartment._id) {",
+                  "    pm.collectionVariables.set(\"apartmentId\", response.data.apartment._id);",
+                  "    console.log(\"apartmentId successfully stored in collection variables.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Luxury Sea View Apartment",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Beautiful sea view apartment located in Alexandria.",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "{\n  \"country\": \"Egypt\",\n  \"city\": \"Alexandria\",\n  \"district\": \"Sidi Bishr\",\n  \"street\": \"El Geish Road\",\n  \"building\": \"Tower A\",\n  \"floor\": 12,\n  \"apartmentNumber\": \"1204\"\n}",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "type": "text"
+                },
+                {
+                  "key": "coverImage",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/apartments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Apartments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/apartments?search=&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartments"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Apartment by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/apartments/{{apartmentId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartments",
+                "{{apartmentId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Apartment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Updated Luxury Sea View Apartment",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "{\n  \"country\": \"Egypt\",\n  \"city\": \"Alexandria\",\n  \"district\": \"Sidi Bishr\",\n  \"street\": \"El Geish Road\",\n  \"building\": \"Tower A\",\n  \"floor\": 15,\n  \"apartmentNumber\": \"1504\"\n}",
+                  "type": "text"
+                },
+                {
+                  "key": "coverImage",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/apartments/{{apartmentId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartments",
+                "{{apartmentId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Apartment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/apartments/{{apartmentId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "apartments",
+                "{{apartmentId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rooms",
+      "item": [
+        {
+          "name": "Create Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.room && response.data.room._id) {",
+                  "    pm.collectionVariables.set(\"roomId\", response.data.room._id);",
+                  "    console.log(\"roomId successfully stored in collection variables.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "apartmentId",
+                  "value": "{{apartmentId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "name",
+                  "value": "Master Bedroom",
+                  "type": "text"
+                },
+                {
+                  "key": "roomType",
+                  "value": "BEDROOM",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "Spacious master bedroom with modern layout.",
+                  "type": "text"
+                },
+                {
+                  "key": "dimensions",
+                  "value": "{\n  \"width\": 4.5,\n  \"length\": 5.0,\n  \"height\": 3.0,\n  \"unit\": \"meters\"\n}",
+                  "type": "text"
+                },
+                {
+                  "key": "sourceImages",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/rooms",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rooms"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Rooms",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rooms?apartmentId={{apartmentId}}&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rooms"
+              ],
+              "query": [
+                {
+                  "key": "apartmentId",
+                  "value": "{{apartmentId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Room by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rooms/{{roomId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Room",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Updated Master Bedroom",
+                  "type": "text"
+                },
+                {
+                  "key": "dimensions",
+                  "value": "{\n  \"width\": 4.8,\n  \"length\": 5.2,\n  \"height\": 3.0,\n  \"unit\": \"meters\"\n}",
+                  "type": "text"
+                },
+                {
+                  "key": "coverImageId",
+                  "value": "",
+                  "description": "Optional: set cover image ID from sourceImages list",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "selectedGenerationId",
+                  "value": "{{generationId}}",
+                  "description": "Optional: link the final selected AI generation design ID",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "deleteImageIds",
+                  "value": "[\"IMAGE_ID_TO_DELETE\"]",
+                  "description": "Optional: JSON array of sourceImage IDs to delete",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "sourceImages",
+                  "description": "Optional: upload/append new source images",
+                  "type": "file",
+                  "disabled": true,
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/rooms/{{roomId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Room",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rooms/{{roomId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rooms",
+                "{{roomId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Room Layout",
+      "item": [
+        {
+          "name": "Validate Room Layout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "roomId",
+                  "value": "{{roomId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "length_cm",
+                  "value": "400",
+                  "type": "text"
+                },
+                {
+                  "key": "width_cm",
+                  "value": "300",
+                  "type": "text"
+                },
+                {
+                  "key": "height_cm",
+                  "value": "280",
+                  "type": "text"
+                },
+                {
+                  "key": "budget_egp",
+                  "value": "50000",
+                  "type": "text"
+                },
+                {
+                  "key": "generationType",
+                  "value": "CREATE_FROM_SCRATCH",
+                  "type": "text"
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/rooms/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "rooms",
+                "validate"
+              ]
+            },
+            "description": "Validates room layout dimensions, budget, and corner shot image via Gemini AI before creating/updating RoomLayout."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Room Layout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/rooms/{{roomId}}/layout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "rooms",
+                "{{roomId}}",
+                "layout"
+              ]
+            },
+            "description": "Retrieves the existing validated layout for a room."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Generations",
+      "item": [
+        {
+          "name": "Extract Design Preferences",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomType\": \"living_room\",\n  \"budget\": 50000,\n  \"length\": 400,\n  \"width\": 300,\n  \"height\": 280,\n  \"prompt\": \"I want a modern minimalist living room with a beige fabric sofa, warm lighting, and natural wood accents. Avoid leather and dark colors.\",\n  \"generationType\": \"CREATE_FROM_SCRATCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/generations/extract-preferences",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "generations",
+                "extract-preferences"
+              ]
+            },
+            "description": "Extracts user design preferences using Gemini AI based on room details and natural language design prompt."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Generation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.success && response.data && response.data.generation && response.data.generation._id) {",
+                  "    pm.collectionVariables.set(\"generationId\", response.data.generation._id);",
+                  "    console.log(\"generationId successfully stored in collection variables.\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "roomId",
+                  "value": "{{roomId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "generationType",
+                  "value": "CREATE_FROM_SCRATCH",
+                  "type": "text"
+                },
+                {
+                  "key": "prompt",
+                  "value": "Scandinavian cozy design style bedroom",
+                  "type": "text"
+                },
+                {
+                  "key": "settings",
+                  "value": "{\n  \"creativity\": 80,\n  \"preserveLayout\": true,\n  \"colorPalette\": \"light-wood-white-grey\",\n  \"lighting\": \"bright-natural\",\n  \"quality\": \"high\",\n  \"aspectRatio\": \"16:9\"\n}",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/generations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "generations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Generations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/generations?roomId={{roomId}}&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "generations"
+              ],
+              "query": [
+                {
+                  "key": "roomId",
+                  "value": "{{roomId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Generation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/generations/{{generationId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "generations",
+                "{{generationId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Generation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "status",
+                  "value": "COMPLETED",
+                  "type": "text"
+                },
+                {
+                  "key": "selectedImageId",
+                  "value": "GENERATED_IMAGE_ID_HERE",
+                  "description": "Optional: mark a specific generated image as selected",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "deleteImageIds",
+                  "value": "[\"IMAGE_ID_TO_DELETE\"]",
+                  "description": "Optional: JSON array of generated image IDs to delete",
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/generations/{{generationId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "generations",
+                "{{generationId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Generation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/generations/{{generationId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "generations",
+                "{{generationId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "item": [
+        {
+          "name": "Submit Contact Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"message\": \"Hello, I would like to get more information about SmartSpace AI services. Please reach out to me.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/contact",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "contact"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tier\": 500\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/create-checkout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "create-checkout"
+              ]
+            },
+            "description": "Creates a Stripe Checkout Session for purchasing credit tiers (500, 2000, 5000)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Billing History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept-Language",
+                "value": "{{accept_language}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/billing/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "history"
+              ]
+            },
+            "description": "Retrieves user credit purchase and billing history."
+          },
+          "response": []
+        },
+        {
+          "name": "Stripe Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "stripe-signature",
+                "value": "t=12345,v1=mock_signature",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"checkout.session.completed\",\n  \"data\": {\n    \"object\": {}\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/billing/webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "billing",
+                "webhook"
+              ]
+            },
+            "description": "Stripe webhook receiver for handling asynchronous payment events."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accept_language",
+      "value": "ar",
+      "type": "string"
+    },
+    {
+      "key": "apartmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roomId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "generationId",
+      "value": "",
+      "type": "string"
+    }
+  ]
 }

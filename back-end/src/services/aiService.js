@@ -73,7 +73,7 @@ ${
 
   // 4. Call Gemini with the uploaded file reference
   const response = await ai.models.generateContent({
-    model: 'gemini-3.1-flash-lite',
+    model: process.env.GEMINI_MODEL_FOR_GUARD || 'gemini-3.1-flash-lite',
     contents: [
       {
         role: 'user',

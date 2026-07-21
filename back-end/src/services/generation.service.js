@@ -4,6 +4,8 @@ const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
 const fs = require('fs');
 const path = require('path');
+const promptBuilder = require('./promptBuilder.service');
+const geminiService = require('./gemini.service');
 
 /**
  * Create a new generation
@@ -53,6 +55,91 @@ const createGeneration = async (userId, generationData, files = []) => {
   });
 
   return generation;
+};
+
+/**
+ * Extract user design preferences using Gemini AI.
+ * @param {string} userId - Owner ID
+ * @param {Object} payload - { roomType, budget, length, width, height, prompt, roomId?, generationId? }
+ * @returns {Promise<Object>} Object with { generation, extractedPreferences }
+ */
+const extractUserPreferences = async (userId, payload) => {
+  const { roomType, budget, length, width, height, prompt, generationType, roomId, generationId } = payload;
+
+  // If roomId is provided, verify it belongs to the user
+  if (roomId) {
+    const room = await Room.findById(roomId).populate('apartmentId');
+    if (!room) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'room.not_found');
+    }
+    if (!room.apartmentId || room.apartmentId.ownerId.toString() !== userId.toString()) {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'room.forbidden');
+    }
+  }
+
+  // 1. Load category rules from knowledge base
+  const categoryRules = promptBuilder.loadCategoryRules(roomType);
+
+  // 2. Extract available categories
+  const availableCategories = promptBuilder.extractAvailableCategories(categoryRules);
+  const categoryNames = availableCategories.map((c) => c.category);
+
+  // 3. Build prompts
+  const systemPrompt = promptBuilder.buildSystemPrompt(availableCategories);
+  const userPrompt = promptBuilder.buildUserPrompt(
+    { roomType, length, width, height, budget },
+    prompt,
+    availableCategories
+  );
+
+  // 4. Call Gemini to extract preferences
+  const extractedPreferences = await geminiService.extractPreferences(
+    systemPrompt,
+    userPrompt,
+    categoryNames
+  );
+
+  // 5. Create or update Generation document
+  let generation;
+
+  if (generationId) {
+    // Update existing generation
+    generation = await Generation.findById(generationId);
+    if (!generation) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+    }
+    if (generation.ownerId.toString() !== userId.toString()) {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+    }
+
+    generation.extractedPreferences = extractedPreferences;
+    generation.prompt = prompt;
+    if (generationType) {
+      generation.generationType = generationType;
+    }
+    await generation.save();
+  } else {
+    // Create new generation
+    const generationData = {
+      ownerId: userId,
+      prompt,
+      generationType: generationType || 'CREATE_FROM_SCRATCH',
+      status: 'PENDING',
+      extractedPreferences
+    };
+
+    // Only set roomId if provided
+    if (roomId) {
+      generationData.roomId = roomId;
+    }
+
+    generation = await Generation.create(generationData);
+  }
+
+  return {
+    generation,
+    extractedPreferences
+  };
 };
 
 /**
@@ -250,8 +337,10 @@ const deleteGeneration = async (userId, generationId) => {
 
 module.exports = {
   createGeneration,
+  extractUserPreferences,
   getGenerations,
   getGenerationById,
   updateGeneration,
   deleteGeneration
 };
+

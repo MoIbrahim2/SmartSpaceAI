@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
-import { validateRoomLayout, getRoomLayout } from "../../api";
+import { validateRoomLayout, getRoomLayout, getRoomById, extractPreferences } from "../../api";
 
 // Import step sub-components
 import Stepper from "../../Components/RoomGeneration/Stepper";
@@ -12,6 +12,14 @@ import StepDesignInstructions from "../../Components/RoomGeneration/StepDesignIn
 import StepSelectProducts from "../../Components/RoomGeneration/StepSelectProducts";
 import StepRoomGenerationResult from "../../Components/RoomGeneration/StepRoomGenerationResult";
 import ValidationOverlay from "../../Components/RoomGeneration/ValidationOverlay";
+
+const preferenceMessages = [
+  "Analyzing your design description…",
+  "Identifying style preferences…",
+  "Extracting color and material choices…",
+  "Understanding furniture preferences…",
+  "Finalizing your design profile…",
+];
 
 const RoomGeneration = () => {
   const { t } = useTranslation();
@@ -32,6 +40,13 @@ const RoomGeneration = () => {
   const [validating, setValidating] = useState(false);
   const [validationStatus, setValidationStatus] = useState("none"); // "none" | "valid" | "rejected"
   const [savedLayout, setSavedLayout] = useState(null);
+
+  // Preference extraction state
+  const [extracting, setExtracting] = useState(false);
+  const [extractedPreferences, setExtractedPreferences] = useState(null);
+  const [generationId, setGenerationId] = useState(null);
+  const [roomData, setRoomData] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Snapshot of the form at last successful validation — used to detect changes
   const validatedSnapshotRef = useRef(null);
@@ -58,6 +73,7 @@ const RoomGeneration = () => {
 
   /**
    * On mount (or when urlRoomId changes), try to load existing validated layout
+   * and also fetch room data for roomType
    */
   useEffect(() => {
     if (!urlRoomId) return;
@@ -96,7 +112,19 @@ const RoomGeneration = () => {
       }
     };
 
+    const loadRoomData = async () => {
+      try {
+        const { data } = await getRoomById(urlRoomId);
+        if (data.success && data.data.room) {
+          setRoomData(data.data.room);
+        }
+      } catch (err) {
+        console.log("Could not load room data:", urlRoomId);
+      }
+    };
+
     loadExistingLayout();
+    loadRoomData();
   }, [urlRoomId]);
 
   /**
@@ -212,6 +240,70 @@ const RoomGeneration = () => {
     }
   };
 
+  /**
+   * Handle preference extraction from Step 2 (Design Instructions).
+   * Calls the backend extract-preferences endpoint, then proceeds to Step 3.
+   */
+  const handleExtractPreferences = async () => {
+    // Basic validation
+    if (!form.prompt || form.prompt.trim().length < 10) {
+      setError(t("dashboard.promptRequired") || "Please describe your design preferences (at least 10 characters).");
+      return;
+    }
+
+    // Resolve room type from room data or fallback
+    const roomType = roomData?.roomType || "living_room";
+
+    setError("");
+    setExtracting(true);
+
+    try {
+      const payload = {
+        roomType,
+        budget: parseFloat(form.budget) || 50000,
+        length: parseFloat(form.length) || 400,
+        width: parseFloat(form.width) || 300,
+        height: parseFloat(form.height) || 280,
+        prompt: form.prompt.trim(),
+      };
+
+      // Include roomId if available
+      if (form.roomId || urlRoomId) {
+        payload.roomId = form.roomId || urlRoomId;
+      }
+
+      // Include generationId if re-extracting
+      if (generationId) {
+        payload.generationId = generationId;
+      }
+
+      const { data } = await extractPreferences(payload);
+
+      if (data.success) {
+        const generation = data.data.generation;
+        setExtractedPreferences(generation.extractedPreferences);
+        setGenerationId(generation._id);
+
+        // Show success briefly, then proceed
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          setStep(3);
+        }, 1500);
+      }
+    } catch (err) {
+      console.error("Preference extraction error:", err);
+      const response = err.response?.data;
+      const reason =
+        response?.message ||
+        response?.errors?.[0]?.message ||
+        "Failed to extract preferences. Please try again.";
+      setError(reason);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setForm((p) => ({ ...p, images: e.target.files }));
@@ -282,6 +374,43 @@ const RoomGeneration = () => {
       {/* Validation Loading Overlay */}
       {validating && <ValidationOverlay />}
 
+      {/* Preference Extraction Loading Overlay */}
+      {extracting && (
+        <ValidationOverlay
+          title={t("dashboard.extractingPreferences") || "Understanding your design preferences"}
+          messages={preferenceMessages}
+          fallbackMessages={preferenceMessages}
+          subTextKey="dashboard.extractionHint"
+          subTextFallback="SmartSpaceAI is analyzing your request and extracting your design preferences."
+        />
+      )}
+
+      {/* Success Toast */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div
+            className="flex flex-col items-center gap-4 rounded-[2rem] bg-background p-10 neomorph-raised max-w-sm w-[85%] mx-4"
+            style={{ animation: "fadeInUp 0.4s ease-out" }}
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
+              <Icon name="check_circle" size={40} className="text-green-600" />
+            </div>
+            <h3 className="font-headline text-lg font-bold text-on-surface text-center">
+              {t("dashboard.preferencesExtracted") || "Preferences Extracted!"}
+            </h3>
+            <p className="text-sm text-on-surface-variant text-center">
+              {t("dashboard.preferencesExtractedDesc") || "Your design preferences have been analyzed successfully."}
+            </p>
+          </div>
+          <style>{`
+            @keyframes fadeInUp {
+              from { opacity: 0; transform: translateY(16px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
+
       {step === 0 ? (
         <StepSelectType setForm={setForm} setStep={setStep} error={error} />
       ) : (
@@ -289,7 +418,7 @@ const RoomGeneration = () => {
           <Stepper currentStep={step} />
 
           <section className="flex-grow flex flex-col gap-6 w-full md:w-3/4 lg:w-4/5">
-            {error && step === 1 && (
+            {error && (step === 1 || step === 2) && (
               <div className="rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
                 {error}
               </div>
@@ -314,6 +443,8 @@ const RoomGeneration = () => {
                 form={form}
                 setForm={setForm}
                 setStep={setStep}
+                onExtractPreferences={handleExtractPreferences}
+                extracting={extracting}
               />
             )}
 

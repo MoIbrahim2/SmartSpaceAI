@@ -1,8 +1,16 @@
 import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 
-const StepDesignInstructions = ({ form, setForm, setStep }) => {
+const StepDesignInstructions = ({ form, setForm, setStep, onExtractPreferences, extracting }) => {
   const { t } = useTranslation();
+
+  const handleNext = () => {
+    if (onExtractPreferences) {
+      onExtractPreferences();
+    } else {
+      setStep(3);
+    }
+  };
 
   return (
     <div className="bg-background rounded-[2rem] p-8 lg:p-10 neomorph-raised flex-grow flex flex-col">
@@ -47,14 +55,16 @@ const StepDesignInstructions = ({ form, setForm, setStep }) => {
       <div className="flex justify-between items-center mt-auto pt-4 border-t border-outline-variant/20">
         <button
           onClick={() => setStep(1)}
-          className="px-6 py-3 rounded-xl font-headline font-semibold text-on-surface-variant bg-background neomorph-raised hover:text-primary active:neomorph-inset transition-all flex items-center gap-2"
+          disabled={extracting}
+          className="px-6 py-3 rounded-xl font-headline font-semibold text-on-surface-variant bg-background neomorph-raised hover:text-primary active:neomorph-inset transition-all flex items-center gap-2 disabled:opacity-50"
         >
           <Icon name="arrow_forward" size={16} className="rotate-180 rtl:rotate-0" />
           {t("common.goBack")}
         </button>
         <button
-          onClick={() => setStep(3)}
-          className="px-8 py-3 rounded-xl font-headline font-semibold text-primary bg-background neomorph-raised hover:text-primary-variant active:neomorph-inset transition-all flex items-center gap-2 group"
+          onClick={handleNext}
+          disabled={extracting}
+          className="px-8 py-3 rounded-xl font-headline font-semibold text-primary bg-background neomorph-raised hover:text-primary-variant active:neomorph-inset transition-all flex items-center gap-2 group disabled:opacity-50"
         >
           {t("common.next")}
           <Icon name="arrow_forward" size={16} className="transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />

@@ -1,0 +1,657 @@
+{
+  "collection": "budget_templates",
+  "version": "1.0.0",
+  "lastUpdated": "2026-07-19",
+  "description": "Budget distribution templates for each room type",
+  "templates": [
+    {
+      "roomType": "Living Room",
+      "description": "الصالون - أكتر غرفة بتاخد ميزانية",
+      "minBudget": 25000,
+      "maxBudget": 500000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Sofa",
+          "defaultPercentage": 35,
+          "minPercentage": 25,
+          "maxPercentage": 50,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Coffee Table",
+          "defaultPercentage": 10,
+          "minPercentage": 5,
+          "maxPercentage": 15,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "TV Unit",
+          "defaultPercentage": 15,
+          "minPercentage": 10,
+          "maxPercentage": 20,
+          "priority": 3,
+          "role": "CORE"
+        },
+        {
+          "category": "Curtains",
+          "defaultPercentage": 8,
+          "minPercentage": 5,
+          "maxPercentage": 12,
+          "priority": 4,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Side Table",
+          "defaultPercentage": 5,
+          "minPercentage": 3,
+          "maxPercentage": 8,
+          "priority": 5,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Rug",
+          "defaultPercentage": 8,
+          "minPercentage": 5,
+          "maxPercentage": 12,
+          "priority": 6,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Floor Lamp",
+          "defaultPercentage": 5,
+          "minPercentage": 2,
+          "maxPercentage": 8,
+          "priority": 7,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Bookshelf",
+          "defaultPercentage": 7,
+          "minPercentage": 3,
+          "maxPercentage": 12,
+          "priority": 8,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Wall Art",
+          "defaultPercentage": 3,
+          "minPercentage": 1,
+          "maxPercentage": 6,
+          "priority": 9,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Armchair",
+          "defaultPercentage": 4,
+          "minPercentage": 0,
+          "maxPercentage": 10,
+          "priority": 10,
+          "role": "OPTIONAL"
+        }
+      ]
+    },
+    {
+      "roomType": "Bedroom",
+      "description": "غرفة النوم - السرير والدولاب هم الأساس",
+      "minBudget": 20000,
+      "maxBudget": 400000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Bed",
+          "defaultPercentage": 35,
+          "minPercentage": 28,
+          "maxPercentage": 45,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Wardrobe",
+          "defaultPercentage": 25,
+          "minPercentage": 18,
+          "maxPercentage": 32,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "Nightstand",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 3,
+          "role": "CORE"
+        },
+        {
+          "category": "Dresser",
+          "defaultPercentage": 10,
+          "minPercentage": 6,
+          "maxPercentage": 15,
+          "priority": 4,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Curtains",
+          "defaultPercentage": 7,
+          "minPercentage": 4,
+          "maxPercentage": 10,
+          "priority": 5,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Rug",
+          "defaultPercentage": 5,
+          "minPercentage": 3,
+          "maxPercentage": 8,
+          "priority": 6,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Table Lamp",
+          "defaultPercentage": 4,
+          "minPercentage": 2,
+          "maxPercentage": 7,
+          "priority": 7,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Mirror",
+          "defaultPercentage": 3,
+          "minPercentage": 1,
+          "maxPercentage": 6,
+          "priority": 8,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Bedroom Armchair",
+          "defaultPercentage": 3,
+          "minPercentage": 0,
+          "maxPercentage": 8,
+          "priority": 9,
+          "role": "OPTIONAL"
+        }
+      ]
+    },
+    {
+      "roomType": "Kids Room",
+      "description": "غرفة الأطفال - الأمان والتخزين أهم",
+      "minBudget": 15000,
+      "maxBudget": 200000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Kids Bed",
+          "defaultPercentage": 25,
+          "minPercentage": 18,
+          "maxPercentage": 35,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Kids Wardrobe",
+          "defaultPercentage": 20,
+          "minPercentage": 15,
+          "maxPercentage": 28,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "Study Desk",
+          "defaultPercentage": 15,
+          "minPercentage": 10,
+          "maxPercentage": 20,
+          "priority": 3,
+          "role": "CORE"
+        },
+        {
+          "category": "Study Chair",
+          "defaultPercentage": 10,
+          "minPercentage": 6,
+          "maxPercentage": 14,
+          "priority": 4,
+          "role": "CORE"
+        },
+        {
+          "category": "Bookshelf",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 5,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Rug",
+          "defaultPercentage": 7,
+          "minPercentage": 4,
+          "maxPercentage": 10,
+          "priority": 6,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Storage Unit",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 7,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Wall Decor",
+          "defaultPercentage": 4,
+          "minPercentage": 2,
+          "maxPercentage": 7,
+          "priority": 8,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Night Light",
+          "defaultPercentage": 3,
+          "minPercentage": 1,
+          "maxPercentage": 5,
+          "priority": 9,
+          "role": "OPTIONAL"
+        }
+      ]
+    },
+    {
+      "roomType": "Kitchen",
+      "description": "المطبخ - الدواليب والكاونتر هم الأساس",
+      "minBudget": 30000,
+      "maxBudget": 600000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Kitchen Cabinet Set",
+          "defaultPercentage": 40,
+          "minPercentage": 30,
+          "maxPercentage": 55,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Countertop",
+          "defaultPercentage": 20,
+          "minPercentage": 12,
+          "maxPercentage": 28,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "Kitchen Island",
+          "defaultPercentage": 12,
+          "minPercentage": 0,
+          "maxPercentage": 20,
+          "priority": 3,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Storage Rack",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 4,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Bar Stool",
+          "defaultPercentage": 8,
+          "minPercentage": 3,
+          "maxPercentage": 12,
+          "priority": 5,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Kitchen Lighting",
+          "defaultPercentage": 7,
+          "minPercentage": 4,
+          "maxPercentage": 10,
+          "priority": 6,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Wall Shelf",
+          "defaultPercentage": 5,
+          "minPercentage": 2,
+          "maxPercentage": 8,
+          "priority": 7,
+          "role": "OPTIONAL"
+        }
+      ]
+    },
+    {
+      "roomType": "Bathroom",
+      "description": "الحمام - الفانيتي والشاور هم الأساس",
+      "minBudget": 10000,
+      "maxBudget": 200000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Vanity Unit",
+          "defaultPercentage": 25,
+          "minPercentage": 18,
+          "maxPercentage": 35,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Shower Enclosure",
+          "defaultPercentage": 25,
+          "minPercentage": 18,
+          "maxPercentage": 32,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "Toilet",
+          "defaultPercentage": 15,
+          "minPercentage": 10,
+          "maxPercentage": 22,
+          "priority": 3,
+          "role": "CORE"
+        },
+        {
+          "category": "Mirror Cabinet",
+          "defaultPercentage": 12,
+          "minPercentage": 6,
+          "maxPercentage": 16,
+          "priority": 4,
+          "role": "CORE"
+        },
+        {
+          "category": "Shelving",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 5,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Towel Rack",
+          "defaultPercentage": 5,
+          "minPercentage": 2,
+          "maxPercentage": 8,
+          "priority": 6,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Accessories Set",
+          "defaultPercentage": 5,
+          "minPercentage": 2,
+          "maxPercentage": 8,
+          "priority": 7,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Bathroom Lighting",
+          "defaultPercentage": 5,
+          "minPercentage": 3,
+          "maxPercentage": 8,
+          "priority": 8,
+          "role": "SECONDARY"
+        }
+      ]
+    },
+    {
+      "roomType": "Dining Room",
+      "description": "غرفة السفرة - الترابيزة والكراسي هم الأساس",
+      "minBudget": 15000,
+      "maxBudget": 350000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Dining Table",
+          "defaultPercentage": 30,
+          "minPercentage": 22,
+          "maxPercentage": 40,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Dining Chairs",
+          "defaultPercentage": 25,
+          "minPercentage": 18,
+          "maxPercentage": 32,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "Buffet Sideboard",
+          "defaultPercentage": 15,
+          "minPercentage": 8,
+          "maxPercentage": 22,
+          "priority": 3,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Chandelier",
+          "defaultPercentage": 10,
+          "minPercentage": 5,
+          "maxPercentage": 15,
+          "priority": 4,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Rug",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 5,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Curtains",
+          "defaultPercentage": 7,
+          "minPercentage": 4,
+          "maxPercentage": 10,
+          "priority": 6,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Wall Art",
+          "defaultPercentage": 5,
+          "minPercentage": 2,
+          "maxPercentage": 8,
+          "priority": 7,
+          "role": "OPTIONAL"
+        }
+      ]
+    },
+    {
+      "roomType": "Office",
+      "description": "المكتب - المكتب والكرسي هم الأساس",
+      "minBudget": 10000,
+      "maxBudget": 250000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Office Desk",
+          "defaultPercentage": 25,
+          "minPercentage": 18,
+          "maxPercentage": 35,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Office Chair",
+          "defaultPercentage": 25,
+          "minPercentage": 18,
+          "maxPercentage": 35,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "Bookshelf",
+          "defaultPercentage": 15,
+          "minPercentage": 8,
+          "maxPercentage": 20,
+          "priority": 3,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Filing Cabinet",
+          "defaultPercentage": 10,
+          "minPercentage": 5,
+          "maxPercentage": 15,
+          "priority": 4,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Desk Lamp",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 5,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Rug",
+          "defaultPercentage": 10,
+          "minPercentage": 5,
+          "maxPercentage": 15,
+          "priority": 6,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Whiteboard",
+          "defaultPercentage": 7,
+          "minPercentage": 3,
+          "maxPercentage": 10,
+          "priority": 7,
+          "role": "OPTIONAL"
+        }
+      ]
+    },
+    {
+      "roomType": "Balcony",
+      "description": "البلكونة - أثاث خارجي مقاوم للعوامل الجوية",
+      "minBudget": 5000,
+      "maxBudget": 150000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Outdoor Seating",
+          "defaultPercentage": 30,
+          "minPercentage": 22,
+          "maxPercentage": 40,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Outdoor Table",
+          "defaultPercentage": 20,
+          "minPercentage": 12,
+          "maxPercentage": 28,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "Planter",
+          "defaultPercentage": 15,
+          "minPercentage": 8,
+          "maxPercentage": 22,
+          "priority": 3,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Outdoor Lighting",
+          "defaultPercentage": 15,
+          "minPercentage": 8,
+          "maxPercentage": 20,
+          "priority": 4,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Outdoor Rug",
+          "defaultPercentage": 10,
+          "minPercentage": 5,
+          "maxPercentage": 15,
+          "priority": 5,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Swing",
+          "defaultPercentage": 10,
+          "minPercentage": 0,
+          "maxPercentage": 18,
+          "priority": 6,
+          "role": "OPTIONAL"
+        }
+      ]
+    },
+    {
+      "roomType": "Game Room",
+      "description": "غرفة الألعاب - الـ Gaming Setup هو الأساس",
+      "minBudget": 15000,
+      "maxBudget": 300000,
+      "currency": "EGP",
+      "categories": [
+        {
+          "category": "Gaming Desk",
+          "defaultPercentage": 20,
+          "minPercentage": 14,
+          "maxPercentage": 28,
+          "priority": 1,
+          "role": "CORE"
+        },
+        {
+          "category": "Gaming Chair",
+          "defaultPercentage": 20,
+          "minPercentage": 14,
+          "maxPercentage": 28,
+          "priority": 2,
+          "role": "CORE"
+        },
+        {
+          "category": "TV Unit",
+          "defaultPercentage": 15,
+          "minPercentage": 10,
+          "maxPercentage": 20,
+          "priority": 3,
+          "role": "CORE"
+        },
+        {
+          "category": "Sofa",
+          "defaultPercentage": 15,
+          "minPercentage": 8,
+          "maxPercentage": 22,
+          "priority": 4,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Storage Unit",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 5,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "LED Lighting",
+          "defaultPercentage": 8,
+          "minPercentage": 4,
+          "maxPercentage": 12,
+          "priority": 6,
+          "role": "SECONDARY"
+        },
+        {
+          "category": "Rug",
+          "defaultPercentage": 7,
+          "minPercentage": 3,
+          "maxPercentage": 10,
+          "priority": 7,
+          "role": "OPTIONAL"
+        },
+        {
+          "category": "Sound System Stand",
+          "defaultPercentage": 7,
+          "minPercentage": 3,
+          "maxPercentage": 10,
+          "priority": 8,
+          "role": "OPTIONAL"
+        }
+      ]
+    }
+  ]
+}
