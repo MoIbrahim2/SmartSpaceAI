@@ -5,7 +5,7 @@ const HTTP_STATUS = require('../constants/statusCodes');
 const fs = require('fs');
 const path = require('path');
 const promptBuilder = require('./promptBuilder.service');
-const geminiService = require('./gemini.service');
+const aiService = require('./aiService');
 
 /**
  * Create a new generation
@@ -93,7 +93,7 @@ const extractUserPreferences = async (userId, payload) => {
   );
 
   // 4. Call Gemini to extract preferences
-  const extractedPreferences = await geminiService.extractPreferences(
+  const extractedPreferences = await aiService.extractPreferences(
     systemPrompt,
     userPrompt,
     categoryNames
