@@ -29,9 +29,10 @@ flowchart TD
         P1["Category Resolution & Aliasing (Standard, Semantic Alias, Dynamic Ad-hoc)"]
         P2["Area Calculation & SizeRules Matching (Length x Width -> Room Area fit)"]
         P3["Dynamic Budget Allocation (budgetAdjustment: premium/budget-friendly/mid-range)"]
-        P4["Negative Filtering (Exclude materialsToAvoid, colorsToAvoid)"]
-        P5["Product Scoring & Tiering (Calculate Match Score -> Cheaper/Balanced/Premium)"]
-        P6["Budget Optimization & CORE Guardrails (Ensure Total <= Budget, Protect CORE min %)"]
+        P4["Stage 1: Candidate Generation (DB Pre-filtering: Category, Deal-breakers, Price <= 1.35*Bi)"]
+        P5["Stage 2: Weighted Match Scoring (In-Memory Math: Style, Material, Color, Price, Size)"]
+        P6["Stage 3: Tiering & Re-ranking (3-Tier Split: Cheaper/Balanced/Premium + Stock/Rating Re-ranking)"]
+        P7["Budget Optimization & CORE Guardrails (Ensure Total <= Budget, Protect CORE min %)"]
     end
 
     subgraph Outputs["3. Output Payload"]
@@ -173,17 +174,34 @@ For each active category, retrieve the base percentages from `budget_templates.j
 
 ---
 
-### Step 4.4: Filtering, Product Scoring & Tiering (`Cheaper`, `Balanced`, `Premium`)
+### Step 4.4: 3-Stage Recommendation Pipeline (Candidate Generation, Scoring & Tiering)
 
-Filter candidate products from the database:
-1. **Negative Filtering:** Exclude any products matching `materialsToAvoid` or `colorsToAvoid`.
-2. **Weighted Match Scoring:**
-   $$\text{Score} = (W_{\text{style}} \cdot S_{\text{style}}) + (W_{\text{material}} \cdot S_{\text{material}}) + (W_{\text{color}} \cdot S_{\text{color}}) + (W_{\text{price}} \cdot S_{\text{price}}) + (W_{\text{size}} \cdot S_{\text{size}})$$
-3. **3-Tier Classification:**
-   Classify matching products based on the target category budget $B_i$:
-   * 🟢 **`Cheaper`:** Price $< 0.85 \times B_i$.
-   * 🟡 **`Balanced` (Default Recommended Option):** Price between $0.85 \times B_i$ and $1.15 \times B_i$.
-   * 🟣 **`Premium`:** Price between $1.15 \times B_i$ and $1.35 \times B_i$.
+To maximize performance when querying large product catalogs (e.g. 50,000+ items), the scoring and tiering engine operates as a **3-Stage Pipeline**:
+
+#### 1️⃣ Stage 1: Candidate Generation (Database Pre-filtering)
+Move the "Hard Exclusion" logic out of application code and push it directly into the database query. Databases are heavily indexed and optimized for fast pre-filtering.
+
+Before the scoring engine processes items in application memory, run a database query using strict constraints:
+* **Category Filter:** `WHERE category = 'Sofa'`
+* **Deal-breaker Exclusion:** `AND material NOT IN (materialsToAvoid) AND color NOT IN (colorsToAvoid)`
+* **Hard Budget Cap:** Since the highest tier (`Premium`) caps at $1.35 \times B_i$, immediately exclude anything above that price: `AND price <= (allocatedBudget * 1.35)`
+* **Result:** Instantly reduces candidate dataset from ~50,000 products to ~500–2,000 viable candidates.
+
+#### 2️⃣ Stage 2: Weighted Match Scoring (Application Memory)
+Take the surviving candidates from Stage 1 into application memory and compute the **Weighted Match Scoring** formula:
+
+$$\text{Score} = (W_{\text{style}} \cdot S_{\text{style}}) + (W_{\text{material}} \cdot S_{\text{material}}) + (W_{\text{color}} \cdot S_{\text{color}}) + (W_{\text{price}} \cdot S_{\text{price}}) + (W_{\text{size}} \cdot S_{\text{size}})$$
+
+* Calculating this complex math for ~1,000 items in memory takes mere milliseconds.
+* The array of scored candidates is sorted in descending order by score to isolate top matching candidates.
+
+#### 3️⃣ Stage 3: Tiering & Re-ranking
+Take the top 20–50 highest-scoring candidates from Stage 2 and classify them into **3 Budget Tiers** based on the target category budget $B_i$:
+* 🟢 **`Cheaper`:** Price $< 0.85 \times B_i$.
+* 🟡 **`Balanced` (Default Recommended Option):** Price between $0.85 \times B_i$ and $1.15 \times B_i$.
+* 🟣 **`Premium`:** Price between $1.15 \times B_i$ and $1.35 \times B_i$.
+
+* **Final Business Logic:** Apply secondary re-ranking (e.g., verifying real-time stock availability, boosting top user-rated items, or selecting fallback candidates).
 
 ---
 
@@ -351,7 +369,7 @@ class RecommendationEngineService {
     // 3. Allocate Budget per Category considering budgetAdjustment
     const allocatedCategories = this.allocateBudget(totalBudget, resolvedCategories, geminiPreferences.categoryPreferences);
 
-    // 4. Search, Filter, Score & Tier Products
+    // 4. 3-Stage Processing Pipeline: Candidate Generation, Scoring & Tiering
     const categoriesBreakdown = [];
     let allocatedSum = 0;
 
@@ -361,11 +379,13 @@ class RecommendationEngineService {
       // Match size rules based on room area
       const matchedSizeRule = this.matchSizeRule(rule.sizeRules, area_sqm);
 
-      // Search & Filter DB
+      // Stage 1: Candidate Generation (Database Pre-filtering: Category, Deal-breakers, Hard Budget Cap price <= 1.35 * Bi)
       const candidateProducts = await this.fetchAndFilterProducts(cat, geminiPreferences, productsDb, matchedSizeRule);
 
-      // Score and Tier
+      // Stage 2: Weighted Match Scoring (In-Memory Math & Sorting)
       const scoredProducts = this.scoreProducts(candidateProducts, cat, geminiPreferences.roomPreferences);
+
+      // Stage 3: Tiering & Re-ranking (3-Tier Classification & Business Rules)
       const tiered = this.classifyTiers(scoredProducts, cat.allocatedBudget);
 
       const recommendedProduct = tiered.balanced[0] || tiered.cheaper[0] || tiered.premium[0] || null;
