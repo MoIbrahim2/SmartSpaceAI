@@ -57,7 +57,14 @@ const extractAvailableCategories = (categoryRules) => {
     category: rule.category,
     role: rule.role,
     priority: rule.priority,
-    defaultIncluded: rule.defaultIncluded
+    defaultIncluded: rule.defaultIncluded,
+    quantity: rule.quantity
+      ? {
+          min: rule.quantity.min,
+          max: rule.quantity.max,
+          allowMultiple: rule.quantity.allowMultiple
+        }
+      : null
   }));
 };
 
@@ -70,30 +77,54 @@ const extractAvailableCategories = (categoryRules) => {
  */
 const buildSystemPrompt = (availableCategories) => {
   const categoryList = availableCategories
-    .map((c) => `- ${c.category} (${c.role}, ${c.defaultIncluded ? 'included by default' : 'optional'})`)
+    .map((c) => {
+      let qInfo = '';
+      if (c.quantity) {
+        qInfo = `; Quantity Constraints: min=${c.quantity.min}, max=${c.quantity.max}, allowMultiple=${c.quantity.allowMultiple}`;
+      }
+      return `- ${c.category} (${c.role}, ${c.defaultIncluded ? 'included by default' : 'optional'}${qInfo})`;
+    })
     .join('\n');
 
-  return `You are a design preference extraction assistant for an AI-powered interior design platform called SmartSpaceAI.
+  return `You are an intent and design-preference extraction system for an AI-powered interior design platform called SmartSpaceAI.
 
 Your ONLY responsibility is to understand the user's natural language description and extract their design preferences.
 
 You must NEVER:
 - Recommend specific products
-- Allocate budgets
-- Calculate sizes or dimensions
+- Allocate budgets or calculate category budgets from quantity
+- Multiply category budget percentages by quantity
+- Calculate sizes, dimensions, or physical product dimensions from quantity
 - Make placement decisions
 - Filter or rank products
 - Invent preferences the user did not express
+- Use the category's default quantity as extracted user intent
+- Modify knowledge-base quantity rules
 
-If the user did not mention a preference, return null for that field.
-If the user did not mention a specific category, still include it in categoryPreferences with included set to null.
+Extract only preferences explicitly stated or clearly implied by the user's request.
+
+For quantity extraction:
+- Quantity means the number of separate products/items requested from a category.
+- Extract quantity only when the number of products is explicit or unambiguous.
+- If quantity is not specified by the user, return null. NEVER use the category's default quantity as extracted user intent.
+- Do NOT confuse product quantity with capacity, component count, or product configuration:
+  * "table for six people" -> Dining Table quantity: null (it is 1 table with seating capacity for 6 people)
+  * "double-sink vanity" -> Vanity Unit quantity: null (it is 1 vanity unit with double-sink configuration)
+  * "three-door wardrobe" -> Wardrobe quantity: null (it is 1 wardrobe with 3 doors)
+  * "four-drawer dresser" -> Dresser quantity: null (it is 1 dresser with 4 drawers)
+  * "seating for two people" -> Seating quantity: null (unless explicit like "two outdoor chairs" -> Outdoor Seating quantity: 2)
+  * "two sofas" -> Sofa quantity: 2
+  * "six dining chairs" -> Dining Chairs quantity: 6
+  * "two nightstands" -> Nightstand quantity: 2
+- Respect the supplied category quantity constraints (min, max, allowMultiple). If allowMultiple is false or max is 1, do NOT invent or support multiple products for that category.
+- The recommendation engine will handle budget allocation, quantity feasibility, dimensions, and product selection.
 
 Available furniture categories for this room type:
 ${categoryList}
 
 You must return a structured JSON response with the following schema:
 1. roomPreferences: The overall room design preferences (style, theme, mood, lighting, colorPalette)
-2. categoryPreferences: Per-category preferences for each available category
+2. categoryPreferences: Per-category preferences for each available category (including category, included, excluded, quantity, preferredMaterial, preferredColor, preferredStyle, preferredShape, preferredSize, budgetAdjustment, importance)
 3. negativePreferences: Things the user explicitly wants to avoid`;
 };
 
@@ -119,7 +150,7 @@ Available Categories: ${categoryNames}
 User's Design Description:
 "${userPrompt}"
 
-Based on the user's description above, extract their design preferences. For each available category, determine if the user expressed any preference about it. If unknown, use null.`;
+Based on the user's description above, extract their design preferences. For each available category, determine if the user expressed any preference about it (including explicit product quantity if requested). If unknown or not specified, use null.`;
 };
 
 module.exports = {

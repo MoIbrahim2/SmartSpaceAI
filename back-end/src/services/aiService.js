@@ -155,6 +155,11 @@ const buildResponseSchema = (categoryNames) => {
               nullable: true,
               description: 'true if user explicitly does NOT want this category. null if not mentioned.'
             },
+            quantity: {
+              type: Type.INTEGER,
+              nullable: true,
+              description: 'Extracted product quantity for this category if explicitly specified or unambiguously implied by the user as a number of separate products (e.g. 2 for "two sofas"). Must be null if user did not specify product quantity or if it refers to capacity/configuration/component count (e.g. table for 6, double-sink vanity, 3-door wardrobe).'
+            },
             preferredMaterial: {
               type: Type.STRING,
               nullable: true,
@@ -191,7 +196,19 @@ const buildResponseSchema = (categoryNames) => {
               description: 'How important this category seems to the user (HIGH, MEDIUM, LOW). null if not mentioned.'
             }
           },
-          required: ['category']
+          required: [
+            'category',
+            'included',
+            'excluded',
+            'quantity',
+            'preferredMaterial',
+            'preferredColor',
+            'preferredStyle',
+            'preferredShape',
+            'preferredSize',
+            'budgetAdjustment',
+            'importance'
+          ]
         },
         description: 'Per-category preferences for each available furniture category.'
       },
@@ -304,6 +321,16 @@ const validateExtractedPreferences = (preferences) => {
       throw new ApiError(
         HTTP_STATUS.UNPROCESSABLE_ENTITY,
         'AI response contains categoryPreference without a valid category name.'
+      );
+    }
+    if (
+      catPref.quantity !== undefined &&
+      catPref.quantity !== null &&
+      (!Number.isInteger(catPref.quantity) || catPref.quantity < 1)
+    ) {
+      throw new ApiError(
+        HTTP_STATUS.UNPROCESSABLE_ENTITY,
+        'AI response contains invalid quantity in categoryPreferences.'
       );
     }
   }

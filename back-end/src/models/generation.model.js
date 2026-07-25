@@ -70,6 +70,7 @@ const generationSchema = new mongoose.Schema({
       category: { type: String, required: true },
       included: { type: Boolean, default: null },
       excluded: { type: Boolean, default: null },
+      quantity: { type: Number, default: null },
       preferredMaterial: { type: String, default: null },
       preferredColor: { type: String, default: null },
       preferredStyle: { type: String, default: null },
