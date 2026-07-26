@@ -74,6 +74,7 @@ flowchart TD
       "category": "Sofa",
       "included": true,
       "excluded": false,
+      "quantity": 2,
       "preferredMaterial": "Fabric",
       "preferredColor": "Off-White",
       "preferredStyle": "Modern",
@@ -86,6 +87,7 @@ flowchart TD
       "category": "Coffee Table",
       "included": true,
       "excluded": false,
+      "quantity": null,
       "preferredMaterial": "Oak Wood",
       "preferredColor": null,
       "preferredStyle": "Scandinavian",
@@ -95,9 +97,23 @@ flowchart TD
       "importance": "MEDIUM"
     },
     {
+      "category": "Nightstand",
+      "included": true,
+      "excluded": false,
+      "quantity": 2,
+      "preferredMaterial": "Wood",
+      "preferredColor": "Light Wood",
+      "preferredStyle": "Scandinavian",
+      "preferredShape": null,
+      "preferredSize": null,
+      "budgetAdjustment": "mid-range",
+      "importance": "MEDIUM"
+    },
+    {
       "category": "Bean Bag",
       "included": true,
       "excluded": false,
+      "quantity": null,
       "preferredMaterial": "Fabric",
       "preferredColor": "Sage Green",
       "preferredStyle": null,
@@ -114,6 +130,46 @@ flowchart TD
   }
 }
 ```
+
+> [!IMPORTANT]
+> **Gemini Quantity Extraction Rules:**
+> - `quantity` represents the **number of separate products/items** requested for a category (e.g. `2` for "two sofas" or "two nightstands").
+> - If quantity is NOT mentioned, Gemini returns `null`. Gemini **never** uses knowledge base defaults as user intent.
+> - **Product Quantity vs. Capacity/Configuration:**
+>   * *"Table for 6 people"* $\rightarrow$ `Dining Table quantity: null` (1 table with seating capacity of 6), `Dining Chairs quantity: 6`.
+>   * *"Double-sink vanity"* $\rightarrow$ `Vanity Unit quantity: null` (1 vanity unit with double-sink config).
+>   * *"3-door wardrobe"* $\rightarrow$ `Wardrobe quantity: null` (1 wardrobe with 3 doors).
+
+### C) Knowledge Base Rules Schema (`category_rules/*.json`):
+Each room type category rule defines structured constraints:
+```json
+{
+  "category": "Nightstand",
+  "role": "CORE",
+  "priority": 3,
+  "defaultIncluded": true,
+  "quantity": {
+    "default": 2,
+    "min": 1,
+    "max": 2,
+    "allowMultiple": true,
+    "budgetMode": "PER_CATEGORY",
+    "additionalItemBudgetBoost": 0,
+    "sizeMode": "STANDARD"
+  },
+  "budget": {
+    "defaultPercentage": 8,
+    "minPercentage": 4,
+    "maxPercentage": 12
+  }
+}
+```
+* **`quantity.default`**: Default count when user does not specify a quantity.
+* **`quantity.min` / `max`**: Minimum and maximum allowable items for this category in the room.
+* **`quantity.allowMultiple`**: Boolean flag indicating if multiple items can be allocated.
+* **`quantity.budgetMode`**: `"PER_CATEGORY"` (allocated budget covers all items) vs `"PER_UNIT"`.
+* **`quantity.sizeMode`**: `"STANDARD"` vs `"ADJUST_PER_ITEM"`.
+
 
 ---
 
@@ -146,6 +202,25 @@ The engine takes `categoryPreferences` from Gemini and merges them with the stan
 
 ---
 
+### Step 4.1.1: Quantity Resolution & Precedence Rules
+
+The engine resolves the target quantity ($Q_i$) for category $i$ using explicit precedence rules:
+
+1. **Precedence Hierarchy:**
+   $$\text{Resolved Quantity } (Q_i) = \begin{cases} 
+   \text{userQuantity} & \text{if Gemini returned non-null integer AND } \text{rule.allowMultiple} = \text{true} \\
+   \text{rule.quantity.default} & \text{if userQuantity is null} \\
+   1 & \text{if } \text{rule.allowMultiple} = \text{false (forced single-unit constraint)}
+   \end{cases}$$
+
+2. **Boundary Validation:**
+   * $Q_i$ is clamped between `rule.quantity.min` and `rule.quantity.max`.
+   * Example 1: User requests *"2 nightstands"*. Gemini returns `quantity: 2`. Rule allows `max: 2`. Resolved $Q = 2$.
+   * Example 2: User requests *"dining table for 6"*. Gemini returns `Dining Table quantity: null` (capacity vs quantity distinction). Rule `default: 1`. Resolved $Q = 1$.
+   * Example 3: User requests *"two beds"* for a single bedroom. Rule specifies `allowMultiple: false, max: 1`. Resolved $Q = 1$ with system notice: *"Adjusted Bed quantity to 1 to fit standard single bedroom rules."*
+
+---
+
 ### Step 4.2: Room Area Calculation & `sizeRules` Matching
 
 Calculate room surface area:
@@ -156,21 +231,27 @@ Load `knowledge_base/category_rules/living_room.json`:
   * For $20 \text{ m}^2$ (bracket `min: 18, max: 25`):
     * **Sofa:** Recommended dimensions: `width: 220cm - 280cm`, `depth: 90cm - 110cm`.
     * **Coffee Table:** Recommended dimensions: `width: 110cm - 140cm`, `depth: 60cm - 75cm`.
-* Products exceeding maximum dimensions for the room area are filtered out to prevent room overcrowding.
+* If `sizeMode === "ADJUST_PER_ITEM"` and $Q_i > 1$ (e.g. 2 smaller sofas instead of 1 large sofa), reduce the individual product target dimensions by $15-25\%$ so the total cumulative width fits within the room clearance.
 
 ---
 
-### Step 4.3: Dynamic Budget Allocation & `budgetAdjustment` Hints
+### Step 4.3: Dynamic Budget Allocation & Per-Unit Pricing
 
-For each active category, retrieve the base percentages from `budget_templates.json`:
+For each active category:
 1. **Base Allocation:**
    $$B_i^{\text{base}} = \text{TotalBudget} \times \left( \frac{\text{defaultPercentage}_i}{100} \right)$$
 2. **Adjustment via Gemini `budgetAdjustment`:**
    * If `budgetAdjustment === "premium"`: Scale up towards `maxPercentage`.
    * If `budgetAdjustment === "budget-friendly"`: Scale down towards `minPercentage`.
    * If `budgetAdjustment === "mid-range"` or `null`: Use `defaultPercentage`.
-3. **CORE Category Guardrails:**
-   * Allocations for `CORE` items (e.g., Sofa, TV Unit) can never fall below their defined `minPercentage`.
+3. **Multi-Unit Budget Allocation & Per-Unit Target Price ($P_{\text{unit}}$):**
+   * If $Q_i > 1$:
+     * Add `additionalItemBudgetBoost` if defined in the rule (e.g. $+5\%$ total budget boost for additional sofa).
+     * Calculate **Per-Unit Target Budget**:
+       $$P_{\text{unit}} = \frac{B_i^{\text{allocated}}}{Q_i}$$
+     * Candidate matching and tier evaluation (`Cheaper`, `Balanced`, `Premium`) will target products priced around $P_{\text{unit}}$, ensuring $Q_i \times \text{Product.Price} \le B_i^{\text{allocated}}$.
+4. **CORE Category Guardrails:**
+   * Allocations for `CORE` items (e.g., Sofa, Bed) can never fall below their defined `minPercentage`.
 
 ---
 
@@ -234,53 +315,62 @@ Take the top 20–50 highest-scoring candidates from Stage 2 and classify them i
   ],
   "categoriesBreakdown": [
     {
-      "category": "Sofa",
+      "category": "Nightstand",
       "role": "CORE",
-      "priority": 1,
-      "allocatedBudget": 32000,
+      "priority": 3,
+      "requestedQuantity": 2,
+      "resolvedQuantity": 2,
+      "allocatedBudget": 6400,
+      "unitTargetBudget": 3200,
       "recommendedDimensions": {
-        "width": { "min": 220, "max": 280 },
-        "depth": { "min": 90, "max": 110 }
+        "width": { "min": 40, "max": 55 },
+        "depth": { "min": 35, "max": 45 }
       },
       "recommendedProduct": {
-        "id": "prod_sofa_bal_101",
+        "id": "prod_nightstand_bal_10",
         "tier": "BALANCED",
-        "title": "Modern L-Shape Fabric Sofa",
-        "price": 29500,
+        "title": "Nordic Light Wood Bedside Table",
+        "price": 3100,
         "currency": "EGP",
-        "dimensions": { "width": 240, "depth": 95, "height": 85 },
-        "material": "Fabric",
-        "color": "Off-White",
-        "style": "Modern",
-        "imageUrl": "https://cdn.smartspace.ai/products/sofa_bal.jpg",
-        "score": 96
+        "unitPrice": 3100,
+        "totalPriceForQuantity": 6200,
+        "quantity": 2,
+        "dimensions": { "width": 45, "depth": 40, "height": 50 },
+        "material": "Wood",
+        "color": "Light Wood",
+        "style": "Scandinavian",
+        "imageUrl": "https://cdn.smartspace.ai/products/nightstand.jpg",
+        "score": 95
       },
       "tieredAlternatives": {
         "cheaper": [
           {
-            "id": "prod_sofa_cheap_99",
+            "id": "prod_nightstand_cheap_01",
             "tier": "CHEAPER",
-            "title": "Minimalist 3-Seater Fabric Sofa",
-            "price": 22000,
-            "score": 86
+            "title": "Minimalist Pine Nightstand",
+            "unitPrice": 2200,
+            "totalPriceForQuantity": 4400,
+            "score": 85
           }
         ],
         "balanced": [
           {
-            "id": "prod_sofa_bal_101",
+            "id": "prod_nightstand_bal_10",
             "tier": "BALANCED",
-            "title": "Modern L-Shape Fabric Sofa",
-            "price": 29500,
-            "score": 96
+            "title": "Nordic Light Wood Bedside Table",
+            "unitPrice": 3100,
+            "totalPriceForQuantity": 6200,
+            "score": 95
           }
         ],
         "premium": [
           {
-            "id": "prod_sofa_prem_303",
+            "id": "prod_nightstand_prem_05",
             "tier": "PREMIUM",
-            "title": "Scandinavian Luxury Sectional Sofa",
-            "price": 36000,
-            "score": 94
+            "title": "Solid Oak Curved Nightstand",
+            "unitPrice": 3900,
+            "totalPriceForQuantity": 7800,
+            "score": 91
           }
         ]
       }
@@ -289,7 +379,10 @@ Take the top 20–50 highest-scoring candidates from Stage 2 and classify them i
       "category": "Armchair",
       "role": "SECONDARY",
       "priority": 5,
+      "requestedQuantity": null,
+      "resolvedQuantity": 1,
       "allocatedBudget": 8000,
+      "unitTargetBudget": 8000,
       "mappedFrom": "Bean Bag",
       "recommendedProduct": {
         "id": "prod_armchair_02",
@@ -297,6 +390,9 @@ Take the top 20–50 highest-scoring candidates from Stage 2 and classify them i
         "title": "Cozy Sage Green Accent Armchair",
         "price": 7500,
         "currency": "EGP",
+        "unitPrice": 7500,
+        "totalPriceForQuantity": 7500,
+        "quantity": 1,
         "material": "Fabric",
         "color": "Sage Green",
         "score": 92
@@ -307,7 +403,8 @@ Take the top 20–50 highest-scoring candidates from Stage 2 and classify them i
             "id": "prod_armchair_cheap_01",
             "tier": "CHEAPER",
             "title": "Nordic Fabric Armchair",
-            "price": 5500,
+            "unitPrice": 5500,
+            "totalPriceForQuantity": 5500,
             "score": 84
           }
         ],
@@ -316,7 +413,8 @@ Take the top 20–50 highest-scoring candidates from Stage 2 and classify them i
             "id": "prod_armchair_02",
             "tier": "BALANCED",
             "title": "Cozy Sage Green Accent Armchair",
-            "price": 7500,
+            "unitPrice": 7500,
+            "totalPriceForQuantity": 7500,
             "score": 92
           }
         ],
@@ -369,35 +467,46 @@ class RecommendationEngineService {
     // 3. Allocate Budget per Category considering budgetAdjustment
     const allocatedCategories = this.allocateBudget(totalBudget, resolvedCategories, geminiPreferences.categoryPreferences);
 
-    // 4. 3-Stage Processing Pipeline: Candidate Generation, Scoring & Tiering
+    // 4. 3-Stage Processing Pipeline with Quantity & Per-Unit Pricing
     const categoriesBreakdown = [];
     let allocatedSum = 0;
 
     for (const cat of allocatedCategories) {
       const rule = categoryRules.rules.find(r => r.category.toLowerCase() === cat.category.toLowerCase()) || {};
       
+      // Step 4.1.1: Resolve Quantity & Constraints
+      const userPref = geminiPreferences.categoryPreferences.find(c => c.category.toLowerCase() === cat.category.toLowerCase());
+      const userQuantity = userPref?.quantity || null;
+      const resolvedQuantity = this.resolveQuantity(userQuantity, rule);
+      
+      // Calculate per-unit budget
+      const unitTargetBudget = cat.allocatedBudget / resolvedQuantity;
+
       // Match size rules based on room area
       const matchedSizeRule = this.matchSizeRule(rule.sizeRules, area_sqm);
 
-      // Stage 1: Candidate Generation (Database Pre-filtering: Category, Deal-breakers, Hard Budget Cap price <= 1.35 * Bi)
-      const candidateProducts = await this.fetchAndFilterProducts(cat, geminiPreferences, productsDb, matchedSizeRule);
+      // Stage 1: Candidate Generation (Targeting unit price <= 1.35 * unitTargetBudget)
+      const candidateProducts = await this.fetchAndFilterProducts(cat, geminiPreferences, productsDb, matchedSizeRule, unitTargetBudget);
 
-      // Stage 2: Weighted Match Scoring (In-Memory Math & Sorting)
+      // Stage 2: Weighted Match Scoring
       const scoredProducts = this.scoreProducts(candidateProducts, cat, geminiPreferences.roomPreferences);
 
-      // Stage 3: Tiering & Re-ranking (3-Tier Classification & Business Rules)
-      const tiered = this.classifyTiers(scoredProducts, cat.allocatedBudget);
+      // Stage 3: Tiering & Re-ranking based on unitTargetBudget
+      const tiered = this.classifyTiers(scoredProducts, unitTargetBudget, resolvedQuantity);
 
       const recommendedProduct = tiered.balanced[0] || tiered.cheaper[0] || tiered.premium[0] || null;
       if (recommendedProduct) {
-        allocatedSum += recommendedProduct.price;
+        allocatedSum += (recommendedProduct.unitPrice * resolvedQuantity);
       }
 
       categoriesBreakdown.push({
         category: cat.category,
         role: cat.role,
         priority: cat.priority,
+        requestedQuantity: userQuantity,
+        resolvedQuantity,
         allocatedBudget: cat.allocatedBudget,
+        unitTargetBudget,
         mappedFrom: cat.mappedFrom || null,
         recommendedDimensions: matchedSizeRule?.recommendedDimensions || null,
         recommendedProduct,
@@ -421,6 +530,17 @@ class RecommendationEngineService {
     };
   }
 
+  resolveQuantity(userQuantity, rule = {}) {
+    const qRule = rule.quantity || {};
+    if (qRule.allowMultiple === false) return 1;
+    if (Number.isInteger(userQuantity) && userQuantity >= 1) {
+      const min = qRule.min || 1;
+      const max = qRule.max || 10;
+      return Math.min(Math.max(userQuantity, min), max);
+    }
+    return qRule.default || 1;
+  }
+
   async loadBudgetTemplate(roomType) {
     const filePath = path.join(__dirname, '../../knowledge_base/budget_templates.json');
     const data = JSON.parse(await fs.readFile(filePath, 'utf8'));
@@ -439,16 +559,22 @@ class RecommendationEngineService {
     return sizeRules.find(sr => area_sqm >= sr.roomArea.min && area_sqm <= sr.roomArea.max) || sizeRules[0] || null;
   }
 
-  classifyTiers(products, targetBudget) {
+  classifyTiers(products, unitTargetBudget, resolvedQuantity = 1) {
     const cheaper = [];
     const balanced = [];
     const premium = [];
 
     products.forEach(p => {
-      const ratio = p.price / targetBudget;
-      if (ratio < 0.85) cheaper.push({ ...p, tier: 'CHEAPER' });
-      else if (ratio <= 1.15) balanced.push({ ...p, tier: 'BALANCED' });
-      else premium.push({ ...p, tier: 'PREMIUM' });
+      const ratio = p.price / unitTargetBudget;
+      const formattedProduct = {
+        ...p,
+        unitPrice: p.price,
+        totalPriceForQuantity: p.price * resolvedQuantity,
+        quantity: resolvedQuantity
+      };
+      if (ratio < 0.85) cheaper.push({ ...formattedProduct, tier: 'CHEAPER' });
+      else if (ratio <= 1.15) balanced.push({ ...formattedProduct, tier: 'BALANCED' });
+      else premium.push({ ...formattedProduct, tier: 'PREMIUM' });
     });
 
     return {
@@ -467,7 +593,9 @@ module.exports = new RecommendationEngineService();
 ## 🎯 Summary
 
 This document is 100% aligned with:
-1. `aiService.js` (`roomPreferences`, `categoryPreferences`, `negativePreferences`).
-2. `budget_templates.json` and `category_rules/*.json`.
+1. `aiService.js` (`roomPreferences`, `categoryPreferences`, `negativePreferences`, and `quantity` extraction).
+2. `budget_templates.json` and `category_rules/*.json` (including `quantity` schema rules: `min`, `max`, `allowMultiple`, `budgetMode`, `sizeMode`).
 3. Special product strategies (Semantic Aliasing, Dynamic Ad-hoc Category, Fallback Notices).
-4. 3-tier product alternatives (`Cheaper`, `Balanced`, `Premium`).
+4. Quantity Resolution Precedence (Explicit Gemini quantity > KB Default > Single-unit constraints).
+5. Multi-unit budget allocation ($P_{\text{unit}} = B_i / Q_i$) and 3-tier product alternatives (`Cheaper`, `Balanced`, `Premium`).
+
