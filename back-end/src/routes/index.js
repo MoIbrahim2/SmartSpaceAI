@@ -8,6 +8,7 @@ const generationRoutes = require('./generation.routes');
 const contactRoutes = require('./contact.routes');
 const billingRoutes = require('./billing.routes');
 const roomLayoutRoutes = require('./roomLayout.routes');
+const recommendationRoutes = require('./recommendation.routes');
 
 // Health check for azure vm
 router.get("/health", (req, res) => {
@@ -27,5 +28,6 @@ router.use('/generations', generationRoutes);
 router.use('/contact', contactRoutes);
 router.use('/billing', billingRoutes);
 router.use('/v1/rooms', roomLayoutRoutes);
+router.use('/recommendations', recommendationRoutes);
 
 module.exports = router;

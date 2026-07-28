@@ -29,7 +29,7 @@ flowchart TD
         P1["Category Resolution & Aliasing (Standard, Semantic Alias, Dynamic Ad-hoc)"]
         P2["Area Calculation & SizeRules Matching (Length x Width -> Room Area fit)"]
         P3["Dynamic Budget Allocation (budgetAdjustment: premium/budget-friendly/mid-range)"]
-        P4["Stage 1: Candidate Generation (DB Pre-filtering: Category, Deal-breakers, Price <= 1.35*Bi)"]
+        P4["Stage 1: Candidate Generation (DB Pre-filtering: Category, Deal-breakers, Price <= 1.35*unitTargetBudget)"]
         P5["Stage 2: Weighted Match Scoring (In-Memory Math: Style, Material, Color, Price, Size)"]
         P6["Stage 3: Tiering & Re-ranking (3-Tier Split: Cheaper/Balanced/Premium + Stock/Rating Re-ranking)"]
         P7["Budget Optimization & CORE Guardrails (Ensure Total <= Budget, Protect CORE min %)"]
@@ -265,7 +265,7 @@ Move the "Hard Exclusion" logic out of application code and push it directly int
 Before the scoring engine processes items in application memory, run a database query using strict constraints:
 * **Category Filter:** `WHERE category = 'Sofa'`
 * **Deal-breaker Exclusion:** `AND material NOT IN (materialsToAvoid) AND color NOT IN (colorsToAvoid)`
-* **Hard Budget Cap:** Since the highest tier (`Premium`) caps at $1.35 \times B_i$, immediately exclude anything above that price: `AND price <= (allocatedBudget * 1.35)`
+* **Hard Budget Cap:** Calculate the per-unit target budget ($P_{\text{unit}} = \text{allocatedCategoryBudget} / \text{quantity}$). Since the highest tier (`Premium`) caps at $1.35 \times P_{\text{unit}}$, immediately exclude anything above that unit price: `AND price <= (unitTargetBudget * 1.35)`
 * **Result:** Instantly reduces candidate dataset from ~50,000 products to ~500–2,000 viable candidates.
 
 #### 2️⃣ Stage 2: Weighted Match Scoring (Application Memory)
@@ -277,10 +277,10 @@ $$\text{Score} = (W_{\text{style}} \cdot S_{\text{style}}) + (W_{\text{material}
 * The array of scored candidates is sorted in descending order by score to isolate top matching candidates.
 
 #### 3️⃣ Stage 3: Tiering & Re-ranking
-Take the top 20–50 highest-scoring candidates from Stage 2 and classify them into **3 Budget Tiers** based on the target category budget $B_i$:
-* 🟢 **`Cheaper`:** Price $< 0.85 \times B_i$.
-* 🟡 **`Balanced` (Default Recommended Option):** Price between $0.85 \times B_i$ and $1.15 \times B_i$.
-* 🟣 **`Premium`:** Price between $1.15 \times B_i$ and $1.35 \times B_i$.
+Take the top 20–50 highest-scoring candidates from Stage 2 and classify them into **3 Budget Tiers** based on the per-unit target budget $P_{\text{unit}} = B_i / Q_i$:
+* 🟢 **`Cheaper`:** Price $< 0.85 \times P_{\text{unit}}$.
+* 🟡 **`Balanced` (Default Recommended Option):** Price between $0.85 \times P_{\text{unit}}$ and $1.15 \times P_{\text{unit}}$.
+* 🟣 **`Premium`:** Price between $1.15 \times P_{\text{unit}}$ and $1.35 \times P_{\text{unit}}$.
 
 * **Final Business Logic:** Apply secondary re-ranking (e.g., verifying real-time stock availability, boosting top user-rated items, or selecting fallback candidates).
 
