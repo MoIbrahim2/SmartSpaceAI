@@ -1,6 +1,6 @@
 {
   "roomType": "Living Room",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "rules": [
     {
       "category": "Sofa",
@@ -17,9 +17,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 35,
-        "minPercentage": 25,
-        "maxPercentage": 50
+        "defaultPercentage": 27,
+        "minPercentage": 18,
+        "maxPercentage": 40
       },
       "sizeRules": [
         {
@@ -119,9 +119,96 @@
       }
     },
     {
-      "category": "Coffee Table",
+      "category": "Air Conditioner",
       "role": "CORE",
       "priority": 2,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 2,
+        "allowMultiple": true,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 12,
+        "minPercentage": 8,
+        "maxPercentage": 18
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 8,
+            "max": 15
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 75,
+              "max": 90
+            },
+            "depth": {
+              "min": 18,
+              "max": 25
+            },
+            "height": {
+              "min": 25,
+              "max": 32
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 15,
+            "max": 40
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 85,
+              "max": 110
+            },
+            "depth": {
+              "min": 20,
+              "max": 30
+            },
+            "height": {
+              "min": 28,
+              "max": 35
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredWall": "UPPER_WALL",
+        "minimumClearance": 15,
+        "minimumDistanceFromViewer": 150
+      },
+      "constraints": {
+        "wallMounted": "REQUIRED",
+        "maxRoomCoverage": 3
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Minimal"
+        ],
+        "preferredMaterials": [
+          "Plastic",
+          "Metal"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Coffee Table",
+      "role": "CORE",
+      "priority": 3,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -133,9 +220,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 10,
-        "minPercentage": 5,
-        "maxPercentage": 15
+        "defaultPercentage": 8,
+        "minPercentage": 4,
+        "maxPercentage": 13
       },
       "sizeRules": [
         {
@@ -243,7 +330,7 @@
     {
       "category": "TV Unit",
       "role": "CORE",
-      "priority": 3,
+      "priority": 4,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -255,9 +342,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 15,
-        "minPercentage": 10,
-        "maxPercentage": 20
+        "defaultPercentage": 11,
+        "minPercentage": 7,
+        "maxPercentage": 16
       },
       "sizeRules": [
         {
@@ -372,9 +459,140 @@
       }
     },
     {
+      "category": "TV",
+      "role": "CORE",
+      "priority": 5,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 10,
+        "minPercentage": 6,
+        "maxPercentage": 16
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 8,
+            "max": 12
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 95,
+              "max": 115
+            },
+            "depth": {
+              "min": 8,
+              "max": 25
+            },
+            "height": {
+              "min": 55,
+              "max": 70
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 12,
+            "max": 18
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 120,
+              "max": 145
+            },
+            "depth": {
+              "min": 8,
+              "max": 30
+            },
+            "height": {
+              "min": 70,
+              "max": 85
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 18,
+            "max": 25
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 145,
+              "max": 170
+            },
+            "depth": {
+              "min": 10,
+              "max": 35
+            },
+            "height": {
+              "min": 85,
+              "max": 100
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 25,
+            "max": 40
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 165,
+              "max": 195
+            },
+            "depth": {
+              "min": 10,
+              "max": 40
+            },
+            "height": {
+              "min": 95,
+              "max": 115
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredWall": "ON_TV_UNIT",
+        "minimumClearance": 20,
+        "minimumDistanceFromViewer": 200
+      },
+      "constraints": {
+        "wallMounted": "ALLOWED",
+        "freestanding": "ALLOWED",
+        "maxRoomCoverage": 5
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Contemporary",
+          "Minimal",
+          "Tech"
+        ],
+        "preferredMaterials": [
+          "Glass",
+          "Metal",
+          "Plastic"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "HIGH",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
       "category": "Curtains",
       "role": "SECONDARY",
-      "priority": 4,
+      "priority": 6,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -386,9 +604,9 @@
         "sizeMode": "PER_TARGET"
       },
       "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 5,
-        "maxPercentage": 12
+        "defaultPercentage": 6,
+        "minPercentage": 3,
+        "maxPercentage": 10
       },
       "sizeRules": [
         {
@@ -434,7 +652,7 @@
     {
       "category": "Side Table",
       "role": "SECONDARY",
-      "priority": 5,
+      "priority": 7,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -446,9 +664,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 5,
-        "minPercentage": 3,
-        "maxPercentage": 8
+        "defaultPercentage": 4,
+        "minPercentage": 2,
+        "maxPercentage": 7
       },
       "sizeRules": [
         {
@@ -503,7 +721,7 @@
     {
       "category": "Rug",
       "role": "SECONDARY",
-      "priority": 6,
+      "priority": 8,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -515,9 +733,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 5,
-        "maxPercentage": 12
+        "defaultPercentage": 6,
+        "minPercentage": 3,
+        "maxPercentage": 10
       },
       "sizeRules": [
         {
@@ -621,7 +839,7 @@
     {
       "category": "Floor Lamp",
       "role": "SECONDARY",
-      "priority": 7,
+      "priority": 9,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -633,9 +851,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 5,
+        "defaultPercentage": 4,
         "minPercentage": 2,
-        "maxPercentage": 8
+        "maxPercentage": 7
       },
       "sizeRules": [
         {
@@ -685,7 +903,7 @@
     {
       "category": "Bookshelf",
       "role": "OPTIONAL",
-      "priority": 8,
+      "priority": 10,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -697,9 +915,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 7,
-        "minPercentage": 3,
-        "maxPercentage": 12
+        "defaultPercentage": 5,
+        "minPercentage": 2,
+        "maxPercentage": 9
       },
       "sizeRules": [
         {
@@ -776,7 +994,7 @@
     {
       "category": "Wall Art",
       "role": "OPTIONAL",
-      "priority": 9,
+      "priority": 11,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -790,7 +1008,7 @@
       "budget": {
         "defaultPercentage": 3,
         "minPercentage": 1,
-        "maxPercentage": 6
+        "maxPercentage": 5
       },
       "sizeRules": [
         {
@@ -856,7 +1074,7 @@
     {
       "category": "Armchair",
       "role": "OPTIONAL",
-      "priority": 10,
+      "priority": 12,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -869,8 +1087,8 @@
       },
       "budget": {
         "defaultPercentage": 4,
-        "minPercentage": 0,
-        "maxPercentage": 10
+        "minPercentage": 1,
+        "maxPercentage": 8
       },
       "sizeRules": [
         {

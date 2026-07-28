@@ -1,6 +1,6 @@
 {
   "roomType": "Balcony",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "rules": [
     {
       "category": "Outdoor Seating",
@@ -17,9 +17,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 30,
-        "minPercentage": 22,
-        "maxPercentage": 40
+        "defaultPercentage": 27,
+        "minPercentage": 18,
+        "maxPercentage": 36
       },
       "sizeRules": [
         {
@@ -124,9 +124,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 20,
-        "minPercentage": 12,
-        "maxPercentage": 28
+        "defaultPercentage": 18,
+        "minPercentage": 11,
+        "maxPercentage": 25
       },
       "sizeRules": [
         {
@@ -237,9 +237,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 15,
-        "minPercentage": 8,
-        "maxPercentage": 22
+        "defaultPercentage": 14,
+        "minPercentage": 7,
+        "maxPercentage": 20
       },
       "sizeRules": [
         {
@@ -325,9 +325,9 @@
         "sizeMode": "PER_TARGET"
       },
       "budget": {
-        "defaultPercentage": 15,
-        "minPercentage": 8,
-        "maxPercentage": 20
+        "defaultPercentage": 13,
+        "minPercentage": 7,
+        "maxPercentage": 18
       },
       "sizeRules": [
         {
@@ -388,9 +388,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 10,
-        "minPercentage": 5,
-        "maxPercentage": 15
+        "defaultPercentage": 9,
+        "minPercentage": 4,
+        "maxPercentage": 13
       },
       "sizeRules": [
         {
@@ -457,9 +457,75 @@
       }
     },
     {
-      "category": "Swing",
+      "category": "Outdoor Fan / Heater",
       "role": "OPTIONAL",
       "priority": 6,
+      "defaultIncluded": false,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 2,
+        "allowMultiple": true,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 8,
+        "minPercentage": 4,
+        "maxPercentage": 12
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 2,
+            "max": 12
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 35,
+              "max": 60
+            },
+            "depth": {
+              "min": 35,
+              "max": 60
+            },
+            "height": {
+              "min": 50,
+              "max": 220
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "CORNER_OR_CEILING_MOUNTED",
+        "minimumClearance": 30
+      },
+      "constraints": {
+        "weatherproof": "REQUIRED",
+        "ipRating": "IP44_MINIMUM"
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Industrial"
+        ],
+        "preferredMaterials": [
+          "Metal",
+          "Stainless Steel"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "MEDIUM",
+        "size": "LOW",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Swing",
+      "role": "OPTIONAL",
+      "priority": 7,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -471,7 +537,7 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 10,
+        "defaultPercentage": 11,
         "minPercentage": 0,
         "maxPercentage": 18
       },

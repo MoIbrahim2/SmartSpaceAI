@@ -79,6 +79,27 @@ describe('resolveCategory', () => {
     expect(result.resolvedCategory).toBe('TV Unit');
   });
 
+  test('SEMANTIC_ALIAS: television → TV', () => {
+    const categoriesWithTV = [...kbCategories, { category: 'TV', role: 'CORE' }];
+    const result = resolveCategory('television', categoriesWithTV);
+    expect(result.resolutionType).toBe('SEMANTIC_ALIAS');
+    expect(result.resolvedCategory).toBe('TV');
+  });
+
+  test('SEMANTIC_ALIAS: ac → Air Conditioner', () => {
+    const categoriesWithAC = [...kbCategories, { category: 'Air Conditioner', role: 'CORE' }];
+    const result = resolveCategory('ac', categoriesWithAC);
+    expect(result.resolutionType).toBe('SEMANTIC_ALIAS');
+    expect(result.resolvedCategory).toBe('Air Conditioner');
+  });
+
+  test('SEMANTIC_ALIAS: fridge → Refrigerator', () => {
+    const categoriesWithFridge = [...kbCategories, { category: 'Refrigerator', role: 'CORE' }];
+    const result = resolveCategory('fridge', categoriesWithFridge);
+    expect(result.resolutionType).toBe('SEMANTIC_ALIAS');
+    expect(result.resolvedCategory).toBe('Refrigerator');
+  });
+
   test('UNRESOLVED: Piano (not in KB or aliases)', () => {
     const result = resolveCategory('Piano', kbCategories);
     expect(result.resolutionType).toBe('UNRESOLVED');

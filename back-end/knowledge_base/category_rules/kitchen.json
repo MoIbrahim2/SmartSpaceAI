@@ -1,6 +1,6 @@
 {
   "roomType": "Kitchen",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "rules": [
     {
       "category": "Kitchen Cabinet Set",
@@ -17,9 +17,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 40,
-        "minPercentage": 30,
-        "maxPercentage": 55
+        "defaultPercentage": 22,
+        "minPercentage": 15,
+        "maxPercentage": 30
       },
       "sizeRules": [
         {
@@ -134,7 +134,7 @@
       }
     },
     {
-      "category": "Countertop",
+      "category": "Refrigerator",
       "role": "CORE",
       "priority": 2,
       "defaultIncluded": true,
@@ -148,9 +148,164 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 20,
-        "minPercentage": 12,
-        "maxPercentage": 28
+        "defaultPercentage": 22,
+        "minPercentage": 15,
+        "maxPercentage": 30
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 4,
+            "max": 10
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 60,
+              "max": 75
+            },
+            "depth": {
+              "min": 60,
+              "max": 72
+            },
+            "height": {
+              "min": 160,
+              "max": 185
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 10,
+            "max": 20
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 75,
+              "max": 95
+            },
+            "depth": {
+              "min": 68,
+              "max": 80
+            },
+            "height": {
+              "min": 175,
+              "max": 195
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "KITCHEN_WORK_TRIANGLE",
+        "minimumClearance": 10,
+        "avoidBlockingDoors": true
+      },
+      "constraints": {
+        "freestanding": "ALLOWED",
+        "integrated": "ALLOWED",
+        "maxRoomCoverage": 10
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Minimal"
+        ],
+        "preferredMaterials": [
+          "Stainless Steel",
+          "Metal",
+          "Glass"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "HIGH",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Oven / Cooktop",
+      "role": "CORE",
+      "priority": 3,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 14,
+        "minPercentage": 9,
+        "maxPercentage": 20
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 4,
+            "max": 20
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 60,
+              "max": 90
+            },
+            "depth": {
+              "min": 55,
+              "max": 65
+            },
+            "height": {
+              "min": 60,
+              "max": 90
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "INTEGRATED_COUNTERTOP",
+        "minimumClearance": 15
+      },
+      "constraints": {
+        "heatResistant": "REQUIRED"
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Industrial"
+        ],
+        "preferredMaterials": [
+          "Stainless Steel",
+          "Glass Ceramic",
+          "Metal"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Countertop",
+      "role": "CORE",
+      "priority": 4,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 10,
+        "minPercentage": 6,
+        "maxPercentage": 15
       },
       "sizeRules": [
         {
@@ -206,9 +361,138 @@
       }
     },
     {
+      "category": "Dishwasher",
+      "role": "SECONDARY",
+      "priority": 5,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 8,
+        "minPercentage": 4,
+        "maxPercentage": 12
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 4,
+            "max": 20
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 45,
+              "max": 60
+            },
+            "depth": {
+              "min": 55,
+              "max": 60
+            },
+            "height": {
+              "min": 80,
+              "max": 85
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "UNDER_COUNTER_NEAR_SINK",
+        "minimumClearance": 10
+      },
+      "constraints": {
+        "plumbingRequired": true
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern"
+        ],
+        "preferredMaterials": [
+          "Stainless Steel",
+          "Metal"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Range Hood",
+      "role": "SECONDARY",
+      "priority": 6,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 6,
+        "minPercentage": 3,
+        "maxPercentage": 9
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 4,
+            "max": 20
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 60,
+              "max": 90
+            },
+            "depth": {
+              "min": 45,
+              "max": 55
+            },
+            "height": {
+              "min": 30,
+              "max": 60
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "ABOVE_COOKTOP",
+        "minimumClearanceFromCooktop": 65
+      },
+      "constraints": {
+        "ventilation": "REQUIRED"
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Industrial"
+        ],
+        "preferredMaterials": [
+          "Stainless Steel",
+          "Glass"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "MEDIUM",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
       "category": "Kitchen Island",
       "role": "OPTIONAL",
-      "priority": 3,
+      "priority": 7,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -220,9 +504,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 12,
+        "defaultPercentage": 5,
         "minPercentage": 0,
-        "maxPercentage": 20
+        "maxPercentage": 10
       },
       "sizeRules": [
         {
@@ -298,9 +582,75 @@
       }
     },
     {
+      "category": "Microwave",
+      "role": "SECONDARY",
+      "priority": 8,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 5,
+        "minPercentage": 2,
+        "maxPercentage": 8
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 4,
+            "max": 20
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 45,
+              "max": 60
+            },
+            "depth": {
+              "min": 35,
+              "max": 48
+            },
+            "height": {
+              "min": 28,
+              "max": 40
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "COUNTERTOP_OR_SHELF",
+        "minimumClearance": 10
+      },
+      "constraints": {
+        "freestanding": "ALLOWED",
+        "builtIn": "ALLOWED"
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern"
+        ],
+        "preferredMaterials": [
+          "Stainless Steel",
+          "Metal",
+          "Glass"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "MEDIUM",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
       "category": "Storage Rack",
       "role": "SECONDARY",
-      "priority": 4,
+      "priority": 9,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -312,9 +662,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 4,
-        "maxPercentage": 12
+        "defaultPercentage": 3,
+        "minPercentage": 1,
+        "maxPercentage": 5
       },
       "sizeRules": [
         {
@@ -368,7 +718,7 @@
     {
       "category": "Bar Stool",
       "role": "OPTIONAL",
-      "priority": 5,
+      "priority": 10,
       "defaultIncluded": false,
       "quantity": {
         "default": 2,
@@ -380,9 +730,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 3,
-        "maxPercentage": 12
+        "defaultPercentage": 2,
+        "minPercentage": 0,
+        "maxPercentage": 4
       },
       "sizeRules": [
         {
@@ -437,7 +787,7 @@
     {
       "category": "Kitchen Lighting",
       "role": "SECONDARY",
-      "priority": 6,
+      "priority": 11,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -449,9 +799,9 @@
         "sizeMode": "PER_TARGET"
       },
       "budget": {
-        "defaultPercentage": 7,
-        "minPercentage": 4,
-        "maxPercentage": 10
+        "defaultPercentage": 2,
+        "minPercentage": 1,
+        "maxPercentage": 4
       },
       "sizeRules": [
         {
@@ -498,7 +848,7 @@
     {
       "category": "Wall Shelf",
       "role": "OPTIONAL",
-      "priority": 7,
+      "priority": 12,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -510,9 +860,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 5,
-        "minPercentage": 2,
-        "maxPercentage": 8
+        "defaultPercentage": 1,
+        "minPercentage": 0,
+        "maxPercentage": 3
       },
       "sizeRules": [
         {

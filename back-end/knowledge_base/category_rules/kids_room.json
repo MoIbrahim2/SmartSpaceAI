@@ -1,6 +1,6 @@
 {
   "roomType": "Kids Room",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "rules": [
     {
       "category": "Kids Bed",
@@ -17,9 +17,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 25,
-        "minPercentage": 18,
-        "maxPercentage": 35
+        "defaultPercentage": 22,
+        "minPercentage": 15,
+        "maxPercentage": 30
       },
       "sizeRules": [
         {
@@ -138,9 +138,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 20,
-        "minPercentage": 15,
-        "maxPercentage": 28
+        "defaultPercentage": 18,
+        "minPercentage": 12,
+        "maxPercentage": 25
       },
       "sizeRules": [
         {
@@ -235,9 +235,96 @@
       }
     },
     {
-      "category": "Study Desk",
+      "category": "Air Conditioner",
       "role": "CORE",
       "priority": 3,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 12,
+        "minPercentage": 8,
+        "maxPercentage": 18
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 8,
+            "max": 15
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 75,
+              "max": 90
+            },
+            "depth": {
+              "min": 18,
+              "max": 25
+            },
+            "height": {
+              "min": 25,
+              "max": 32
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 15,
+            "max": 35
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 85,
+              "max": 110
+            },
+            "depth": {
+              "min": 20,
+              "max": 30
+            },
+            "height": {
+              "min": 28,
+              "max": 35
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredWall": "UPPER_WALL",
+        "minimumClearance": 15,
+        "avoidDirectDraftOnBed": true
+      },
+      "constraints": {
+        "wallMounted": "REQUIRED",
+        "maxRoomCoverage": 3
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Minimal"
+        ],
+        "preferredMaterials": [
+          "Plastic",
+          "Metal"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Study Desk",
+      "role": "CORE",
+      "priority": 4,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -249,9 +336,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 15,
-        "minPercentage": 10,
-        "maxPercentage": 20
+        "defaultPercentage": 14,
+        "minPercentage": 9,
+        "maxPercentage": 18
       },
       "sizeRules": [
         {
@@ -337,7 +424,7 @@
     {
       "category": "Study Chair",
       "role": "CORE",
-      "priority": 4,
+      "priority": 5,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -349,9 +436,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 10,
-        "minPercentage": 6,
-        "maxPercentage": 14
+        "defaultPercentage": 9,
+        "minPercentage": 5,
+        "maxPercentage": 13
       },
       "sizeRules": [
         {
@@ -406,7 +493,7 @@
     {
       "category": "Bookshelf",
       "role": "SECONDARY",
-      "priority": 5,
+      "priority": 6,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -418,9 +505,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 4,
-        "maxPercentage": 12
+        "defaultPercentage": 7,
+        "minPercentage": 3,
+        "maxPercentage": 10
       },
       "sizeRules": [
         {
@@ -492,9 +579,101 @@
       }
     },
     {
+      "category": "Storage Unit",
+      "role": "SECONDARY",
+      "priority": 7,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 3,
+        "allowMultiple": true,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 2,
+        "sizeMode": "ADJUST_PER_ITEM"
+      },
+      "budget": {
+        "defaultPercentage": 7,
+        "minPercentage": 3,
+        "maxPercentage": 10
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 8,
+            "max": 14
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 60,
+              "max": 80
+            },
+            "depth": {
+              "min": 30,
+              "max": 40
+            },
+            "height": {
+              "min": 60,
+              "max": 100
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 14,
+            "max": 35
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 80,
+              "max": 120
+            },
+            "depth": {
+              "min": 35,
+              "max": 45
+            },
+            "height": {
+              "min": 80,
+              "max": 120
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "ALONG_WALL",
+        "childReachable": true,
+        "wallAnchoring": "REQUIRED"
+      },
+      "constraints": {
+        "binsOrCubbies": "PREFERRED",
+        "labelFriendly": "PREFERRED",
+        "roundedEdges": "PREFERRED",
+        "antiTip": "REQUIRED"
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Playful",
+          "Scandinavian",
+          "Colorful"
+        ],
+        "preferredMaterials": [
+          "Wood",
+          "MDF",
+          "Fabric Bins"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "LOW",
+        "size": "MEDIUM",
+        "style": "MEDIUM",
+        "color": "HIGH"
+      }
+    },
+    {
       "category": "Rug",
       "role": "SECONDARY",
-      "priority": 6,
+      "priority": 8,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -506,9 +685,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 7,
-        "minPercentage": 4,
-        "maxPercentage": 10
+        "defaultPercentage": 6,
+        "minPercentage": 3,
+        "maxPercentage": 9
       },
       "sizeRules": [
         {
@@ -590,101 +769,9 @@
       }
     },
     {
-      "category": "Storage Unit",
-      "role": "SECONDARY",
-      "priority": 7,
-      "defaultIncluded": true,
-      "quantity": {
-        "default": 1,
-        "min": 1,
-        "max": 3,
-        "allowMultiple": true,
-        "budgetMode": "PER_CATEGORY",
-        "additionalItemBudgetBoost": 2,
-        "sizeMode": "ADJUST_PER_ITEM"
-      },
-      "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 4,
-        "maxPercentage": 12
-      },
-      "sizeRules": [
-        {
-          "roomArea": {
-            "min": 8,
-            "max": 14
-          },
-          "recommendedDimensions": {
-            "width": {
-              "min": 60,
-              "max": 80
-            },
-            "depth": {
-              "min": 30,
-              "max": 40
-            },
-            "height": {
-              "min": 60,
-              "max": 100
-            }
-          }
-        },
-        {
-          "roomArea": {
-            "min": 14,
-            "max": 35
-          },
-          "recommendedDimensions": {
-            "width": {
-              "min": 80,
-              "max": 120
-            },
-            "depth": {
-              "min": 35,
-              "max": 45
-            },
-            "height": {
-              "min": 80,
-              "max": 120
-            }
-          }
-        }
-      ],
-      "placement": {
-        "preferredPosition": "ALONG_WALL",
-        "childReachable": true,
-        "wallAnchoring": "REQUIRED"
-      },
-      "constraints": {
-        "binsOrCubbies": "PREFERRED",
-        "labelFriendly": "PREFERRED",
-        "roundedEdges": "PREFERRED",
-        "antiTip": "REQUIRED"
-      },
-      "productSearch": {
-        "preferredStyles": [
-          "Modern",
-          "Playful",
-          "Scandinavian",
-          "Colorful"
-        ],
-        "preferredMaterials": [
-          "Wood",
-          "MDF",
-          "Fabric Bins"
-        ]
-      },
-      "promptInfluence": {
-        "budget": "LOW",
-        "size": "MEDIUM",
-        "style": "MEDIUM",
-        "color": "HIGH"
-      }
-    },
-    {
       "category": "Wall Decor",
       "role": "OPTIONAL",
-      "priority": 8,
+      "priority": 9,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -696,9 +783,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 4,
-        "minPercentage": 2,
-        "maxPercentage": 7
+        "defaultPercentage": 3,
+        "minPercentage": 1,
+        "maxPercentage": 5
       },
       "sizeRules": [
         {
@@ -750,7 +837,7 @@
     {
       "category": "Night Light",
       "role": "OPTIONAL",
-      "priority": 9,
+      "priority": 10,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -762,9 +849,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 3,
+        "defaultPercentage": 2,
         "minPercentage": 1,
-        "maxPercentage": 5
+        "maxPercentage": 4
       },
       "sizeRules": [
         {

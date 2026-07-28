@@ -1,6 +1,6 @@
 {
   "roomType": "Bedroom",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "rules": [
     {
       "category": "Bed",
@@ -17,9 +17,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 35,
-        "minPercentage": 28,
-        "maxPercentage": 45
+        "defaultPercentage": 28,
+        "minPercentage": 20,
+        "maxPercentage": 36
       },
       "sizeRules": [
         {
@@ -138,9 +138,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 25,
-        "minPercentage": 18,
-        "maxPercentage": 32
+        "defaultPercentage": 20,
+        "minPercentage": 14,
+        "maxPercentage": 26
       },
       "sizeRules": [
         {
@@ -257,9 +257,96 @@
       }
     },
     {
-      "category": "Nightstand",
+      "category": "Air Conditioner",
       "role": "CORE",
       "priority": 3,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 12,
+        "minPercentage": 8,
+        "maxPercentage": 18
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 8,
+            "max": 15
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 75,
+              "max": 90
+            },
+            "depth": {
+              "min": 18,
+              "max": 25
+            },
+            "height": {
+              "min": 25,
+              "max": 32
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 15,
+            "max": 40
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 85,
+              "max": 110
+            },
+            "depth": {
+              "min": 20,
+              "max": 30
+            },
+            "height": {
+              "min": 28,
+              "max": 35
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredWall": "UPPER_WALL",
+        "minimumClearance": 15,
+        "avoidDirectlyAboveBed": true
+      },
+      "constraints": {
+        "wallMounted": "REQUIRED",
+        "maxRoomCoverage": 3
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Minimal"
+        ],
+        "preferredMaterials": [
+          "Plastic",
+          "Metal"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Nightstand",
+      "role": "CORE",
+      "priority": 4,
       "defaultIncluded": true,
       "quantity": {
         "default": 2,
@@ -271,9 +358,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 4,
-        "maxPercentage": 12
+        "defaultPercentage": 6,
+        "minPercentage": 3,
+        "maxPercentage": 10
       },
       "sizeRules": [
         {
@@ -328,7 +415,7 @@
     {
       "category": "Dresser",
       "role": "SECONDARY",
-      "priority": 4,
+      "priority": 5,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -340,9 +427,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 10,
-        "minPercentage": 6,
-        "maxPercentage": 15
+        "defaultPercentage": 8,
+        "minPercentage": 4,
+        "maxPercentage": 12
       },
       "sizeRules": [
         {
@@ -416,9 +503,98 @@
       }
     },
     {
+      "category": "TV",
+      "role": "SECONDARY",
+      "priority": 6,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 8,
+        "minPercentage": 4,
+        "maxPercentage": 13
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 8,
+            "max": 14
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 95,
+              "max": 115
+            },
+            "depth": {
+              "min": 8,
+              "max": 25
+            },
+            "height": {
+              "min": 55,
+              "max": 70
+            }
+          }
+        },
+        {
+          "roomArea": {
+            "min": 14,
+            "max": 40
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 120,
+              "max": 145
+            },
+            "depth": {
+              "min": 8,
+              "max": 30
+            },
+            "height": {
+              "min": 70,
+              "max": 85
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredWall": "WALL_OPPOSITE_BED",
+        "minimumClearance": 20
+      },
+      "constraints": {
+        "wallMounted": "ALLOWED",
+        "freestanding": "ALLOWED",
+        "maxRoomCoverage": 4
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Minimal",
+          "Tech"
+        ],
+        "preferredMaterials": [
+          "Glass",
+          "Metal",
+          "Plastic"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "HIGH",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
       "category": "Curtains",
       "role": "SECONDARY",
-      "priority": 5,
+      "priority": 7,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -430,9 +606,9 @@
         "sizeMode": "PER_TARGET"
       },
       "budget": {
-        "defaultPercentage": 7,
-        "minPercentage": 4,
-        "maxPercentage": 10
+        "defaultPercentage": 5,
+        "minPercentage": 3,
+        "maxPercentage": 8
       },
       "sizeRules": [
         {
@@ -477,7 +653,7 @@
     {
       "category": "Rug",
       "role": "SECONDARY",
-      "priority": 6,
+      "priority": 8,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -489,9 +665,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 5,
-        "minPercentage": 3,
-        "maxPercentage": 8
+        "defaultPercentage": 4,
+        "minPercentage": 2,
+        "maxPercentage": 7
       },
       "sizeRules": [
         {
@@ -575,7 +751,7 @@
     {
       "category": "Table Lamp",
       "role": "SECONDARY",
-      "priority": 7,
+      "priority": 9,
       "defaultIncluded": true,
       "quantity": {
         "default": 2,
@@ -587,9 +763,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 4,
-        "minPercentage": 2,
-        "maxPercentage": 7
+        "defaultPercentage": 3,
+        "minPercentage": 1,
+        "maxPercentage": 5
       },
       "sizeRules": [
         {
@@ -641,7 +817,7 @@
     {
       "category": "Mirror",
       "role": "OPTIONAL",
-      "priority": 8,
+      "priority": 10,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -655,7 +831,7 @@
       "budget": {
         "defaultPercentage": 3,
         "minPercentage": 1,
-        "maxPercentage": 6
+        "maxPercentage": 5
       },
       "sizeRules": [
         {
@@ -705,7 +881,7 @@
     {
       "category": "Bedroom Armchair",
       "role": "OPTIONAL",
-      "priority": 9,
+      "priority": 11,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -719,7 +895,7 @@
       "budget": {
         "defaultPercentage": 3,
         "minPercentage": 0,
-        "maxPercentage": 8
+        "maxPercentage": 6
       },
       "sizeRules": [
         {

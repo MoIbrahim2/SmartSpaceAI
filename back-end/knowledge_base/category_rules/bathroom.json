@@ -1,6 +1,6 @@
 {
   "roomType": "Bathroom",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "rules": [
     {
       "category": "Vanity Unit",
@@ -17,9 +17,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 25,
-        "minPercentage": 18,
-        "maxPercentage": 35
+        "defaultPercentage": 20,
+        "minPercentage": 14,
+        "maxPercentage": 28
       },
       "sizeRules": [
         {
@@ -130,9 +130,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 25,
-        "minPercentage": 18,
-        "maxPercentage": 32
+        "defaultPercentage": 20,
+        "minPercentage": 14,
+        "maxPercentage": 26
       },
       "sizeRules": [
         {
@@ -228,7 +228,7 @@
       }
     },
     {
-      "category": "Toilet",
+      "category": "Washing Machine",
       "role": "CORE",
       "priority": 3,
       "defaultIncluded": true,
@@ -245,6 +245,73 @@
         "defaultPercentage": 15,
         "minPercentage": 10,
         "maxPercentage": 22
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 3,
+            "max": 14
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 55,
+              "max": 65
+            },
+            "depth": {
+              "min": 50,
+              "max": 65
+            },
+            "height": {
+              "min": 80,
+              "max": 88
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredPosition": "NEAR_WATER_AND_DRAIN",
+        "minimumClearance": 10
+      },
+      "constraints": {
+        "frontLoading": "PREFERRED",
+        "topLoading": "ALLOWED",
+        "plumbingRequired": true
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern"
+        ],
+        "preferredMaterials": [
+          "Stainless Steel",
+          "Metal",
+          "Plastic"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Toilet",
+      "role": "CORE",
+      "priority": 4,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 12,
+        "minPercentage": 8,
+        "maxPercentage": 18
       },
       "sizeRules": [
         {
@@ -298,9 +365,9 @@
       }
     },
     {
-      "category": "Mirror Cabinet",
-      "role": "CORE",
-      "priority": 4,
+      "category": "Water Heater",
+      "role": "SECONDARY",
+      "priority": 5,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -312,9 +379,75 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 12,
-        "minPercentage": 6,
-        "maxPercentage": 16
+        "defaultPercentage": 8,
+        "minPercentage": 4,
+        "maxPercentage": 12
+      },
+      "sizeRules": [
+        {
+          "roomArea": {
+            "min": 3,
+            "max": 14
+          },
+          "recommendedDimensions": {
+            "width": {
+              "min": 40,
+              "max": 55
+            },
+            "depth": {
+              "min": 40,
+              "max": 55
+            },
+            "height": {
+              "min": 50,
+              "max": 85
+            }
+          }
+        }
+      ],
+      "placement": {
+        "preferredWall": "UPPER_PLUMBING_WALL",
+        "minimumClearance": 15
+      },
+      "constraints": {
+        "wallMounted": "REQUIRED",
+        "electricOrGas": "ALLOWED"
+      },
+      "productSearch": {
+        "preferredStyles": [
+          "Modern",
+          "Minimal"
+        ],
+        "preferredMaterials": [
+          "Metal",
+          "Enamel"
+        ]
+      },
+      "promptInfluence": {
+        "budget": "HIGH",
+        "size": "MEDIUM",
+        "style": "LOW",
+        "color": "LOW"
+      }
+    },
+    {
+      "category": "Mirror Cabinet",
+      "role": "CORE",
+      "priority": 6,
+      "defaultIncluded": true,
+      "quantity": {
+        "default": 1,
+        "min": 1,
+        "max": 1,
+        "allowMultiple": false,
+        "budgetMode": "PER_CATEGORY",
+        "additionalItemBudgetBoost": 0,
+        "sizeMode": "STANDARD"
+      },
+      "budget": {
+        "defaultPercentage": 9,
+        "minPercentage": 4,
+        "maxPercentage": 13
       },
       "sizeRules": [
         {
@@ -390,7 +523,7 @@
     {
       "category": "Shelving",
       "role": "SECONDARY",
-      "priority": 5,
+      "priority": 7,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -402,9 +535,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 8,
-        "minPercentage": 4,
-        "maxPercentage": 12
+        "defaultPercentage": 6,
+        "minPercentage": 3,
+        "maxPercentage": 9
       },
       "sizeRules": [
         {
@@ -459,7 +592,7 @@
     {
       "category": "Towel Rack",
       "role": "SECONDARY",
-      "priority": 6,
+      "priority": 8,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -471,9 +604,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 5,
+        "defaultPercentage": 4,
         "minPercentage": 2,
-        "maxPercentage": 8
+        "maxPercentage": 6
       },
       "sizeRules": [
         {
@@ -525,7 +658,7 @@
     {
       "category": "Accessories Set",
       "role": "OPTIONAL",
-      "priority": 7,
+      "priority": 9,
       "defaultIncluded": false,
       "quantity": {
         "default": 1,
@@ -537,9 +670,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 5,
-        "minPercentage": 2,
-        "maxPercentage": 8
+        "defaultPercentage": 3,
+        "minPercentage": 1,
+        "maxPercentage": 5
       },
       "sizeRules": [
         {
@@ -582,7 +715,7 @@
     {
       "category": "Bathroom Lighting",
       "role": "SECONDARY",
-      "priority": 8,
+      "priority": 10,
       "defaultIncluded": true,
       "quantity": {
         "default": 1,
@@ -594,9 +727,9 @@
         "sizeMode": "PER_TARGET"
       },
       "budget": {
-        "defaultPercentage": 5,
-        "minPercentage": 3,
-        "maxPercentage": 8
+        "defaultPercentage": 3,
+        "minPercentage": 1,
+        "maxPercentage": 5
       },
       "sizeRules": [
         {
