@@ -41,12 +41,14 @@ const fetchCandidates = async ({
 }) => {
   const premiumCeiling = unitTargetBudget * TIER_THRESHOLDS.premiumMax;
 
-  // Build the DB query
+  // Build the DB query (strictly requiring valid, non-Unsplash images)
   const query = {
     'processing.status': ACCEPTED_STATUS,
     'classification.canonicalCategory': resolvedCategory,
     'pricing.currentPrice': { $gt: 0 },
     'availability.inStock': { $ne: false },
+    'images': { $exists: true, $not: { $size: 0 } },
+    'images.url': { $not: /unsplash\.com/i },
   };
 
   // Apply price ceiling only if we have a valid budget
@@ -122,11 +124,21 @@ const fetchCandidates = async ({
   const dbCandidates = dbResult || [];
   const rawScrapedProducts = scrapeResult?.products || [];
 
-  // Filter scraped products against negative preferences and budget ceiling
+  // Filter scraped products against negative preferences, budget ceiling, and image validity
   const filteredScraped = rawScrapedProducts.filter((p) => {
     const price = p.pricing?.currentPrice || 0;
     if (price <= 0) return false;
     if (unitTargetBudget > 0 && price > premiumCeiling) return false;
+
+    // Check image validity
+    const imgs = p.images || [];
+    const hasValidImage = imgs.some((img) => {
+      const u = typeof img === 'string' ? img : img?.url || '';
+      return u && typeof u === 'string' && u.trim() && !u.includes('unsplash.com');
+    });
+    const fallbackImage = p.primaryImage?.url || p.imageUrl || p.img || p.image;
+    const hasAnyValid = hasValidImage || (fallbackImage && !fallbackImage.includes('unsplash.com'));
+    if (!hasAnyValid) return false;
 
     // Check negative materials
     if (materialsToAvoid.length > 0) {

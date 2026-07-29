@@ -83,8 +83,17 @@ async function seedProducts() {
         }
       }
 
+      // 3. Image validation - must have at least one valid, non-Unsplash image URL
+      const imgs = updatedItem.images || [];
+      const hasValidRealImage = Array.isArray(imgs) && imgs.some((img) => {
+        const url = typeof img === 'string' ? img : (img && img.url ? img.url : '');
+        return url && typeof url === 'string' && url.trim().length > 0 && !url.includes('unsplash.com');
+      });
+
       totalProductsProcessed++;
-      allProducts.push(updatedItem);
+      if (hasValidRealImage) {
+        allProducts.push(updatedItem);
+      }
       return updatedItem;
     });
 

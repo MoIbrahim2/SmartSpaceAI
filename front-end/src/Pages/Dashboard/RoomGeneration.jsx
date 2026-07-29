@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 import { validateRoomLayout, getRoomLayout, getRoomById, extractPreferences, saveSelectedProducts, generateRoomImage } from "../../api";
+import { getProductId } from "../../utils/productUtils";
 
 // Import step sub-components
 import Stepper from "../../Components/RoomGeneration/Stepper";
@@ -285,29 +286,37 @@ const RoomGeneration = () => {
 
             const combined = [...recs];
             alts.forEach((alt) => {
-              const altId = String(alt._id || alt.id || alt.productData?._id || alt.productData?.id || "");
-              if (altId && !combined.some((item) => String(item._id || item.id || item.productData?._id || item.productData?.id || "") === altId)) {
+              const altId = getProductId(alt);
+              if (altId && !combined.some((item) => getProductId(item) === altId)) {
                 combined.push(alt);
               }
             });
 
             newProductData[catName] = combined;
-            const reqCount = catObj.quantity || counts[catName] || 1;
+
+            // Only categories explicitly requested in prompt are required (reqCount > 0)
+            const isRequired = catObj.isUserRequested === true || (catObj.role && catObj.role !== 'OPTIONAL');
+            const reqCount = isRequired ? (catObj.quantity || counts[catName] || 1) : 0;
             counts[catName] = reqCount;
 
-            // Auto-select Golden Cards (top N recommended items matching category requirement)
-            const topRecs = recs.length > 0 ? recs.slice(0, reqCount) : combined.slice(0, reqCount);
-            topRecs.forEach((item) => {
-              const pId = String(item._id || item.id || item.productData?._id || item.productData?.id || "");
-              if (pId && !goldenIds.includes(pId)) goldenIds.push(pId);
-            });
+            // Auto-select Golden Cards (top recommended items matching category requirement)
+            if (reqCount > 0) {
+              const pool = recs.length > 0 ? recs : combined;
+              for (let i = 0; i < reqCount; i++) {
+                if (pool.length > 0) {
+                  const item = pool[i % pool.length];
+                  const pId = getProductId(item);
+                  if (pId) goldenIds.push(pId);
+                }
+              }
+            }
           });
 
           setProductData(newProductData);
           setCategoryCounts(counts);
           setAddedProducts(goldenIds);
 
-          const firstCat = recResult.categories[0]?.category || Object.keys(newProductData)[0] || "sofa";
+          const firstCat = Object.keys(counts).find((c) => counts[c] > 0) || recResult.categories[0]?.category || Object.keys(newProductData)[0] || "sofa";
           setActiveCategory(firstCat);
         } else {
           throw new Error("The recommendation engine did not return any products for your request. Please try refining your prompt.");
@@ -327,24 +336,32 @@ const RoomGeneration = () => {
     }
   };
 
+  const incrementProduct = (id) => {
+    const strId = String(id);
+    setAddedProducts((prev) => [...prev, strId]);
+  };
+
+  const decrementProduct = (id) => {
+    const strId = String(id);
+    setAddedProducts((prev) => {
+      const idx = prev.indexOf(strId);
+      if (idx > -1) {
+        const copy = [...prev];
+        copy.splice(idx, 1);
+        return copy;
+      }
+      return prev;
+    });
+  };
+
   const toggleProduct = (id, category, reqCount = 1) => {
     const strId = String(id);
-    const isAlreadyAdded = addedProducts.map(String).includes(strId);
+    const count = addedProducts.filter((pId) => pId === strId).length;
 
-    if (isAlreadyAdded) {
-      setAddedProducts(addedProducts.filter((pId) => String(pId) !== strId));
+    if (count > 0) {
+      setAddedProducts((prev) => prev.filter((pId) => pId !== strId));
     } else {
-      // Check how many items currently selected in this category
-      const currentCatProds = (productData[category] || []).map((p) => String(p._id || p.id || p.productData?._id || p.productData?.id));
-      const catSelected = addedProducts.filter((pId) => currentCatProds.includes(String(pId)));
-
-      if (catSelected.length >= reqCount) {
-        // If max reached, replace the earliest selected item in this category
-        const updated = addedProducts.filter((pId) => String(pId) !== String(catSelected[0]));
-        setAddedProducts([...updated, strId]);
-      } else {
-        setAddedProducts([...addedProducts, strId]);
-      }
+      setAddedProducts((prev) => [...prev, strId]);
     }
   };
 
@@ -360,18 +377,29 @@ const RoomGeneration = () => {
 
     try {
       setLoading(true);
-      // Format selected products list for API payload
+      // Format selected products list for API payload with quantities
       const allProdsList = Object.values(productData).flat();
-      const selectedProductObjects = allProdsList
-        .filter((p) => addedProducts.map(String).includes(String(p._id || p.id || p.productData?._id || p.productData?.id)))
-        .map((p) => ({
-          category: p.category || activeCategory,
-          productId: String(p._id || p.id || p.productData?._id || p.productData?.id),
-          productData: p,
-          isRecommended: !!p.isRecommended,
-          price: p.price || p.numericPrice || 0,
-          quantity: 1,
-        }));
+      const countsMap = {};
+      addedProducts.forEach((id) => {
+        countsMap[id] = (countsMap[id] || 0) + 1;
+      });
+
+      const selectedProductObjects = [];
+      const seenIds = new Set();
+      allProdsList.forEach((p) => {
+        const pId = getProductId(p);
+        if (countsMap[pId] && !seenIds.has(pId)) {
+          seenIds.add(pId);
+          selectedProductObjects.push({
+            category: p.category || activeCategory,
+            productId: pId,
+            productData: p,
+            isRecommended: !!p.isRecommended,
+            price: p.pricing?.currentPrice || p.price || p.numericPrice || 0,
+            quantity: countsMap[pId],
+          });
+        }
+      });
 
       await saveSelectedProducts(generationId, {
         selectedProducts: selectedProductObjects,
@@ -441,14 +469,18 @@ const RoomGeneration = () => {
   // Spent calculations for Step 3
   const baseBudget = form.budget ? parseFloat(form.budget) : 75000;
   const allProductsList = Object.values(productData).flat();
-  const currentSpent = allProductsList
-    .filter((p) => addedProducts.includes(p.id || p._id))
-    .reduce((sum, p) => sum + (p.price || p.numericPrice || 0), 0);
+  const currentSpent = addedProducts.reduce((sum, pId) => {
+    const foundProduct = allProductsList.find((p) => getProductId(p) === pId);
+    if (!foundProduct) return sum;
+    const price = foundProduct.pricing?.currentPrice || foundProduct.price || foundProduct.numericPrice || 0;
+    return sum + price;
+  }, 0);
 
   const percent = baseBudget > 0 ? Math.round((currentSpent / baseBudget) * 100) : 0;
 
   // Gather list of selected product objects for step 4 summary
-  const selectedProductObjs = allProductsList.filter((p) => addedProducts.includes(p.id || p._id));
+  const addedSet = new Set(addedProducts);
+  const selectedProductObjs = allProductsList.filter((p) => addedSet.has(getProductId(p)));
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-on-surface pb-24 md:pb-0">
@@ -529,6 +561,8 @@ const RoomGeneration = () => {
                 setActiveCategory={setActiveCategory}
                 addedProducts={addedProducts}
                 toggleProduct={toggleProduct}
+                incrementProduct={incrementProduct}
+                decrementProduct={decrementProduct}
                 currentSpent={currentSpent}
                 baseBudget={baseBudget}
                 percent={percent}

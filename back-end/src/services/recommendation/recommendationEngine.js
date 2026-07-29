@@ -266,6 +266,7 @@ const processCategory = async (category, { roomArea, roomPreferences, negativePr
   return {
     resolvedCategory,
     role: kbRule?.role || 'OPTIONAL',
+    isUserRequested: category.isUserRequested ?? (kbRule?.role ? kbRule.role !== 'OPTIONAL' : false),
     priority: kbRule?.priority || 99,
     resolvedQuantity,
     allocatedBudget: category.allocatedBudget,
@@ -300,6 +301,7 @@ const formatCategoryOutput = (categoryResult) => {
   return {
     category: categoryResult.resolvedCategory,
     role: categoryResult.role,
+    isUserRequested: categoryResult.isUserRequested ?? (categoryResult.role !== 'OPTIONAL'),
     priority: categoryResult.priority,
     quantity: categoryResult.resolvedQuantity,
     allocatedBudget: categoryResult.allocatedBudget,

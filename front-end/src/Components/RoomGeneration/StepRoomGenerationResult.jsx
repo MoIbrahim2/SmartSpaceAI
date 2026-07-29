@@ -21,8 +21,7 @@ const StepRoomGenerationResult = ({
     return `${API_HOST}/${url.replace(/^\//, "")}`;
   };
 
-  const finalImgUrl = getImageUrl(generatedImage?.url) ||
-    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1200&auto=format&fit=crop";
+  const finalImgUrl = getImageUrl(generatedImage?.url) || null;
 
   return (
     <div className="bg-background rounded-[2rem] p-6 lg:p-10 neomorph-raised flex-grow flex flex-col relative">
@@ -97,7 +96,7 @@ const StepRoomGenerationResult = ({
               Gemini Imagen is synthesizing your room layout, furniture dimensions, materials, and soft lighting for maximum spatial accuracy.
             </p>
           </div>
-        ) : (
+        ) : finalImgUrl ? (
           <>
             <img
               alt="Generated Room Render"
@@ -111,6 +110,18 @@ const StepRoomGenerationResult = ({
               <span>SmartSpace AI Imagen Render</span>
             </div>
           </>
+        ) : (
+          <div className="flex flex-col items-center justify-center text-center p-8">
+            <div className="w-20 h-20 rounded-full bg-surface-variant/30 flex items-center justify-center mb-4">
+              <Icon name="image" size={36} className="text-on-surface-variant/50" />
+            </div>
+            <h3 className="font-headline font-bold text-lg text-on-surface mb-1">
+              No Rendered Image Yet
+            </h3>
+            <p className="text-sm text-on-surface-variant max-w-sm">
+              Click "Regenerate Image" to create an AI-rendered visualization of your room with the selected furniture.
+            </p>
+          </div>
         )}
       </div>
 

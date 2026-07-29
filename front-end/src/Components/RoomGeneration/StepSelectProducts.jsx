@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 import ProductDetailModal from "./ProductDetailModal";
 import BudgetWarningModal from "./BudgetWarningModal";
-import { parseProductDetails } from "../../utils/productUtils";
+import { parseProductDetails, getProductId } from "../../utils/productUtils";
 
 const StepSelectProducts = ({
   setStep,
@@ -13,6 +13,8 @@ const StepSelectProducts = ({
   setActiveCategory,
   addedProducts = [],
   toggleProduct,
+  incrementProduct,
+  decrementProduct,
   currentSpent = 0,
   baseBudget = 0,
   percent = 0,
@@ -39,28 +41,29 @@ const StepSelectProducts = ({
     }).format(val || 0);
   };
   const currentCategoryProducts = productData[activeCategory] || [];
-  const requiredCountForCategory = categoryCounts[activeCategory] || 1;
+  const requiredCountForCategory = categoryCounts[activeCategory] ?? 0;
+  const isOptionalActiveCategory = requiredCountForCategory === 0;
 
-  // Count how many products are selected in the active category
-  const selectedInActiveCategory = currentCategoryProducts.filter((p) =>
-    addedProducts.map(String).includes(String(p._id || p.id || p.productData?._id || p.productData?.id))
-  );
+  // Count total selected items in the active category (accounting for multi-quantity)
+  const activeCatProductIds = new Set(currentCategoryProducts.map((p) => getProductId(p)));
+  const selectedInActiveCategoryCount = addedProducts.filter((id) => activeCatProductIds.has(id)).length;
 
-  // Check if ALL categories meet exact required counts
+  // Validate category selections: ONLY categories explicitly requested in prompt (reqCount > 0) are required!
   const validateCategorySelections = () => {
     for (const cat of categories) {
-      const catProducts = productData[cat] || [];
-      const reqCount = categoryCounts[cat] || 1;
-      const selectedCount = catProducts.filter((p) =>
-        addedProducts.map(String).includes(String(p._id || p.id || p.productData?._id || p.productData?.id))
-      ).length;
+      const reqCount = categoryCounts[cat] ?? 0;
+      if (reqCount === 0) continue; // Optional categories never block progress!
 
-      if (selectedCount !== reqCount) {
+      const catProducts = productData[cat] || [];
+      const catProductIds = new Set(catProducts.map((p) => getProductId(p)));
+      const selCount = addedProducts.filter((id) => catProductIds.has(id)).length;
+
+      if (selCount < reqCount) {
         return {
           valid: false,
           categoryName: cat,
           required: reqCount,
-          selected: selectedCount
+          selected: selCount
         };
       }
     }
@@ -107,10 +110,12 @@ const StepSelectProducts = ({
 
         <div className="bg-background p-4 rounded-xl neomorph-raised border border-outline-variant/30 shrink-0 text-right rtl:text-left">
           <span className="text-xs text-on-surface-variant block font-semibold uppercase tracking-wider">
-            Active Category Requirement
+            Active Category Status
           </span>
           <span className="font-headline font-bold text-lg text-primary">
-            {selectedInActiveCategory.length} / {requiredCountForCategory} Selected
+            {isOptionalActiveCategory
+              ? `${selectedInActiveCategoryCount} Selected (Optional)`
+              : `${selectedInActiveCategoryCount} / ${requiredCountForCategory} Selected`}
           </span>
         </div>
       </div>
@@ -134,8 +139,14 @@ const StepSelectProducts = ({
           <h2 className="font-headline font-bold text-lg text-on-surface flex items-center gap-2 capitalize">
             <Icon name="category" className="text-primary" size={20} />
             <span>Category: {activeCategory.replace("_", " ")}</span>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-bold">
-              {requiredCountForCategory} {requiredCountForCategory === 1 ? "item required" : "items required"}
+            <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
+              isOptionalActiveCategory
+                ? "bg-stone-500/10 text-stone-500 dark:text-stone-400"
+                : "bg-primary/10 text-primary"
+            }`}>
+              {isOptionalActiveCategory
+                ? "Optional"
+                : `${requiredCountForCategory} ${requiredCountForCategory === 1 ? "item required" : "items required"}`}
             </span>
           </h2>
 
@@ -170,13 +181,12 @@ const StepSelectProducts = ({
           >
             {categories.map((cat) => {
               const catProds = productData[cat] || [];
-              const reqCount = categoryCounts[cat] || 1;
-              const selCount = catProds.filter((p) =>
-                addedProducts.map(String).includes(String(p._id || p.id || p.productData?._id || p.productData?.id))
-              ).length;
+              const reqCount = categoryCounts[cat] ?? 0;
+              const catProductIds = new Set(catProds.map((p) => getProductId(p)));
+              const selCount = addedProducts.filter((id) => catProductIds.has(id)).length;
               return (
                 <option key={cat} value={cat}>
-                  {cat.replace("_", " ")} ({selCount}/{reqCount} selected)
+                  {cat.replace("_", " ")} ({reqCount === 0 ? `${selCount} selected • Optional` : `${selCount}/${reqCount} selected`})
                 </option>
               );
             })}
@@ -188,11 +198,11 @@ const StepSelectProducts = ({
           {categories.map((category) => {
             const isCatActive = activeCategory === category;
             const catProds = productData[category] || [];
-            const reqCount = categoryCounts[category] || 1;
-            const selCount = catProds.filter((p) =>
-              addedProducts.map(String).includes(String(p._id || p.id || p.productData?._id || p.productData?.id))
-            ).length;
-            const isComplete = selCount === reqCount;
+            const reqCount = categoryCounts[category] ?? 0;
+            const catProductIds = new Set(catProds.map((p) => getProductId(p)));
+            const selCount = addedProducts.filter((id) => catProductIds.has(id)).length;
+            const isComplete = reqCount > 0 ? selCount >= reqCount : selCount > 0;
+            const isOptional = reqCount === 0;
 
             return (
               <button
@@ -212,10 +222,12 @@ const StepSelectProducts = ({
                   className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     isComplete
                       ? "bg-emerald-500/20 text-emerald-500"
+                      : isOptional
+                      ? "bg-stone-500/10 text-stone-500 dark:text-stone-400"
                       : "bg-surface-variant text-on-surface-variant"
                   }`}
                 >
-                  {selCount}/{reqCount}
+                  {isOptional ? (selCount > 0 ? `${selCount} Selected` : "Optional") : `${selCount}/${reqCount}`}
                 </span>
                 {isComplete && <Icon name="check_circle" size={16} className="text-emerald-500 shrink-0" />}
               </button>
@@ -229,8 +241,9 @@ const StepSelectProducts = ({
         {currentCategoryProducts.map((product, idx) => {
           const parsed = parseProductDetails(product, activeCategory);
           const productId = parsed.id;
-          const isAdded = addedProducts.map(String).includes(productId);
-          const isGolden = product.isRecommended || idx < requiredCountForCategory;
+          const selectedQty = addedProducts.filter((id) => id === productId).length;
+          const isAdded = selectedQty > 0;
+          const isGolden = product.isRecommended || (requiredCountForCategory > 0 && idx < requiredCountForCategory);
 
           const title = parsed.title;
           const brand = parsed.brand;
@@ -275,17 +288,46 @@ const StepSelectProducts = ({
                   </div>
                 )}
 
-                {/* Toggle Selection Button */}
-                <button
-                  onClick={() => toggleProduct(productId, activeCategory, requiredCountForCategory)}
-                  className={`absolute top-3 right-3 rtl:right-auto rtl:left-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 z-10 shadow-lg ${
-                    isAdded
-                      ? "bg-primary text-white scale-110"
-                      : "bg-background text-on-surface hover:text-primary neomorph-raised"
-                  }`}
-                >
-                  <Icon name={isAdded ? "check" : "add"} size={18} />
-                </button>
+                {/* Multi-Selection Quantity Controls / Add Button */}
+                <div className="absolute top-3 right-3 rtl:right-auto rtl:left-3 z-10">
+                  {selectedQty > 0 ? (
+                    <div className="flex items-center gap-1.5 bg-background/95 backdrop-blur-md p-1 rounded-full border border-primary/30 shadow-xl neomorph-raised">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          decrementProduct ? decrementProduct(productId) : toggleProduct(productId, activeCategory, requiredCountForCategory);
+                        }}
+                        className="w-7 h-7 rounded-full bg-surface-variant hover:bg-red-500 hover:text-white text-on-surface flex items-center justify-center transition-all font-bold text-sm"
+                        title="Decrease quantity"
+                      >
+                        <Icon name="remove" size={14} />
+                      </button>
+
+                      <span className="px-2 font-headline font-black text-sm text-primary">
+                        {selectedQty}
+                      </span>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          incrementProduct ? incrementProduct(productId) : toggleProduct(productId, activeCategory, requiredCountForCategory);
+                        }}
+                        className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center transition-all font-bold text-sm hover:scale-110 shadow-md"
+                        title="Add another instance"
+                      >
+                        <Icon name="add" size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => incrementProduct ? incrementProduct(productId) : toggleProduct(productId, activeCategory, requiredCountForCategory)}
+                      className="w-9 h-9 rounded-full bg-background text-on-surface hover:text-primary neomorph-raised flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-105"
+                      title="Add product"
+                    >
+                      <Icon name="add" size={18} />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Product Info */}
@@ -306,9 +348,9 @@ const StepSelectProducts = ({
                   <span className="font-headline font-bold text-lg text-primary">
                     {formatCurrency(price)}
                   </span>
-                  {isAdded && (
+                  {selectedQty > 0 && (
                     <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                      <Icon name="check_circle" size={14} /> Selected
+                      <Icon name="check_circle" size={14} /> {selectedQty > 1 ? `${selectedQty} Selected` : "Selected"}
                     </span>
                   )}
                 </div>
@@ -351,8 +393,11 @@ const StepSelectProducts = ({
         product={selectedModalProduct}
         isOpen={!!selectedModalProduct}
         onClose={() => setSelectedModalProduct(null)}
-        isSelected={selectedModalProduct && addedProducts.includes(selectedModalProduct.id || selectedModalProduct._id)}
+        selectedQty={selectedModalProduct ? addedProducts.filter((id) => id === getProductId(selectedModalProduct)).length : 0}
+        isSelected={selectedModalProduct && addedProducts.includes(getProductId(selectedModalProduct))}
         onToggleSelect={(id) => toggleProduct(id, activeCategory, requiredCountForCategory)}
+        onIncrement={(id) => incrementProduct ? incrementProduct(id) : toggleProduct(id, activeCategory, requiredCountForCategory)}
+        onDecrement={(id) => decrementProduct ? decrementProduct(id) : toggleProduct(id, activeCategory, requiredCountForCategory)}
         formatCurrency={formatCurrency}
       />
 

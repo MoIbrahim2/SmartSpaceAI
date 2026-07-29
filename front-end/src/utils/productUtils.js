@@ -3,64 +3,11 @@
  * Normalizes title, brand, price, images, description, dimensions, and styling properties.
  */
 
-export const CATEGORY_IMAGE_POOLS = {
-  sofa: [
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800",
-    "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?w=800",
-    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
-    "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
-    "https://images.unsplash.com/photo-1512212621149-107ffe572d2f?w=800",
-    "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=800",
-    "https://images.unsplash.com/photo-1567016432779-094069958ea5?w=800",
-    "https://images.unsplash.com/photo-1550581190-9c1c48d21d6c?w=800",
-    "https://images.unsplash.com/photo-1549187774-b4e9b0445b41?w=800",
-    "https://images.unsplash.com/photo-1506898667547-42e2b376e159?w=800"
-  ],
-  armchair: [
-    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800",
-    "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=800",
-    "https://images.unsplash.com/photo-1580481072645-022f9a6d8310?w=800",
-    "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=800",
-    "https://images.unsplash.com/photo-1581539250439-c96689b516dd?w=800"
-  ],
-  coffee_table: [
-    "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800",
-    "https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?w=800",
-    "https://images.unsplash.com/photo-1532323544230-7191fd51bc1b?w=800",
-    "https://images.unsplash.com/photo-1544457070-4cd773b4d71e?w=800"
-  ],
-  tv_unit: [
-    "https://images.unsplash.com/photo-1595428774223-ef52624120d2?w=800",
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800",
-    "https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=800"
-  ],
-  bed: [
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800",
-    "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
-    "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=800",
-    "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800"
-  ],
-  default: [
-    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800",
-    "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800",
-    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800"
-  ]
-};
+/** Path to the generic "no image" placeholder SVG */
+export const NO_IMAGE_PLACEHOLDER = "/img/no-product-image.svg";
 
-export const getUniqueFallbackImage = (product, category = "") => {
-  const pData = (product && product.productData) || product || {};
-  const idOrTitle = String(product?._id || product?.id || pData.title || pData.name || pData.basic?.name || Math.random());
-  const hash = idOrTitle.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-
-  const norm = String(category).toLowerCase().replace(/[\s-]+/g, '_');
-  let pool = CATEGORY_IMAGE_POOLS.default;
-  if (norm.includes('sofa')) pool = CATEGORY_IMAGE_POOLS.sofa;
-  else if (norm.includes('armchair') || norm.includes('chair')) pool = CATEGORY_IMAGE_POOLS.armchair;
-  else if (norm.includes('coffee') || norm.includes('table')) pool = CATEGORY_IMAGE_POOLS.coffee_table;
-  else if (norm.includes('tv')) pool = CATEGORY_IMAGE_POOLS.tv_unit;
-  else if (norm.includes('bed')) pool = CATEGORY_IMAGE_POOLS.bed;
-
-  return pool[hash % pool.length];
+export const getUniqueFallbackImage = (_product, _category = "") => {
+  return NO_IMAGE_PLACEHOLDER;
 };
 
 export const getProductImage = (product, category = "") => {
@@ -101,11 +48,50 @@ export const getProductImage = (product, category = "") => {
   return getUniqueFallbackImage(product, category);
 };
 
+/**
+ * Central, single-source-of-truth function for extracting a unique product ID.
+ *
+ * The recommendation engine's formatTierProduct() flattens MongoDB documents
+ * into plain objects. DB products keep their `_id` (ObjectId), but scraped
+ * products never have `_id` — they only have `externalId` or `name`.
+ * This helper walks a reliable fallback chain so every product gets a
+ * non-empty, consistent string identifier.
+ *
+ * Fallback chain: _id → id → externalId → sellerId → name → index-based
+ */
+export const getProductId = (product) => {
+  if (!product) return "";
+  const pData = product.productData || product;
+
+  // Walk through all possible ID fields
+  const candidates = [
+    product._id,
+    product.id,
+    pData._id,
+    pData.id,
+    product.externalId,
+    pData.externalId,
+    product.sellerId,
+    pData.sellerId,
+  ];
+
+  for (const c of candidates) {
+    if (c != null && String(c).trim() !== "") return String(c);
+  }
+
+  // Last resort: use the product name + price as a deterministic key
+  const name = pData.basic?.name || pData.name || pData.title || product.name || product.title || "";
+  const price = pData.pricing?.currentPrice || pData.price || product.price || 0;
+  if (name) return `${name}__${price}`;
+
+  return "";
+};
+
 export const parseProductDetails = (product, activeCategory = "Furniture") => {
   if (!product) return {};
   const pData = product.productData || product;
 
-  const id = String(product._id || product.id || pData._id || pData.id || "");
+  const id = getProductId(product);
   
   const title =
     pData.basic?.name ||

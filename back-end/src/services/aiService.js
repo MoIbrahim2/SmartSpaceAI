@@ -58,11 +58,10 @@ const validateRoomImage = async (filePath, mimeType, generationType = 'CREATE_FR
   // Build the prompt
   const prompt = `Analyze this image of a room. You are an expert architectural evaluator. 
 Determine if this image is suitable for generating an interior design rendering.
-${
-  isEnhance
-    ? 'Note: This room is being evaluated for the "ENHANCE_ROOM" option. It is completely fine and acceptable if the room has items, furniture, clutter, or existing layouts in it. You should focus on lighting and composition, and you should set is_empty_enough to true.'
-    : 'Note: This room is being evaluated for the "CREATE_FROM_SCRATCH" option. The room MUST be mostly empty or only have minimal clutter.'
-}`;
+${isEnhance
+      ? 'Note: This room is being evaluated for the "ENHANCE_ROOM" option. It is completely fine and acceptable if the room has items, furniture, clutter, or existing layouts in it. You should focus on lighting and composition, and you should set is_empty_enough to true.'
+      : 'Note: This room is being evaluated for the "CREATE_FROM_SCRATCH" option. The room MUST be mostly empty or only have minimal clutter.'
+    }`;
 
   // Build the config with structured output schema
   const config = {

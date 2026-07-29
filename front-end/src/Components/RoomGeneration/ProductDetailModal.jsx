@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
-import { parseProductDetails } from "../../utils/productUtils";
+import { parseProductDetails, getProductId } from "../../utils/productUtils";
 
-const ProductDetailModal = ({ product, isOpen, onClose, isSelected, onToggleSelect, formatCurrency }) => {
+const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelected, onToggleSelect, onIncrement, onDecrement, formatCurrency }) => {
   const { t } = useTranslation();
 
   if (!isOpen || !product) return null;
@@ -73,15 +73,15 @@ const ProductDetailModal = ({ product, isOpen, onClose, isSelected, onToggleSele
               </div>
               <div className="flex justify-between text-xs text-on-surface-variant">
                 <span>Style</span>
-                <span className="font-semibold text-on-surface">{attributes.style || pData.style || "Modern"}</span>
+                <span className="font-semibold text-on-surface">{attributes.style}</span>
               </div>
               <div className="flex justify-between text-xs text-on-surface-variant">
                 <span>Material</span>
-                <span className="font-semibold text-on-surface">{attributes.material || pData.material || "Wood & Fabric"}</span>
+                <span className="font-semibold text-on-surface">{attributes.material}</span>
               </div>
               <div className="flex justify-between text-xs text-on-surface-variant">
                 <span>Color</span>
-                <span className="font-semibold text-on-surface">{attributes.color || pData.color || "Neutral"}</span>
+                <span className="font-semibold text-on-surface">{attributes.color}</span>
               </div>
             </div>
           </div>
@@ -129,20 +129,40 @@ const ProductDetailModal = ({ product, isOpen, onClose, isSelected, onToggleSele
             </a>
           )}
 
-          <button
-            onClick={() => {
-              onToggleSelect(product.id || product._id);
-              onClose();
-            }}
-            className={`flex-1 py-3 px-6 rounded-xl font-headline font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-              isSelected
-                ? "bg-red-500/10 text-red-500 border border-red-500/30 hover:bg-red-500/20"
-                : "bg-primary text-on-primary shadow-lg hover:bg-primary-variant"
-            }`}
-          >
-            <Icon name={isSelected ? "remove_circle" : "check_circle"} size={18} />
-            {isSelected ? "Deselect Product" : "Select Product"}
-          </button>
+          {selectedQty > 0 ? (
+            <div className="flex-1 flex items-center justify-between gap-3 p-2 rounded-xl bg-background border border-primary/30 neomorph-raised">
+              <button
+                onClick={() => onDecrement(parsed.id)}
+                className="w-9 h-9 rounded-lg bg-surface-variant hover:bg-red-500 hover:text-white text-on-surface flex items-center justify-center font-bold transition-all"
+                title="Decrease Quantity"
+              >
+                <Icon name="remove" size={16} />
+              </button>
+
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] uppercase font-bold text-on-surface-variant">Quantity</span>
+                <span className="font-headline font-black text-base text-primary">{selectedQty} Selected</span>
+              </div>
+
+              <button
+                onClick={() => onIncrement(parsed.id)}
+                className="w-9 h-9 rounded-lg bg-primary text-white flex items-center justify-center font-bold transition-all shadow-md hover:scale-105"
+                title="Increase Quantity"
+              >
+                <Icon name="add" size={16} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                onToggleSelect(parsed.id);
+              }}
+              className="flex-1 py-3 px-6 rounded-xl font-headline font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-primary text-white shadow-lg hover:bg-primary-variant"
+            >
+              <Icon name="check_circle" size={18} />
+              Select Product
+            </button>
+          )}
         </div>
       </div>
     </div>

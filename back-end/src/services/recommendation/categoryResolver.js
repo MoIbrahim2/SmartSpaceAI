@@ -156,6 +156,10 @@ const resolveAllCategories = (categoryPreferences = [], kbCategories = [], kbCat
   const unresolvedCategories = [];
   const notices = [];
 
+  const hasUserRequestedCategories = categoryPreferences.some(
+    (p) => (p.included === true || (p.quantity && p.quantity > 0)) && p.excluded !== true
+  );
+
   // Categories explicitly avoided
   const categoriesToAvoid = (negativePreferences.categoriesToAvoid || [])
     .map((c) => normalizeCategory(c));
@@ -198,14 +202,15 @@ const resolveAllCategories = (categoryPreferences = [], kbCategories = [], kbCat
         (r) => normalizeCategory(r.category) === normalizeCategory(resolution.resolvedCategory)
       );
 
+      const isExplicit = pref.included === true || (pref.quantity && pref.quantity > 0);
       resolvedCategories.push({
         ...resolution,
         geminiPreference: pref,
-        kbRule: rule || null,
+        kbRule: rule ? (isExplicit ? rule : { ...rule, role: 'OPTIONAL' }) : null,
         kbBudget: kbCategories.find(
           (c) => normalizeCategory(c.category) === normalizeCategory(resolution.resolvedCategory)
         ) || null,
-        isUserRequested: pref.included === true || (pref.quantity && pref.quantity > 0) || true,
+        isUserRequested: isExplicit,
       });
 
       if (resolution.notice) {
