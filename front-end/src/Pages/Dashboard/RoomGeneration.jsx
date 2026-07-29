@@ -391,7 +391,7 @@ const RoomGeneration = () => {
         if (countsMap[pId] && !seenIds.has(pId)) {
           seenIds.add(pId);
           selectedProductObjects.push({
-            category: p.category || activeCategory,
+            category: p.category || p.categoryName || activeCategory || "Furniture",
             productId: pId,
             productData: p,
             isRecommended: !!p.isRecommended,
@@ -408,7 +408,7 @@ const RoomGeneration = () => {
           width_cm: parseFloat(form.width),
           height_cm: parseFloat(form.height),
           budget_egp: parseFloat(form.budget),
-          room_image_path: savedLayout?.room_image_path,
+          room_image_path: savedLayout?.room_image_path || savedLayout?.imagePath,
         },
       });
 

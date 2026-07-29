@@ -1,5 +1,6 @@
 const Generation = require('../models/generation.model');
 const Room = require('../models/room.model');
+const RoomLayout = require('../models/roomLayout.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
 const fs = require('fs');
@@ -136,6 +137,19 @@ const extractUserPreferences = async (userId, payload) => {
     if (generationType) {
       generation.generationType = generationType;
     }
+
+    if (roomId && (!generation.roomLayoutData || !generation.roomLayoutData.room_image_path)) {
+      const layout = await RoomLayout.findOne({ roomId });
+      if (layout) {
+        generation.roomLayoutData = {
+          length_cm: layout.length_cm,
+          width_cm: layout.width_cm,
+          height_cm: layout.height_cm,
+          budget_egp: layout.budget_egp,
+          room_image_path: layout.room_image_path
+        };
+      }
+    }
     await generation.save();
   } else {
     // Create new generation
@@ -151,6 +165,16 @@ const extractUserPreferences = async (userId, payload) => {
     // Only set roomId if provided
     if (roomId) {
       generationData.roomId = roomId;
+      const layout = await RoomLayout.findOne({ roomId });
+      if (layout) {
+        generationData.roomLayoutData = {
+          length_cm: layout.length_cm,
+          width_cm: layout.width_cm,
+          height_cm: layout.height_cm,
+          budget_egp: layout.budget_egp,
+          room_image_path: layout.room_image_path
+        };
+      }
     }
 
     generation = await Generation.create(generationData);
@@ -374,22 +398,71 @@ const saveSelectedProducts = async (userId, generationId, payload) => {
 
   const { selectedProducts, recommendationResult, roomLayoutData } = payload;
 
-  if (selectedProducts) generation.selectedProducts = selectedProducts;
+  if (selectedProducts && Array.isArray(selectedProducts)) {
+    generation.selectedProducts = selectedProducts.map((p, idx) => {
+      const pData = p.productData || p;
+      const category = p.category || pData.category || pData.categoryName || 'Furniture';
+      const productId = p.productId || pData._id || pData.id || String(idx);
+      const price = Number(p.price || pData.pricing?.currentPrice || pData.price || pData.numericPrice || 0);
+      const quantity = Number(p.quantity || 1);
+      const isRecommended = Boolean(p.isRecommended || pData.isRecommended);
+
+      return {
+        category,
+        productId,
+        productData: pData,
+        isRecommended,
+        price,
+        quantity
+      };
+    });
+  }
+
   if (recommendationResult) generation.recommendationResult = recommendationResult;
-  if (roomLayoutData) generation.roomLayoutData = roomLayoutData;
+
+  if (roomLayoutData) {
+    let imagePath = roomLayoutData.room_image_path || generation.roomLayoutData?.room_image_path;
+    if (!imagePath && generation.roomId) {
+      const layout = await RoomLayout.findOne({ roomId: generation.roomId });
+      if (layout?.room_image_path) {
+        imagePath = layout.room_image_path;
+      }
+    }
+
+    generation.roomLayoutData = {
+      length_cm: Number(roomLayoutData.length_cm || generation.roomLayoutData?.length_cm || 400),
+      width_cm: Number(roomLayoutData.width_cm || generation.roomLayoutData?.width_cm || 350),
+      height_cm: Number(roomLayoutData.height_cm || generation.roomLayoutData?.height_cm || 280),
+      budget_egp: Number(roomLayoutData.budget_egp || generation.roomLayoutData?.budget_egp || 75000),
+      room_image_path: imagePath
+    };
+  } else if (!generation.roomLayoutData?.room_image_path && generation.roomId) {
+    const layout = await RoomLayout.findOne({ roomId: generation.roomId });
+    if (layout) {
+      generation.roomLayoutData = {
+        length_cm: layout.length_cm,
+        width_cm: layout.width_cm,
+        height_cm: layout.height_cm,
+        budget_egp: layout.budget_egp,
+        room_image_path: layout.room_image_path
+      };
+    }
+  }
 
   await generation.save();
   return generation;
 };
 
 /**
- * Trigger AI image generation for a generation using Gemini / Imagen.
+ * Trigger AI image generation for a generation using Qwen Multimodal.
  * @param {string} userId
  * @param {string} generationId
  * @returns {Promise<Object>} Generation with generated image
  */
 const generateRoomImage = async (userId, generationId) => {
-  const generation = await Generation.findById(generationId).populate('roomId');
+  const generation = await Generation.findById(generationId)
+    .populate('roomId')
+    .populate('selectedProducts.productId');
   if (!generation) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
   }
@@ -402,7 +475,18 @@ const generateRoomImage = async (userId, generationId) => {
 
   try {
     const roomType = generation.roomId?.roomType || 'room';
-    const roomImageUrl = generation.roomLayoutData?.room_image_path || generation.roomId?.sourceImages?.[0]?.url || '';
+
+    // Retrieve room_image_path from generation.roomLayoutData or RoomLayout model
+    let roomImageUrl = generation.roomLayoutData?.room_image_path;
+    if (!roomImageUrl && generation.roomId) {
+      const layout = await RoomLayout.findOne({ roomId: generation.roomId._id });
+      if (layout?.room_image_path) {
+        roomImageUrl = layout.room_image_path;
+      }
+    }
+    if (!roomImageUrl) {
+      roomImageUrl = generation.roomId?.sourceImages?.[0]?.url || '';
+    }
     const roomDimensions = {
       length_cm: generation.roomLayoutData?.length_cm,
       width_cm: generation.roomLayoutData?.width_cm,

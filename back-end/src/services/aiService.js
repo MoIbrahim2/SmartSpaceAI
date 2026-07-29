@@ -399,40 +399,8 @@ const generateRoomCompositeImage = async ({
   roomDimensions = {},
   roomType = 'room'
 }) => {
-  // Build comprehensive system & user prompt for image generation
-  const productDescriptions = selectedProducts
-    .map((p, idx) => {
-      const pData = p.productData || p;
-      const title = pData.title || pData.name || p.category || `Product ${idx + 1}`;
-      const provider = pData.brand || pData.provider || pData.merchant || 'Retailer';
-      const price = pData.price ? `${pData.price} EGP` : '';
-      const dims = pData.specifications?.dimensions || pData.dimensions
-        ? `(${pData.specifications?.dimensions?.width || ''}x${pData.specifications?.dimensions?.length || ''}x${pData.specifications?.dimensions?.height || ''} cm)`
-        : '';
-      const style = pData.attributes?.style || pData.style || '';
-      const color = pData.attributes?.color || pData.color || '';
-      const material = pData.attributes?.material || pData.material || '';
-      return `- ${p.category}: "${title}" by ${provider} ${dims}. Style: ${style}, Color: ${color}, Material: ${material}. ${price}`;
-    })
-    .join('\n');
-
-  const dimText = roomDimensions.width_cm && roomDimensions.length_cm
-    ? `${roomDimensions.width_cm}cm x ${roomDimensions.length_cm}cm x ${roomDimensions.height_cm || 280}cm`
-    : 'standard room proportions';
-
-  const systemPrompt = `Create a photorealistic 8K interior design architectural rendering of a ${roomType} (${dimText}).
-User Design Prompt & Preferred Style:
-"${prompt}"
-
-Selected Furniture Products to Smartly Align and Place in the Room:
-${productDescriptions}
-
-Placement & Architectural Rules:
-- Accurately scale each furniture item according to its dimensions relative to room size.
-- Maintain natural realistic lighting, depth, soft shadows, and clean perspective.
-- Follow architectural design norms with logical product positioning, walking paths, and aesthetic harmony.`;
-
-  const modelUsed = process.env.GEMINI_MODEL_FOR_IMAGE_GEN || 'imagen-3.0-generate-002';
+  const modelUsed = process.env.QWEN_MODEL_FOR_IMAGE_GEN || 'qwen-image-2.0-pro';
+  const apiKey = process.env.QWEN_API_KEY || process.env.DASHSCOPE_API_KEY;
 
   // Ensure uploads directory exists
   const uploadsDir = path.join(process.cwd(), 'uploads', 'generations');
@@ -440,38 +408,225 @@ Placement & Architectural Rules:
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
 
+  const dimText = roomDimensions.width_cm && roomDimensions.length_cm
+    ? `${roomDimensions.width_cm}cm x ${roomDimensions.length_cm}cm x ${roomDimensions.height_cm || 280}cm`
+    : 'standard room proportions';
+
   return await withRetry(async () => {
     try {
-      // Try Imagen generateImages API via GoogleGenAI SDK
-      if (typeof ai.models.generateImages === 'function') {
-        const response = await ai.models.generateImages({
-          model: modelUsed,
-          prompt: systemPrompt,
-          config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/jpeg',
-            aspectRatio: '16:9',
+      if (apiKey) {
+        const messageContent = [];
+        let imageIndex = 1;
+        let roomImageRef = '';
+        const productRefList = [];
+
+        // 1. Target Room Layout Image (Image 1)
+        if (roomImageUrl) {
+          let roomImgSrc = null;
+          if (roomImageUrl.startsWith('http://') || roomImageUrl.startsWith('https://')) {
+            roomImgSrc = roomImageUrl;
+          } else {
+            const localPath = path.join(process.cwd(), roomImageUrl.replace(/^\//, ''));
+            if (fs.existsSync(localPath)) {
+              const fileBuffer = fs.readFileSync(localPath);
+              const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'jpeg';
+              const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+              roomImgSrc = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+            } else {
+              console.warn(`[AI Service] Local room image file not found on disk: ${localPath}`);
+            }
+          }
+
+          if (roomImgSrc) {
+            messageContent.push({ image: roomImgSrc });
+            roomImageRef = `Image 1 is the exact target room layout uploaded by the user. Maintain the background walls, floor, windows, doors, perspective, and architectural geometry of Image 1 EXACTLY identical.`;
+            imageIndex++;
+          }
+        }
+
+        // 2. Product Images & Detailed Inventory Directives
+        for (const p of selectedProducts) {
+          const pData = (p.productId && typeof p.productId === 'object' && (p.productId.basic || p.productId.name || p.productId.images))
+            ? p.productId
+            : (p.productData || p);
+
+          const title = pData.basic?.name || pData.name || pData.title || pData.basic?.brand || p.category || 'Furniture Item';
+          const brand = pData.basic?.brand || pData.brand || '';
+          const fullTitle = brand ? `${brand} ${title}` : title;
+          const qty = p.quantity || 1;
+          const category = p.category || pData.classification?.canonicalCategory || pData.category || 'Furniture';
+
+          // Extract physical dimensions
+          const dimsObj = pData.dimensions || pData.specifications?.dimensions || {};
+          const w = dimsObj.width || dimsObj.w;
+          const d = dimsObj.length || dimsObj.depth || dimsObj.d || dimsObj.l;
+          const h = dimsObj.height || dimsObj.h;
+          const dimUnit = dimsObj.dimensionUnit || 'cm';
+          const dimString = (w || d || h)
+            ? `${w || '?'} ${dimUnit} (W) x ${d || '?'} ${dimUnit} (D) x ${h || '?'} ${dimUnit} (H)`
+            : null;
+
+          // Extract visual attributes
+          const colors = Array.isArray(pData.classification?.colors)
+            ? pData.classification.colors.join(', ')
+            : (pData.attributes?.color || pData.color || '');
+          const materials = Array.isArray(pData.classification?.materials)
+            ? pData.classification.materials.join(', ')
+            : (pData.attributes?.material || pData.material || '');
+          const styles = Array.isArray(pData.classification?.styles)
+            ? pData.classification.styles.join(', ')
+            : (pData.attributes?.style || pData.style || '');
+          const attrDetails = [styles, colors, materials].filter(Boolean).join(', ');
+
+          let imgUrl = pData.image_url || pData.image || pData.imageUrl || p.image;
+          if (!imgUrl && Array.isArray(pData.images) && pData.images.length > 0) {
+            const primary = pData.images.find(img => img && (img.isPrimary || img.primary));
+            const firstImg = primary || pData.images[0];
+            imgUrl = typeof firstImg === 'string' ? firstImg : (firstImg?.url || firstImg?.src);
+          }
+
+          let productImgSrc = null;
+          if (imgUrl && (imgUrl.startsWith('http://') || imgUrl.startsWith('https://'))) {
+            productImgSrc = imgUrl;
+          } else if (imgUrl) {
+            const localPath = path.join(process.cwd(), imgUrl.replace(/^\//, ''));
+            if (fs.existsSync(localPath)) {
+              const fileBuffer = fs.readFileSync(localPath);
+              const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'png';
+              const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+              productImgSrc = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+            } else {
+              console.warn(`[AI Service] Product image local file not found: ${localPath}`);
+            }
+          }
+
+          console.log(`[AI Service] Product parsed: "${fullTitle}" (${category}) | Has Image: ${Boolean(productImgSrc)} | Image URL: ${imgUrl || 'N/A'}`);
+
+          if (productImgSrc) {
+            messageContent.push({ image: productImgSrc });
+            productRefList.push(
+              `• Image ${imageIndex} [${category}]: "${fullTitle}"\n` +
+              `  - EXACT REQUIRED QUANTITY: ${qty} ${qty > 1 ? 'units' : 'unit'}\n` +
+              `  - PHYSICAL DIMENSIONS: ${dimString || 'Standard proportional sizing'}\n` +
+              `  - VISUAL FIDELITY: Replicate the exact visual silhouette, fabric, texture, material, leg design, and color from Image ${imageIndex}${attrDetails ? ` (${attrDetails})` : ''}.`
+            );
+            imageIndex++;
+          } else {
+            productRefList.push(
+              `• [${category}]: "${fullTitle}"\n` +
+              `  - EXACT REQUIRED QUANTITY: ${qty} ${qty > 1 ? 'units' : 'unit'}\n` +
+              `  - PHYSICAL DIMENSIONS: ${dimString || 'Standard proportional sizing'}\n` +
+              `  - VISUAL SPECIFICATIONS: ${attrDetails || 'Modern design'}.`
+            );
+          }
+        }
+
+        // 3. Ultra-Concentrated & Detailed System Prompt Directive for Qwen
+        const qwenPrompt = `SYSTEM ROLE & PURPOSE:
+You are an ultra-high-precision Architectural Virtual Staging Engine. Your task is to perform exact visual product placement into a real target room image.
+
+==================== 1. BASE ROOM ARCHITECTURE (IMAGE 1) ====================
+${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
+- RIGID STRUCTURAL CONSTRAINTS:
+  * Do NOT alter, shift, or replace the room layout, back walls, side walls, floor material/texture, ceiling lines, doors, or window frames of Image 1.
+  * Preserved Light & Perspective: Match camera FOV, vanishing points, horizon, ceiling lights, window daylight direction, and shadow orientation strictly from Image 1.
+
+==================== 2. MANDATORY PRODUCT INVENTORY & QUANTITIES ====================
+You MUST insert ONLY the following selected products into Image 1, strictly honoring the exact visual references, specified physical dimensions, and exact quantities:
+
+${productRefList.join('\n\n')}
+
+User Custom Instructions & Preferred Layout: "${prompt || 'Arrange products logically with clean walking paths and balanced ergonomics.'}"
+
+==================== 3. PHYSICAL SCALE & DIMENSIONAL ACCURACY ====================
+- ROOM SPACE BOUNDS: Room floor is approx ${dimText}.
+- RELATIVE PROPORTION RULE: Every furniture item MUST be rendered at its exact physical real-world scale relative to the room floorplan.
+  * For example, a 200cm sofa must occupy exactly half of a 400cm wall section. Do NOT shrink sofas to look like chairs, and do NOT enlarge chairs to look like sofas.
+  * Maintain realistic floor contact, grounding shadows, contact occlusion, and depth cues.
+
+==================== 4. STRICT NEGATIVE CONSTRAINTS (CRITICAL) ====================
+- DO NOT add hallucinated or extra furniture items (e.g. do NOT add extra sofas, extra tables, or extra chairs that are not listed in the product inventory above).
+- DO NOT deviate from item counts: If a product specifies QUANTITY: 2, render EXACTLY 2 identical units. If QUANTITY: 1, render EXACTLY 1 unit.
+- DO NOT replace or approximate product designs: The rendered furniture MUST match the exact visual product references provided in Image 2, Image 3, etc.
+- DO NOT obstruct architectural features like doors or low window sills unrealistically.`;
+
+        messageContent.push({ text: qwenPrompt });
+
+        console.log(`[AI Service] Calling Qwen API (${modelUsed}) with ${messageContent.length - 1} images...`);
+
+        const response = await fetch('https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
           },
+          body: JSON.stringify({
+            model: modelUsed,
+            input: {
+              messages: [
+                {
+                  role: 'user',
+                  content: messageContent
+                }
+              ]
+            },
+            parameters: {
+              n: 1,
+              watermark: false
+            }
+          })
         });
 
-        const imageObj = response.generatedImages?.[0];
-        if (imageObj && imageObj.image?.imageBytes) {
-          const fileName = `generated_room_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-          const filePath = path.join(uploadsDir, fileName);
-          const buffer = Buffer.from(imageObj.image.imageBytes, 'base64');
-          fs.writeFileSync(filePath, buffer);
-          return {
-            url: `uploads/generations/${fileName}`,
-            promptUsed: systemPrompt,
-            modelUsed,
-          };
+        if (response.ok) {
+          const resData = await response.json();
+          let generatedImageUrl = null;
+
+          if (resData.output?.choices?.[0]?.message?.content) {
+            const contentArr = resData.output.choices[0].message.content;
+            const imgObj = Array.isArray(contentArr) ? contentArr.find(item => item.image) : null;
+            if (imgObj) generatedImageUrl = imgObj.image;
+          }
+
+          if (!generatedImageUrl) {
+            generatedImageUrl =
+              resData.output?.choices?.[0]?.image ||
+              resData.output?.results?.[0]?.url ||
+              resData.output?.image_url;
+          }
+
+          if (generatedImageUrl) {
+            const fileName = `generated_room_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+            const filePath = path.join(uploadsDir, fileName);
+
+            if (generatedImageUrl.startsWith('data:image/')) {
+              const cleanBase64 = generatedImageUrl.replace(/^data:image\/\w+;base64,/, '');
+              fs.writeFileSync(filePath, Buffer.from(cleanBase64, 'base64'));
+            } else {
+              const imgRes = await fetch(generatedImageUrl);
+              if (imgRes.ok) {
+                const arrayBuffer = await imgRes.arrayBuffer();
+                fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+              }
+            }
+
+            if (fs.existsSync(filePath)) {
+              return {
+                url: `uploads/generations/${fileName}`,
+                promptUsed: qwenPrompt,
+                modelUsed
+              };
+            }
+          }
+        } else {
+          const errorText = await response.text();
+          console.warn(`[AI Service] Qwen API error (${response.status}): ${errorText}`);
         }
       }
     } catch (imgGenErr) {
-      console.warn(`[AI Service] Imagen API error (${imgGenErr.message}), falling back to baseline composite generator...`);
+      console.warn(`[AI Service] Qwen image generation error (${imgGenErr.message}), falling back to baseline composite generator...`);
     }
 
-    // Fallback: If image generation fails or model is unavailable in tier, create a valid composite reference using source image or default asset
+    // Fallback: If image generation fails or model is unavailable, create a valid composite reference using source image or default asset
     const fileName = `generated_room_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
     const filePath = path.join(uploadsDir, fileName);
 
