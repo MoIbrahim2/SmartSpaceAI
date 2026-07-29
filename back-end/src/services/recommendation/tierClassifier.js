@@ -114,18 +114,8 @@ const formatTierProduct = (product, resolvedQuantity) => {
     ? primaryImageObj
     : (primaryImageObj?.url || primaryImageObj?.src || product.imageUrl || product.image || product.primaryImage || null);
 
-  const productId = String(
-    product._id ||
-    product.id ||
-    product.externalId ||
-    product.sku ||
-    product.basic?.sku ||
-    `prod_${Math.random().toString(36).substr(2, 9)}`
-  );
-
   return {
-    _id: productId,
-    id: productId,
+    _id: product._id,
     externalId: product.externalId || null,
     sellerId: product.sellerId || null,
     name: product.basic?.name || product.name || product.title || '',
