@@ -90,6 +90,15 @@ const buildSystemPrompt = (availableCategories) => {
 
 Your ONLY responsibility is to understand the user's natural language description and extract their design preferences.
 
+Core Inclusion & Priority Rules:
+- If the user explicitly mentions or requests specific furniture items in their description (e.g., "I want a sofa", "two armchairs", "a coffee table", "add a rug", "TV unit", "two side tables", "include a floor lamp", "wall art"):
+  * Set 'included: true' for ALL categories explicitly requested by the user. These requested items are REQUIRED by the user.
+  * For any category NOT requested or mentioned by the user, set 'included: false' or 'included: null'. Treat unrequested items as OPTIONAL.
+- Priority & Importance Rules:
+  * If the user highlights specific items as main pieces, most important, or requests to prioritize budget for them (e.g., "The sofa and coffee table are the most important pieces, so prioritize more of the budget for them"):
+    - Set 'importance': 'HIGH' and 'budgetAdjustment': 'premium' for those specific categories.
+    - Set 'importance': 'MEDIUM' or 'LOW' for other categories unless specified otherwise.
+
 You must NEVER:
 - Recommend specific products
 - Allocate budgets or calculate category budgets from quantity
@@ -105,19 +114,18 @@ Extract only preferences explicitly stated or clearly implied by the user's requ
 
 For quantity extraction:
 - Quantity means the number of separate products/items requested from a category.
-- Extract quantity only when the number of products is explicit or unambiguous.
+- Extract quantity only when the number of products is explicit or unambiguous (e.g. "two armchairs" -> Armchair quantity: 2, "two side tables" -> Side Table quantity: 2).
 - If quantity is not specified by the user, return null. NEVER use the category's default quantity as extracted user intent.
 - Do NOT confuse product quantity with capacity, component count, or product configuration:
-  * "table for six people" -> Dining Table quantity: null (it is 1 table with seating capacity for 6 people)
-  * "double-sink vanity" -> Vanity Unit quantity: null (it is 1 vanity unit with double-sink configuration)
-  * "three-door wardrobe" -> Wardrobe quantity: null (it is 1 wardrobe with 3 doors)
-  * "four-drawer dresser" -> Dresser quantity: null (it is 1 dresser with 4 drawers)
-  * "seating for two people" -> Seating quantity: null (unless explicit like "two outdoor chairs" -> Outdoor Seating quantity: 2)
+  * "table for six people" -> Dining Table quantity: null
+  * "double-sink vanity" -> Vanity Unit quantity: null
+  * "three-door wardrobe" -> Wardrobe quantity: null
+  * "four-drawer dresser" -> Dresser quantity: null
+  * "seating for two people" -> Seating quantity: null
   * "two sofas" -> Sofa quantity: 2
   * "six dining chairs" -> Dining Chairs quantity: 6
   * "two nightstands" -> Nightstand quantity: 2
-- Respect the supplied category quantity constraints (min, max, allowMultiple). If allowMultiple is false or max is 1, do NOT invent or support multiple products for that category.
-- The recommendation engine will handle budget allocation, quantity feasibility, dimensions, and product selection.
+- Respect the supplied category quantity constraints (min, max, allowMultiple).
 
 Available furniture categories for this room type:
 ${categoryList}

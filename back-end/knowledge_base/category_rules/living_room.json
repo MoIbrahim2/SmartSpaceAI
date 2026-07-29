@@ -122,7 +122,7 @@
       "category": "Air Conditioner",
       "role": "CORE",
       "priority": 2,
-      "defaultIncluded": true,
+      "defaultIncluded": false,
       "quantity": {
         "default": 1,
         "min": 1,
@@ -462,7 +462,7 @@
       "category": "TV",
       "role": "CORE",
       "priority": 5,
-      "defaultIncluded": true,
+      "defaultIncluded": false,
       "quantity": {
         "default": 1,
         "min": 1,

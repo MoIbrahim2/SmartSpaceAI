@@ -99,7 +99,23 @@ const extractUserPreferences = async (userId, payload) => {
     categoryNames
   );
 
-  // 5. Create or update Generation document
+  // 5. Generate furniture recommendations using Recommendation Engine
+  let recommendationResult = null;
+  try {
+    const { generateRecommendations } = require('./recommendation/recommendationEngine');
+    recommendationResult = await generateRecommendations({
+      roomType,
+      totalBudget: Number(budget || 75000),
+      length: Number(length || 400),
+      width: Number(width || 350),
+      height: Number(height || 280),
+      extractedPreferences
+    });
+  } catch (recErr) {
+    console.error('[GenerationService] Error running recommendation engine:', recErr.message);
+  }
+
+  // 6. Create or update Generation document
   let generation;
 
   if (generationId) {
@@ -114,6 +130,9 @@ const extractUserPreferences = async (userId, payload) => {
 
     generation.extractedPreferences = extractedPreferences;
     generation.prompt = prompt;
+    if (recommendationResult) {
+      generation.recommendationResult = recommendationResult;
+    }
     if (generationType) {
       generation.generationType = generationType;
     }
@@ -125,7 +144,8 @@ const extractUserPreferences = async (userId, payload) => {
       prompt,
       generationType: generationType || 'CREATE_FROM_SCRATCH',
       status: 'PENDING',
-      extractedPreferences
+      extractedPreferences,
+      recommendationResult
     };
 
     // Only set roomId if provided
@@ -138,7 +158,8 @@ const extractUserPreferences = async (userId, payload) => {
 
   return {
     generation,
-    extractedPreferences
+    extractedPreferences,
+    recommendationResult
   };
 };
 
@@ -335,12 +356,112 @@ const deleteGeneration = async (userId, generationId) => {
   return generation;
 };
 
+/**
+ * Save selected products and step data for a generation.
+ * @param {string} userId
+ * @param {string} generationId
+ * @param {Object} payload - { selectedProducts, recommendationResult, roomLayoutData }
+ * @returns {Promise<Object>} Updated generation
+ */
+const saveSelectedProducts = async (userId, generationId, payload) => {
+  const generation = await Generation.findById(generationId);
+  if (!generation) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+  if (generation.ownerId.toString() !== userId.toString()) {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+  }
+
+  const { selectedProducts, recommendationResult, roomLayoutData } = payload;
+
+  if (selectedProducts) generation.selectedProducts = selectedProducts;
+  if (recommendationResult) generation.recommendationResult = recommendationResult;
+  if (roomLayoutData) generation.roomLayoutData = roomLayoutData;
+
+  await generation.save();
+  return generation;
+};
+
+/**
+ * Trigger AI image generation for a generation using Gemini / Imagen.
+ * @param {string} userId
+ * @param {string} generationId
+ * @returns {Promise<Object>} Generation with generated image
+ */
+const generateRoomImage = async (userId, generationId) => {
+  const generation = await Generation.findById(generationId).populate('roomId');
+  if (!generation) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+  if (generation.ownerId.toString() !== userId.toString()) {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+  }
+
+  generation.status = 'PROCESSING';
+  await generation.save();
+
+  try {
+    const roomType = generation.roomId?.roomType || 'room';
+    const roomImageUrl = generation.roomLayoutData?.room_image_path || generation.roomId?.sourceImages?.[0]?.url || '';
+    const roomDimensions = {
+      length_cm: generation.roomLayoutData?.length_cm,
+      width_cm: generation.roomLayoutData?.width_cm,
+      height_cm: generation.roomLayoutData?.height_cm,
+    };
+
+    const imageResult = await aiService.generateRoomCompositeImage({
+      roomImageUrl,
+      selectedProducts: generation.selectedProducts || [],
+      prompt: generation.prompt || '',
+      roomDimensions,
+      roomType,
+    });
+
+    const generatedImageObj = {
+      url: imageResult.url,
+      promptUsed: imageResult.promptUsed,
+      modelUsed: imageResult.modelUsed,
+      generatedAt: new Date(),
+    };
+
+    generation.generatedImage = generatedImageObj;
+    generation.status = 'COMPLETED';
+    generation.completedAt = new Date();
+
+    // Push to images array if not already present
+    generation.images.push({
+      url: imageResult.url,
+      thumbnail: imageResult.url,
+      width: 1920,
+      height: 1080,
+      selected: true,
+    });
+
+    await generation.save();
+
+    // Link this generation as the selected active generation on the Room model
+    if (generation.roomId) {
+      await Room.findByIdAndUpdate(generation.roomId._id, {
+        selectedGenerationId: generation._id,
+      });
+    }
+
+    return generation;
+  } catch (err) {
+    generation.status = 'FAILED';
+    await generation.save();
+    throw err;
+  }
+};
+
 module.exports = {
   createGeneration,
   extractUserPreferences,
   getGenerations,
   getGenerationById,
   updateGeneration,
-  deleteGeneration
+  deleteGeneration,
+  saveSelectedProducts,
+  generateRoomImage
 };
 

@@ -18,3 +18,6 @@ export const updateRoom = (id, formData) =>
 
 export const deleteRoom = (id) =>
   api.delete(`/rooms/${id}`);
+
+export const getRoomGenerationsHistory = (id) =>
+  api.get(`/rooms/${id}/history`);

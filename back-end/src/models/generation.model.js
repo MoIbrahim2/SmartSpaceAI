@@ -85,6 +85,30 @@ const generationSchema = new mongoose.Schema({
       categoriesToAvoid: [{ type: String }]
     }
   },
+  selectedProducts: [{
+    category: { type: String, required: true },
+    productId: { type: String },
+    productData: { type: mongoose.Schema.Types.Mixed },
+    isRecommended: { type: Boolean, default: false },
+    price: { type: Number },
+    quantity: { type: Number, default: 1 }
+  }],
+  recommendationResult: {
+    type: mongoose.Schema.Types.Mixed
+  },
+  roomLayoutData: {
+    length_cm: { type: Number },
+    width_cm: { type: Number },
+    height_cm: { type: Number },
+    budget_egp: { type: Number },
+    room_image_path: { type: String }
+  },
+  generatedImage: {
+    url: { type: String },
+    promptUsed: { type: String },
+    modelUsed: { type: String },
+    generatedAt: { type: Date }
+  },
   completedAt: {
     type: Date
   }

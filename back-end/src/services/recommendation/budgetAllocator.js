@@ -39,6 +39,7 @@ const allocateBudgets = (totalBudget, resolvedCategories) => {
     // Resolve budget percentage
     let effectivePct = resolveBudgetPercentage(
       geminiPref.budgetAdjustment || null,
+      geminiPref.importance || null,
       budgetRule
     );
 
@@ -64,12 +65,35 @@ const allocateBudgets = (totalBudget, resolvedCategories) => {
   }
 
   // Step 3: Normalize if total exceeds 100%
-  const totalPercentage = rawAllocations.reduce((sum, a) => sum + a.effectivePercentage, 0);
+  let totalPercentage = rawAllocations.reduce((sum, a) => sum + a.effectivePercentage, 0);
 
   if (totalPercentage > 100) {
-    const scale = 100 / totalPercentage;
-    for (const alloc of rawAllocations) {
-      alloc.effectivePercentage = alloc.effectivePercentage * scale;
+    // Separate allocations by whether they were explicitly user-requested or KB optional defaults
+    const unrequestedAllocations = rawAllocations.filter((a) => a.isUserRequested === false);
+    if (unrequestedAllocations.length > 0) {
+      const userReqTotal = rawAllocations
+        .filter((a) => a.isUserRequested !== false)
+        .reduce((sum, a) => sum + a.effectivePercentage, 0);
+
+      if (userReqTotal <= 100) {
+        const remainingForUnrequested = 100 - userReqTotal;
+        const unreqTotal = unrequestedAllocations.reduce((sum, a) => sum + a.effectivePercentage, 0);
+        if (unreqTotal > 0) {
+          const unreqScale = remainingForUnrequested / unreqTotal;
+          for (const alloc of unrequestedAllocations) {
+            alloc.effectivePercentage = alloc.effectivePercentage * unreqScale;
+          }
+        }
+      }
+    }
+
+    // Re-check total percentage and scale proportionally if still > 100
+    totalPercentage = rawAllocations.reduce((sum, a) => sum + a.effectivePercentage, 0);
+    if (totalPercentage > 100) {
+      const scale = 100 / totalPercentage;
+      for (const alloc of rawAllocations) {
+        alloc.effectivePercentage = alloc.effectivePercentage * scale;
+      }
     }
   }
 

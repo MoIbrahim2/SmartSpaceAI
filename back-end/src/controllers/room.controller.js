@@ -48,10 +48,19 @@ const deleteRoom = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'room.delete_success', {}, HTTP_STATUS.OK);
 });
 
+/**
+ * Fetch generation history for a room
+ */
+const getRoomGenerationsHistory = asyncHandler(async (req, res) => {
+  const result = await roomService.getRoomGenerationsHistory(req.user._id, req.params.id);
+  return sendSuccess(res, 'room.generations_history', result, HTTP_STATUS.OK);
+});
+
 module.exports = {
   createRoom,
   getRooms,
   getRoomById,
   updateRoom,
-  deleteRoom
+  deleteRoom,
+  getRoomGenerationsHistory
 };

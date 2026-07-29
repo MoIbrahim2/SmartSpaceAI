@@ -149,8 +149,11 @@ const ADHOC_CATEGORY_DEFAULT_PERCENTAGE = 5;
 // "mid-range"/null  → use defaultPercentage from KB rule
 const BUDGET_ADJUSTMENT_MAP = {
   'premium': 'maxPercentage',
+  'high': 'maxPercentage',
   'budget-friendly': 'minPercentage',
+  'low': 'minPercentage',
   'mid-range': 'defaultPercentage',
+  'medium': 'defaultPercentage',
 };
 
 // ─── Size Mode Dimension Reduction ──────────────────────────
@@ -179,6 +182,13 @@ const CATEGORY_ROLES = {
 // Role priority for budget optimization (downgrade in this order)
 const ROLE_DOWNGRADE_ORDER = ['OPTIONAL_ADHOC', 'OPTIONAL', 'SECONDARY', 'CORE'];
 
+// ─── Real-Time Scraping Configuration ──────────────────────
+const SCRAPING_ENABLED = true;
+const SCRAPING_TIMEOUT_MS = 10000;
+const SCRAPING_CACHE_TTL_SECONDS = 1800; // 30 minutes
+const MAX_SCRAPED_PER_SITE = 10;
+const USD_TO_EGP_RATE = 50; // Exchange rate for Amazon US listings
+
 module.exports = {
   SCORING_WEIGHTS,
   TIER_THRESHOLDS,
@@ -195,4 +205,9 @@ module.exports = {
   ACCEPTED_STATUS,
   CATEGORY_ROLES,
   ROLE_DOWNGRADE_ORDER,
+  SCRAPING_ENABLED,
+  SCRAPING_TIMEOUT_MS,
+  SCRAPING_CACHE_TTL_SECONDS,
+  MAX_SCRAPED_PER_SITE,
+  USD_TO_EGP_RATE,
 };

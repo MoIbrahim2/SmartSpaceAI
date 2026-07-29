@@ -59,19 +59,44 @@ const classifyTiers = (scoredProducts, unitTargetBudget, resolvedQuantity = 1) =
 };
 
 /**
- * Select the best recommended product using tier fallback order.
+ * Select top N recommendations up to requested quantity.
+ *
+ * @param {{ cheaper: Array, balanced: Array, premium: Array }} tieredProducts
+ * @param {number} quantity - Number of recommended products needed
+ * @returns {Array} List of recommended products
+ */
+const selectRecommendations = (tieredProducts, quantity = 1) => {
+  const pool = [];
+  for (const tierName of TIER_FALLBACK_ORDER) {
+    const tier = tieredProducts[tierName.toLowerCase()] || [];
+    pool.push(...tier);
+  }
+
+  // Deduplicate by _id / externalId
+  const uniquePool = [];
+  const seenIds = new Set();
+  for (const prod of pool) {
+    const idStr = String(prod._id || prod.externalId || prod.name);
+    if (!seenIds.has(idStr)) {
+      seenIds.add(idStr);
+      uniquePool.push(prod);
+    }
+  }
+
+  // Sort by score descending and take up to quantity
+  uniquePool.sort((a, b) => (b.score || 0) - (a.score || 0));
+  return uniquePool.slice(0, Math.max(1, quantity));
+};
+
+/**
+ * Select the best single recommended product using tier fallback order.
  *
  * @param {{ cheaper: Array, balanced: Array, premium: Array }} tieredProducts
  * @returns {Object|null} Best recommendation or null
  */
 const selectRecommendation = (tieredProducts) => {
-  for (const tierName of TIER_FALLBACK_ORDER) {
-    const tier = tieredProducts[tierName.toLowerCase()];
-    if (tier && tier.length > 0) {
-      return tier[0]; // Top-scoring product in this tier
-    }
-  }
-  return null;
+  const list = selectRecommendations(tieredProducts, 1);
+  return list.length > 0 ? list[0] : null;
 };
 
 /**
@@ -82,27 +107,43 @@ const selectRecommendation = (tieredProducts) => {
  * @returns {Object}
  */
 const formatTierProduct = (product, resolvedQuantity) => {
-  const price = product.pricing?.currentPrice || 0;
-  const primaryImage = (product.images || []).find(img => img.isPrimary) || (product.images || [])[0];
+  const price = product.pricing?.currentPrice || product.price || 0;
+  const primaryImageObj = (product.images || []).find(img => img && (img.isPrimary || img.primary)) || (product.images || [])[0];
+
+  const primaryImageUrl = typeof primaryImageObj === 'string'
+    ? primaryImageObj
+    : (primaryImageObj?.url || primaryImageObj?.src || product.imageUrl || product.image || product.primaryImage || null);
+
+  const productId = String(
+    product._id ||
+    product.id ||
+    product.externalId ||
+    product.sku ||
+    product.basic?.sku ||
+    `prod_${Math.random().toString(36).substr(2, 9)}`
+  );
 
   return {
-    _id: product._id,
+    _id: productId,
+    id: productId,
     externalId: product.externalId || null,
     sellerId: product.sellerId || null,
-    name: product.basic?.name || '',
+    name: product.basic?.name || product.name || product.title || '',
+    brand: product.basic?.brand || product.brand || product.source?.marketplace || '',
     price,
-    currency: product.pricing?.currency || 'EGP',
-    originalPrice: product.pricing?.originalPrice || null,
-    discountPercentage: product.pricing?.discountPercentage || 0,
+    currency: product.pricing?.currency || product.currency || 'EGP',
+    originalPrice: product.pricing?.originalPrice || product.originalPrice || null,
+    discountPercentage: product.pricing?.discountPercentage || product.discountPercentage || 0,
     unitPrice: price,
     totalPriceForQuantity: price * resolvedQuantity,
     quantity: resolvedQuantity,
     dimensions: product.dimensions || null,
-    materials: product.classification?.materials || [],
-    colors: product.classification?.colors || [],
-    styles: product.classification?.styles || [],
-    primaryImage: primaryImage?.url || null,
-    productUrl: product.source?.productUrl || null,
+    materials: product.classification?.materials || product.materials || [],
+    colors: product.classification?.colors || product.colors || [],
+    styles: product.classification?.styles || product.styles || [],
+    primaryImage: primaryImageUrl,
+    images: product.images || (primaryImageUrl ? [{ url: primaryImageUrl, isPrimary: true }] : []),
+    productUrl: product.source?.productUrl || product.productUrl || null,
     score: product.score,
     scoreBreakdown: product.scoreBreakdown,
   };
@@ -111,5 +152,6 @@ const formatTierProduct = (product, resolvedQuantity) => {
 module.exports = {
   classifyTiers,
   selectRecommendation,
+  selectRecommendations,
   formatTierProduct,
 };

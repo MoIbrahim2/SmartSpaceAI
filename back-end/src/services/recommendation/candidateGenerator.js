@@ -11,14 +11,16 @@ const {
   ACCEPTED_STATUS,
   TIER_THRESHOLDS,
   MAX_CANDIDATES_FROM_DB,
+  SCRAPING_ENABLED,
 } = require('../../config/recommendation.config');
 const { normalizeCategory } = require('./helpers');
+const { scrapeForCategory } = require('../scraping/scraperService');
 
 /**
- * Fetch candidate products from MongoDB for a given category.
+ * Fetch candidate products for a given category from BOTH MongoDB and real-time website scrapers.
  *
  * Applies hard filters:
- * - processing.status = ACCEPTED
+ * - processing.status = ACCEPTED (for DB) or SCRAPED (for live products)
  * - classification.canonicalCategory = resolved category
  * - pricing.currentPrice > 0 AND <= premiumCeiling (1.35 × unitTargetBudget)
  * - availability.inStock != false
@@ -28,16 +30,18 @@ const { normalizeCategory } = require('./helpers');
  * @param {string} params.resolvedCategory - Canonical category name
  * @param {number} params.unitTargetBudget - Per-unit target budget in EGP
  * @param {Object} params.negativePreferences - { materialsToAvoid, colorsToAvoid }
+ * @param {boolean} [params.enableScraping=true] - Whether to include live scraped candidates
  * @returns {Promise<{ candidates: Array, diagnostics: Object }>}
  */
 const fetchCandidates = async ({
   resolvedCategory,
   unitTargetBudget,
   negativePreferences = {},
+  enableScraping = true,
 }) => {
   const premiumCeiling = unitTargetBudget * TIER_THRESHOLDS.premiumMax;
 
-  // Build the query
+  // Build the DB query
   const query = {
     'processing.status': ACCEPTED_STATUS,
     'classification.canonicalCategory': resolvedCategory,
@@ -56,12 +60,11 @@ const fetchCandidates = async ({
     'classification.canonicalCategory': resolvedCategory,
   });
 
-  // Apply negative preference exclusions
+  // Apply negative preference exclusions to DB query
   const materialsToAvoid = negativePreferences.materialsToAvoid || [];
   const colorsToAvoid = negativePreferences.colorsToAvoid || [];
 
   if (materialsToAvoid.length > 0) {
-    // Case-insensitive exclusion: exclude products that have ANY of the avoided materials
     const materialRegexes = materialsToAvoid.map(
       (m) => new RegExp(`^${escapeRegex(m)}$`, 'i')
     );
@@ -75,8 +78,8 @@ const fetchCandidates = async ({
     query['classification.colors'] = { $nin: colorRegexes };
   }
 
-  // Execute query with projection (don't fetch huge descriptions)
-  const candidates = await Product.find(query)
+  // Execute DB query and real-time scrape CONCURRENTLY
+  const dbPromise = Product.find(query)
     .select({
       'basic.name': 1,
       'basic.brand': 1,
@@ -100,28 +103,63 @@ const fetchCandidates = async ({
       'processing.issues': 1,
       'processing.qualityScore': 1,
       'source.productUrl': 1,
+      'source.marketplace': 1,
       'externalId': 1,
       'sellerId': 1,
     })
-    .sort({ 'pricing.currentPrice': 1 }) // Sort by price for predictable results
+    .sort({ 'pricing.currentPrice': 1 })
     .limit(MAX_CANDIDATES_FROM_DB)
     .lean();
 
-  // Count rejections
-  const afterNegativeFilters = await Product.countDocuments({
-    ...query,
-    // Reset price filter to see how many were excluded by price vs negatives
+  const shouldScrape = SCRAPING_ENABLED && enableScraping;
+  const scrapePromise = shouldScrape
+    ? scrapeForCategory(resolvedCategory, unitTargetBudget)
+    : Promise.resolve({ products: [], diagnostics: { skipped: true } });
+
+  // Await both sources simultaneously
+  const [dbResult, scrapeResult] = await Promise.all([dbPromise, scrapePromise]);
+
+  const dbCandidates = dbResult || [];
+  const rawScrapedProducts = scrapeResult?.products || [];
+
+  // Filter scraped products against negative preferences and budget ceiling
+  const filteredScraped = rawScrapedProducts.filter((p) => {
+    const price = p.pricing?.currentPrice || 0;
+    if (price <= 0) return false;
+    if (unitTargetBudget > 0 && price > premiumCeiling) return false;
+
+    // Check negative materials
+    if (materialsToAvoid.length > 0) {
+      const pMaterials = (p.classification?.materials || []).map((m) => m.toLowerCase());
+      const hasAvoidedMaterial = materialsToAvoid.some((m) => pMaterials.includes(m.toLowerCase()));
+      if (hasAvoidedMaterial) return false;
+    }
+
+    // Check negative colors
+    if (colorsToAvoid.length > 0) {
+      const pColors = (p.classification?.colors || []).map((c) => c.toLowerCase());
+      const hasAvoidedColor = colorsToAvoid.some((c) => pColors.includes(c.toLowerCase()));
+      if (hasAvoidedColor) return false;
+    }
+
+    return true;
   });
+
+  // Merge DB and scraped candidates (scraped products get mapped IDs if needed)
+  const mergedCandidates = [...dbCandidates, ...filteredScraped];
 
   const diagnostics = {
     category: resolvedCategory,
     databaseMatches: totalCategoryMatches,
+    dbCandidatesReturned: dbCandidates.length,
+    scrapedCandidatesReturned: filteredScraped.length,
+    scrapedTotalCollected: rawScrapedProducts.length,
     premiumCeiling: Math.round(premiumCeiling),
-    afterNegativeFilters: candidates.length, // approximate
-    candidatesReturned: candidates.length,
+    candidatesReturned: mergedCandidates.length,
+    scrapingDiagnostics: scrapeResult?.diagnostics || null,
   };
 
-  return { candidates, diagnostics };
+  return { candidates: mergedCandidates, diagnostics };
 };
 
 /**

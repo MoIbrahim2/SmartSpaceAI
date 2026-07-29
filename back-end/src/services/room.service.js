@@ -288,10 +288,26 @@ const deleteRoom = async (userId, roomId) => {
   return room;
 };
 
+/**
+ * Get all generations history for a room
+ * @param {string} userId
+ * @param {string} roomId
+ */
+const getRoomGenerationsHistory = async (userId, roomId) => {
+  const room = await getRoomById(userId, roomId);
+  const Generation = require('../models/generation.model');
+  const generations = await Generation.find({ roomId, ownerId: userId }).sort({ createdAt: -1 });
+  return {
+    room,
+    generations
+  };
+};
+
 module.exports = {
   createRoom,
   getRooms,
   getRoomById,
   updateRoom,
-  deleteRoom
+  deleteRoom,
+  getRoomGenerationsHistory
 };

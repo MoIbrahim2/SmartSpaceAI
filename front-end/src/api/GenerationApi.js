@@ -21,3 +21,9 @@ export const deleteGeneration = (id) =>
 
 export const extractPreferences = (data) =>
   api.post("/generations/extract-preferences", data);
+
+export const saveSelectedProducts = (id, data) =>
+  api.post(`/generations/${id}/save-products`, data);
+
+export const generateRoomImage = (id) =>
+  api.post(`/generations/${id}/generate-image`);

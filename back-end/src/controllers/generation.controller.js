@@ -56,11 +56,29 @@ const extractPreferences = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'generation.preferences_extracted', { generation: result.generation }, HTTP_STATUS.OK);
 });
 
+/**
+ * Save selected products and step details for a generation
+ */
+const saveSelectedProducts = asyncHandler(async (req, res) => {
+  const generation = await generationService.saveSelectedProducts(req.user._id, req.params.id, req.body);
+  return sendSuccess(res, 'generation.products_saved', { generation }, HTTP_STATUS.OK);
+});
+
+/**
+ * Trigger AI image generation for a generation
+ */
+const generateRoomImage = asyncHandler(async (req, res) => {
+  const generation = await generationService.generateRoomImage(req.user._id, req.params.id);
+  return sendSuccess(res, 'generation.image_generated', { generation }, HTTP_STATUS.OK);
+});
+
 module.exports = {
   createGeneration,
   getGenerations,
   getGenerationById,
   updateGeneration,
   deleteGeneration,
-  extractPreferences
+  extractPreferences,
+  saveSelectedProducts,
+  generateRoomImage
 };

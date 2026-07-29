@@ -183,15 +183,21 @@ const adjustDimensionsForQuantity = (recommendedDimensions, sizeMode, quantity) 
  * @param {Object} budgetRule - KB budget rule { defaultPercentage, minPercentage, maxPercentage }
  * @returns {number} Effective percentage
  */
-const resolveBudgetPercentage = (budgetAdjustment, budgetRule = {}) => {
+const resolveBudgetPercentage = (budgetAdjustment, importance, budgetRule = {}) => {
+  // Allow signature (budgetAdjustment, budgetRule) if budgetRule is passed as 2nd arg
+  if (importance && typeof importance === 'object' && !('defaultPercentage' in budgetRule)) {
+    budgetRule = importance;
+    importance = null;
+  }
+
   const defaultPct = budgetRule.defaultPercentage || 0;
   const minPct = budgetRule.minPercentage || 0;
   const maxPct = budgetRule.maxPercentage || defaultPct;
 
-  if (!budgetAdjustment) return defaultPct;
+  let signal = budgetAdjustment || importance || null;
+  if (!signal) return defaultPct;
 
-  const adjustmentKey = BUDGET_ADJUSTMENT_MAP[budgetAdjustment.toLowerCase()];
-
+  const adjustmentKey = BUDGET_ADJUSTMENT_MAP[String(signal).toLowerCase()];
   if (!adjustmentKey) return defaultPct;
 
   return budgetRule[adjustmentKey] || defaultPct;

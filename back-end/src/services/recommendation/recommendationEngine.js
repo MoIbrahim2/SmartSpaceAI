@@ -17,7 +17,7 @@ const { resolveAllCategories, resolveAdhocCategory, createAdhocCategoryConfig, c
 const { allocateBudgets } = require('./budgetAllocator');
 const { fetchCandidates } = require('./candidateGenerator');
 const { scoreAndRankCandidates } = require('./productScorer');
-const { classifyTiers, selectRecommendation } = require('./tierClassifier');
+const { classifyTiers, selectRecommendation, selectRecommendations } = require('./tierClassifier');
 const { optimizeBudget } = require('./budgetOptimizer');
 const Product = require('../../models/product.model');
 
@@ -259,8 +259,9 @@ const processCategory = async (category, { roomArea, roomPreferences, negativePr
   // Classify into tiers
   const tieredProducts = classifyTiers(scoredCandidates, unitTargetBudget, resolvedQuantity);
 
-  // Select best recommendation
+  // Select best recommendations matching resolvedQuantity
   const recommendedProduct = selectRecommendation(tieredProducts);
+  const recommendedProducts = selectRecommendations(tieredProducts, resolvedQuantity);
 
   return {
     resolvedCategory,
@@ -270,6 +271,7 @@ const processCategory = async (category, { roomArea, roomPreferences, negativePr
     allocatedBudget: category.allocatedBudget,
     unitTargetBudget,
     recommendedProduct,
+    recommendedProducts,
     tieredAlternatives: tieredProducts,
     candidates,
     diagnostics,
@@ -303,6 +305,7 @@ const formatCategoryOutput = (categoryResult) => {
     allocatedBudget: categoryResult.allocatedBudget,
     unitTargetBudget: categoryResult.unitTargetBudget,
     recommendation: categoryResult.recommendedProduct,
+    recommendations: categoryResult.recommendedProducts || [categoryResult.recommendedProduct].filter(Boolean),
     alternatives: {
       cheaper: (categoryResult.tieredAlternatives?.cheaper || []).slice(0, 3),
       balanced: (categoryResult.tieredAlternatives?.balanced || []).slice(0, 3),

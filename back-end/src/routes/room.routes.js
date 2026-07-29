@@ -22,6 +22,7 @@ const parseRoomBody = (req, res, next) => {
 
 // Protected retrieval routes
 router.get('/', protect, roomController.getRooms);
+router.get('/:id/history', protect, roomController.getRoomGenerationsHistory);
 router.get('/:id', protect, roomController.getRoomById);
 
 // Protected mutation routes

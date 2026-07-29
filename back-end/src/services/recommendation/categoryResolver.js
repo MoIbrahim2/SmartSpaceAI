@@ -165,13 +165,18 @@ const resolveAllCategories = (categoryPreferences = [], kbCategories = [], kbCat
 
   for (const pref of categoryPreferences) {
     // Skip explicitly excluded categories and track them
-    if (pref.excluded === true) {
+    if (pref.excluded === true || pref.included === false) {
       // Resolve what this category maps to, so we exclude the resolved name too
       const resolution = resolveCategory(pref.category, kbCategories);
       if (resolution.resolvedCategory) {
         explicitlyExcluded.add(normalizeCategory(resolution.resolvedCategory));
       }
       explicitlyExcluded.add(normalizeCategory(pref.category));
+      notices.push({
+        type: 'CATEGORY_EXCLUDED',
+        requestedProduct: pref.category,
+        message: `'${pref.category}' was excluded per your preferences.`,
+      });
       continue;
     }
 
@@ -200,6 +205,7 @@ const resolveAllCategories = (categoryPreferences = [], kbCategories = [], kbCat
         kbBudget: kbCategories.find(
           (c) => normalizeCategory(c.category) === normalizeCategory(resolution.resolvedCategory)
         ) || null,
+        isUserRequested: pref.included === true || (pref.quantity && pref.quantity > 0) || true,
       });
 
       if (resolution.notice) {
@@ -210,6 +216,7 @@ const resolveAllCategories = (categoryPreferences = [], kbCategories = [], kbCat
       unresolvedCategories.push({
         ...resolution,
         geminiPreference: pref,
+        isUserRequested: true,
       });
     }
   }
@@ -246,9 +253,10 @@ const resolveAllCategories = (categoryPreferences = [], kbCategories = [], kbCat
         resolutionType: 'KB_DEFAULT',
         mappedFrom: null,
         notice: null,
-        geminiPreference: null, // No Gemini preference for this category
-        kbRule: rule,
+        geminiPreference: { category: kbCat.category, included: false },
+        kbRule: hasUserRequestedCategories ? { ...rule, role: 'OPTIONAL' } : rule,
         kbBudget: kbCat,
+        isUserRequested: false,
       });
     }
   }

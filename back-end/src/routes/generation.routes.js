@@ -33,6 +33,8 @@ router.get('/:id', generationController.getGenerationById);
 
 // Protected mutation routes
 router.post('/extract-preferences', protect, validate(extractPreferencesSchema), generationController.extractPreferences);
+router.post('/:id/save-products', protect, generationController.saveSelectedProducts);
+router.post('/:id/generate-image', protect, generationController.generateRoomImage);
 router.post('/', protect, uploadGenerationImages, parseGenerationBody, validate(createGenerationSchema), generationController.createGeneration);
 router.patch('/:id', protect, uploadGenerationImages, parseGenerationBody, validate(updateGenerationSchema), generationController.updateGeneration);
 router.delete('/:id', protect, generationController.deleteGeneration);

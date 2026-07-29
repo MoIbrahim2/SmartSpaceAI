@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
-import { validateRoomLayout, getRoomLayout, getRoomById, extractPreferences } from "../../api";
+import { validateRoomLayout, getRoomLayout, getRoomById, extractPreferences, saveSelectedProducts, generateRoomImage } from "../../api";
 
 // Import step sub-components
 import Stepper from "../../Components/RoomGeneration/Stepper";
@@ -26,19 +26,24 @@ const RoomGeneration = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Read roomId from URL query params (e.g. /room-generation?roomId=xxx&apartmentId=yyy)
   const urlRoomId = searchParams.get("roomId") || "";
 
-  const [step, setStep] = useState(0); // 0 = main choice, 1 = details, 2 = instructions, 3 = products, 4 = generation
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [activeCategory, setActiveCategory] = useState("Electronics");
-  const [addedProducts, setAddedProducts] = useState([1]); // ID 1 (Soundbar) is added by default
-  const [regenerating, setRegenerating] = useState(false);
+
+  const [productData, setProductData] = useState({});
+  const [categoryCounts, setCategoryCounts] = useState({});
+  const [activeCategory, setActiveCategory] = useState("");
+  const [addedProducts, setAddedProducts] = useState([]);
+
+  // AI Generation state
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [generatedImageResult, setGeneratedImageResult] = useState(null);
 
   // Validation state
   const [validating, setValidating] = useState(false);
-  const [validationStatus, setValidationStatus] = useState("none"); // "none" | "valid" | "rejected"
+  const [validationStatus, setValidationStatus] = useState("none");
   const [savedLayout, setSavedLayout] = useState(null);
 
   // Preference extraction state
@@ -48,7 +53,6 @@ const RoomGeneration = () => {
   const [roomData, setRoomData] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Snapshot of the form at last successful validation — used to detect changes
   const validatedSnapshotRef = useRef(null);
 
   const [form, setForm] = useState({
@@ -64,17 +68,13 @@ const RoomGeneration = () => {
       aspectRatio: "16:9",
     }),
     images: null,
-    length: "",
-    width: "",
-    height: "",
-    budget: "",
+    length: "400",
+    width: "350",
+    height: "280",
+    budget: "75000",
     _rejectionReason: "",
   });
 
-  /**
-   * On mount (or when urlRoomId changes), try to load existing validated layout
-   * and also fetch room data for roomType
-   */
   useEffect(() => {
     if (!urlRoomId) return;
 
@@ -86,7 +86,6 @@ const RoomGeneration = () => {
           setSavedLayout(layout);
           setValidationStatus("valid");
 
-          // Populate the form with saved values
           setForm((prev) => ({
             ...prev,
             roomId: urlRoomId,
@@ -94,10 +93,9 @@ const RoomGeneration = () => {
             width: String(layout.width_cm),
             height: String(layout.height_cm),
             budget: String(layout.budget_egp),
-            images: null, // No file selected; image is already saved on server
+            images: null,
           }));
 
-          // Save snapshot of the validated state
           validatedSnapshotRef.current = {
             length: String(layout.length_cm),
             width: String(layout.width_cm),
@@ -107,7 +105,6 @@ const RoomGeneration = () => {
           };
         }
       } catch (err) {
-        // No layout found — that's fine, user starts fresh
         console.log("No existing layout for room:", urlRoomId);
       }
     };
@@ -127,57 +124,40 @@ const RoomGeneration = () => {
     loadRoomData();
   }, [urlRoomId]);
 
-  /**
-   * Determine if the user has changed anything since the last validation
-   */
   const hasFormChanged = useCallback(() => {
-    if (!validatedSnapshotRef.current) return true; // Never validated
-
+    if (!validatedSnapshotRef.current) return true;
     const snap = validatedSnapshotRef.current;
     if (form.length !== snap.length) return true;
     if (form.width !== snap.width) return true;
     if (form.height !== snap.height) return true;
     if (form.budget !== snap.budget) return true;
-    if (form.images) return true; // New file was selected
-
+    if (form.images) return true;
     return false;
   }, [form]);
 
-  /**
-   * Handle "Next" click from Step 1.
-   * If already validated and nothing changed → skip to step 2.
-   * If changed or not validated → run validation.
-   */
   const handleValidateAndNext = async () => {
-    // If validated and nothing changed, skip directly
     if (validationStatus === "valid" && !hasFormChanged()) {
       setStep(2);
       return;
     }
 
-    // Basic client-side checks
     if (!form.length || !form.width || !form.height || !form.budget) {
       setError(t("dashboard.fillAllFields") || "Please fill in all dimensions and budget.");
       return;
     }
 
-    // Must have an image: either a new file or an existing saved image
     if (!form.images && !savedLayout?.room_image_path) {
       setError(t("dashboard.imageRequired") || "Please upload a room image.");
       return;
     }
 
-    // If nothing changed but we have a saved image and no new file, skip
     if (!hasFormChanged() && validationStatus === "valid") {
       setStep(2);
       return;
     }
 
-    // If dimensions/budget changed but no new image was uploaded and there's a saved one,
-    // we still need to re-validate, but we can't re-upload without a file.
-    // In this case, require a new image upload.
     if (!form.images && hasFormChanged()) {
-      setError(t("dashboard.reuploadImage") || "Please re-upload a room image since you changed the room details.");
+      setError(t("dashboard.reuploadImage") || "Please re-upload a room image since you changed details.");
       return;
     }
 
@@ -194,7 +174,6 @@ const RoomGeneration = () => {
       formData.append("budget_egp", form.budget);
       formData.append("generationType", form.generationType);
 
-      // Append the first image file
       if (form.images && form.images.length > 0) {
         formData.append("image", form.images[0]);
       }
@@ -205,7 +184,6 @@ const RoomGeneration = () => {
         setSavedLayout(data.data.roomLayout);
         setValidationStatus("valid");
 
-        // Save snapshot
         validatedSnapshotRef.current = {
           length: form.length,
           width: form.width,
@@ -214,10 +192,7 @@ const RoomGeneration = () => {
           hasNewImage: false,
         };
 
-        // Clear the file selection (image is now saved on server)
         setForm((prev) => ({ ...prev, images: null, _rejectionReason: "" }));
-
-        // Move to step 2
         setStep(2);
       }
     } catch (err) {
@@ -240,18 +215,12 @@ const RoomGeneration = () => {
     }
   };
 
-  /**
-   * Handle preference extraction from Step 2 (Design Instructions).
-   * Calls the backend extract-preferences endpoint, then proceeds to Step 3.
-   */
   const handleExtractPreferences = async () => {
-    // Basic validation
     if (!form.prompt || form.prompt.trim().length < 10) {
       setError(t("dashboard.promptRequired") || "Please describe your design preferences (at least 10 characters).");
       return;
     }
 
-    // Resolve room type from room data or fallback
     const roomType = roomData?.roomType || "living_room";
 
     setError("");
@@ -260,22 +229,15 @@ const RoomGeneration = () => {
     try {
       const payload = {
         roomType,
-        budget: parseFloat(form.budget) || 50000,
+        budget: parseFloat(form.budget) || 75000,
         length: parseFloat(form.length) || 400,
-        width: parseFloat(form.width) || 300,
+        width: parseFloat(form.width) || 350,
         height: parseFloat(form.height) || 280,
         prompt: form.prompt.trim(),
       };
 
-      // Include roomId if available
-      if (form.roomId || urlRoomId) {
-        payload.roomId = form.roomId || urlRoomId;
-      }
-
-      // Include generationId if re-extracting
-      if (generationId) {
-        payload.generationId = generationId;
-      }
+      if (form.roomId || urlRoomId) payload.roomId = form.roomId || urlRoomId;
+      if (generationId) payload.generationId = generationId;
 
       const { data } = await extractPreferences(payload);
 
@@ -284,33 +246,187 @@ const RoomGeneration = () => {
         setExtractedPreferences(generation.extractedPreferences);
         setGenerationId(generation._id);
 
-        // Show success briefly, then proceed
+        const newProductData = {};
+        const counts = {};
+
+        // Parse extracted category preferences array or object for category counts
+        const catPrefs = generation.extractedPreferences?.categoryPreferences;
+        if (Array.isArray(catPrefs)) {
+          catPrefs.forEach((item) => {
+            if (item.category && item.included !== false && item.excluded !== true) {
+              counts[item.category] = item.quantity || 1;
+            }
+          });
+        } else if (catPrefs && typeof catPrefs === "object") {
+          Object.keys(catPrefs).forEach((cat) => {
+            counts[cat] = catPrefs[cat].quantity || 1;
+          });
+        }
+
+        // Process real recommendation engine results if returned
+        const recResult = generation.recommendationResult || data.data.recommendationResult;
+        const goldenIds = [];
+
+        if (recResult && Array.isArray(recResult.categories) && recResult.categories.length > 0) {
+          recResult.categories.forEach((catObj) => {
+            const catName = catObj.category;
+            const recs = (catObj.recommendations || (catObj.recommendation ? [catObj.recommendation] : [])).filter(Boolean);
+            
+            // Mark top recommendations explicitly
+            recs.forEach((r) => {
+              r.isRecommended = true;
+            });
+
+            const alts = [
+              ...(catObj.alternatives?.cheaper || []),
+              ...(catObj.alternatives?.balanced || []),
+              ...(catObj.alternatives?.premium || []),
+            ];
+
+            const combined = [...recs];
+            alts.forEach((alt) => {
+              const altId = String(alt._id || alt.id || alt.productData?._id || alt.productData?.id || "");
+              if (altId && !combined.some((item) => String(item._id || item.id || item.productData?._id || item.productData?.id || "") === altId)) {
+                combined.push(alt);
+              }
+            });
+
+            newProductData[catName] = combined;
+            const reqCount = catObj.quantity || counts[catName] || 1;
+            counts[catName] = reqCount;
+
+            // Auto-select Golden Cards (top N recommended items matching category requirement)
+            const topRecs = recs.length > 0 ? recs.slice(0, reqCount) : combined.slice(0, reqCount);
+            topRecs.forEach((item) => {
+              const pId = String(item._id || item.id || item.productData?._id || item.productData?.id || "");
+              if (pId && !goldenIds.includes(pId)) goldenIds.push(pId);
+            });
+          });
+
+          setProductData(newProductData);
+          setCategoryCounts(counts);
+          setAddedProducts(goldenIds);
+
+          const firstCat = recResult.categories[0]?.category || Object.keys(newProductData)[0] || "sofa";
+          setActiveCategory(firstCat);
+        } else {
+          throw new Error("The recommendation engine did not return any products for your request. Please try refining your prompt.");
+        }
+
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
           setStep(3);
-        }, 1500);
+        }, 1200);
       }
     } catch (err) {
       console.error("Preference extraction error:", err);
-      const response = err.response?.data;
-      const reason =
-        response?.message ||
-        response?.errors?.[0]?.message ||
-        "Failed to extract preferences. Please try again.";
-      setError(reason);
+      setError(err.response?.data?.message || "Failed to extract preferences.");
     } finally {
       setExtracting(false);
+    }
+  };
+
+  const toggleProduct = (id, category, reqCount = 1) => {
+    const strId = String(id);
+    const isAlreadyAdded = addedProducts.map(String).includes(strId);
+
+    if (isAlreadyAdded) {
+      setAddedProducts(addedProducts.filter((pId) => String(pId) !== strId));
+    } else {
+      // Check how many items currently selected in this category
+      const currentCatProds = (productData[category] || []).map((p) => String(p._id || p.id || p.productData?._id || p.productData?.id));
+      const catSelected = addedProducts.filter((pId) => currentCatProds.includes(String(pId)));
+
+      if (catSelected.length >= reqCount) {
+        // If max reached, replace the earliest selected item in this category
+        const updated = addedProducts.filter((pId) => String(pId) !== String(catSelected[0]));
+        setAddedProducts([...updated, strId]);
+      } else {
+        setAddedProducts([...addedProducts, strId]);
+      }
+    }
+  };
+
+  /**
+   * Move from Step 3 to Step 4: Persist selected products to MongoDB
+   */
+  const handleProceedToStep4 = async () => {
+    if (!generationId) {
+      setStep(4);
+      triggerImageGeneration();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Format selected products list for API payload
+      const allProdsList = Object.values(productData).flat();
+      const selectedProductObjects = allProdsList
+        .filter((p) => addedProducts.map(String).includes(String(p._id || p.id || p.productData?._id || p.productData?.id)))
+        .map((p) => ({
+          category: p.category || activeCategory,
+          productId: String(p._id || p.id || p.productData?._id || p.productData?.id),
+          productData: p,
+          isRecommended: !!p.isRecommended,
+          price: p.price || p.numericPrice || 0,
+          quantity: 1,
+        }));
+
+      await saveSelectedProducts(generationId, {
+        selectedProducts: selectedProductObjects,
+        roomLayoutData: {
+          length_cm: parseFloat(form.length),
+          width_cm: parseFloat(form.width),
+          height_cm: parseFloat(form.height),
+          budget_egp: parseFloat(form.budget),
+          room_image_path: savedLayout?.room_image_path,
+        },
+      });
+
+      setStep(4);
+      triggerImageGeneration();
+    } catch (err) {
+      console.error("Save selected products error:", err);
+      // Proceed to Step 4 regardless
+      setStep(4);
+      triggerImageGeneration();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Trigger AI room composite rendering using Gemini/Imagen
+   */
+  const triggerImageGeneration = async () => {
+    if (!generationId) return;
+
+    setIsGeneratingImage(true);
+    try {
+      const { data } = await generateRoomImage(generationId);
+      if (data.success && data.data.generation?.generatedImage) {
+        setGeneratedImageResult(data.data.generation.generatedImage);
+      }
+    } catch (err) {
+      console.error("Image generation API error:", err);
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleFinishRoomGeneration = () => {
+    if (urlRoomId) {
+      navigate(`/dashboard/rooms/${urlRoomId}`);
+    } else {
+      navigate("/dashboard");
     }
   };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setForm((p) => ({ ...p, images: e.target.files }));
-      // If user picks a new file, reset the validation status
-      if (validationStatus === "valid") {
-        setValidationStatus("none");
-      }
+      if (validationStatus === "valid") setValidationStatus("none");
     }
   };
 
@@ -318,56 +434,21 @@ const RoomGeneration = () => {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       setForm((p) => ({ ...p, images: e.dataTransfer.files }));
-      if (validationStatus === "valid") {
-        setValidationStatus("none");
-      }
+      if (validationStatus === "valid") setValidationStatus("none");
     }
-  };
-
-  const toggleProduct = (id) => {
-    if (addedProducts.includes(id)) {
-      setAddedProducts(addedProducts.filter((pId) => pId !== id));
-    } else {
-      setAddedProducts([...addedProducts, id]);
-    }
-  };
-
-  const handleRegenerate = () => {
-    setRegenerating(true);
-    setTimeout(() => {
-      setRegenerating(false);
-    }, 2000);
-  };
-
-  const productData = {
-    Electronics: [
-      { id: 0, title: t("dashboard.productTitle_0"), desc: t("dashboard.productDesc_0"), price: "$2,499", numericPrice: 2499, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZST4vtc7qjDCP3hJI4joyaqPVSMu_uWOw_LswA96enxaECsY7JCmlms6P1rOBg3YWjpao7U-QvYkj1dD2TSU8zaDGqCIaGcZN7YZksoiLDAO7NkhqkTnBVOeIoVaDupk_PXG36JhPDk7VhWhTI5XyqAGthzt6CYWx0T2QeieMVQW4x3NvFlDfdmgUvKN1b_N0XFtdcCQA66rSDmiWMyO3bWb_eQ340yLciuGHyYVf6yFYs2nw_dk-" },
-      { id: 1, title: t("dashboard.productTitle_1"), desc: t("dashboard.productDesc_1"), price: "$850", numericPrice: 850, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAJHLqojjkou5nLcqZJZF3y86OwC02MqlnUcKIqraFA0kuM9gOkPAzea_bUOZo2UmHujFy_cdPhVxolVF2X17YH_9NzRwlDkE6M4RRKGlcCmYBrp9B_xjf89oDuaIeAItWJ1NMKM1ko1CHJhN8gRV2hnM9u_gz8vf4YkK2TTbJ1xN6Zxqo-_m_-xKNoHQzpcE8xuKBuJ3PKATm2MUC8y44THYoD2gQFljyoVAzFmZx6wdQjGJyTPP6v" },
-      { id: 2, title: t("dashboard.productTitle_2"), desc: t("dashboard.productDesc_2"), price: "$299", numericPrice: 299, img: "https://lh3.googleusercontent.com/aida-public/AB6AXuBoyvAfisBcJVgzpL5rd90DHEKRUlEp1khduP_j6nGncDph2lLmB2RcHYC-udSK7eMk67R_l18SB268T4_a7eJY-QLwAR4DM49iapd1wkGSf3-4QHoYsCShcgOfq0bJ_9qIVY55be29G0kyjrJBzU4zBMw1smuFeX5w7zqfKpc66VQDL-6lfTckP_wMZRm67lK7WQf21JoMXqzucdLglah5KxFoeGFoS70LF2sgrT977tEdcCZFE21m" },
-    ],
-    Decor: [
-      { id: 3, title: t("dashboard.productTitle_3"), desc: t("dashboard.productDesc_3"), price: "$120", numericPrice: 120, img: "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&w=600&q=80" },
-      { id: 4, title: t("dashboard.productTitle_4"), desc: t("dashboard.productDesc_4"), price: "$350", numericPrice: 350, img: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=600&q=80" },
-      { id: 5, title: t("dashboard.productTitle_5"), desc: t("dashboard.productDesc_5"), price: "$45", numericPrice: 45, img: "https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=600&q=80" }
-    ],
-    Furniture: [
-      { id: 6, title: t("dashboard.productTitle_6"), desc: t("dashboard.productDesc_6"), price: "$1,800", numericPrice: 1800, img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80" },
-      { id: 7, title: t("dashboard.productTitle_7"), desc: t("dashboard.productDesc_7"), price: "$450", numericPrice: 450, img: "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=600&q=80" },
-      { id: 8, title: t("dashboard.productTitle_8"), desc: t("dashboard.productDesc_8"), price: "$650", numericPrice: 650, img: "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=600&q=80" }
-    ]
   };
 
   // Spent calculations for Step 3
-  const baseBudget = form.budget ? parseFloat(form.budget) : 70000;
-  const baseSpent = 29150;
-  const allProducts = Object.values(productData).flat();
-  const selectedProductsCost = allProducts
-    .filter((p) => addedProducts.includes(p.id))
-    .reduce((sum, p) => sum + p.numericPrice, 0);
+  const baseBudget = form.budget ? parseFloat(form.budget) : 75000;
+  const allProductsList = Object.values(productData).flat();
+  const currentSpent = allProductsList
+    .filter((p) => addedProducts.includes(p.id || p._id))
+    .reduce((sum, p) => sum + (p.price || p.numericPrice || 0), 0);
 
-  // We baseline so if ONLY the default Soundbar (850) is selected, spent is exactly 30000
-  const currentSpent = baseSpent + selectedProductsCost;
-  const percent = Math.min(100, Math.round((currentSpent / baseBudget) * 100));
+  const percent = baseBudget > 0 ? Math.round((currentSpent / baseBudget) * 100) : 0;
+
+  // Gather list of selected product objects for step 4 summary
+  const selectedProductObjs = allProductsList.filter((p) => addedProducts.includes(p.id || p._id));
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-on-surface pb-24 md:pb-0">
@@ -381,33 +462,24 @@ const RoomGeneration = () => {
           messages={preferenceMessages}
           fallbackMessages={preferenceMessages}
           subTextKey="dashboard.extractionHint"
-          subTextFallback="SmartSpaceAI is analyzing your request and extracting your design preferences."
+          subTextFallback="SmartSpaceAI is analyzing your request and matching furniture recommendations."
         />
       )}
 
       {/* Success Toast */}
       {showSuccess && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div
-            className="flex flex-col items-center gap-4 rounded-[2rem] bg-background p-10 neomorph-raised max-w-sm w-[85%] mx-4"
-            style={{ animation: "fadeInUp 0.4s ease-out" }}
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
-              <Icon name="check_circle" size={40} className="text-green-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="flex flex-col items-center gap-4 rounded-[2rem] bg-background p-10 neomorph-raised max-w-sm w-[85%] mx-4 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-500">
+              <Icon name="check_circle" size={40} />
             </div>
-            <h3 className="font-headline text-lg font-bold text-on-surface text-center">
-              {t("dashboard.preferencesExtracted") || "Preferences Extracted!"}
+            <h3 className="font-headline text-xl font-bold text-on-surface">
+              {t("dashboard.preferencesExtracted") || "Recommendations Ready!"}
             </h3>
-            <p className="text-sm text-on-surface-variant text-center">
-              {t("dashboard.preferencesExtractedDesc") || "Your design preferences have been analyzed successfully."}
+            <p className="text-sm text-on-surface-variant">
+              We generated top recommended products for your room. Proceeding to product selection.
             </p>
           </div>
-          <style>{`
-            @keyframes fadeInUp {
-              from { opacity: 0; transform: translateY(16px); }
-              to { opacity: 1; transform: translateY(0); }
-            }
-          `}</style>
         </div>
       )}
 
@@ -452,6 +524,7 @@ const RoomGeneration = () => {
               <StepSelectProducts
                 setStep={setStep}
                 productData={productData}
+                categoryCounts={categoryCounts}
                 activeCategory={activeCategory}
                 setActiveCategory={setActiveCategory}
                 addedProducts={addedProducts}
@@ -459,14 +532,18 @@ const RoomGeneration = () => {
                 currentSpent={currentSpent}
                 baseBudget={baseBudget}
                 percent={percent}
+                onProceedToStep4={handleProceedToStep4}
               />
             )}
 
             {step === 4 && (
               <StepRoomGenerationResult
                 setStep={setStep}
-                regenerating={regenerating}
-                handleRegenerate={handleRegenerate}
+                generatedImage={generatedImageResult}
+                selectedProducts={selectedProductObjs}
+                isGenerating={isGeneratingImage}
+                handleRegenerate={triggerImageGeneration}
+                onFinish={handleFinishRoomGeneration}
               />
             )}
           </section>
@@ -478,21 +555,18 @@ const RoomGeneration = () => {
         <button
           onClick={() => navigate("/dashboard")}
           className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset"
-          aria-label={t("dashboard.apartments") || "Apartments"}
         >
           <Icon name="domain" />
         </button>
         <button
           onClick={() => setStep(0)}
           className={`rounded-xl p-3 transition-all active:neomorph-inset ${step === 0 ? "text-primary neomorph-inset" : "text-on-surface-variant"}`}
-          aria-label={t("dashboard.roomGeneration") || "Room generation"}
         >
           <Icon name="auto_awesome" />
         </button>
         <button
           onClick={() => navigate("/profile")}
           className="rounded-xl p-3 text-on-surface-variant transition-all active:neomorph-inset"
-          aria-label={t("dashboard.profile") || "Profile"}
         >
           <Icon name="person" />
         </button>
