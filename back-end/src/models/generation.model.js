@@ -29,6 +29,10 @@ const generationSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  userPrompt: {
+    type: String,
+    trim: true
+  },
   negativePrompt: {
     type: String,
     trim: true
@@ -108,6 +112,15 @@ const generationSchema = new mongoose.Schema({
     promptUsed: { type: String },
     modelUsed: { type: String },
     generatedAt: { type: Date }
+  },
+  resolution: {
+    width: { type: Number, default: 1280 },
+    height: { type: Number, default: 720 },
+    label: { type: String, default: 'Standard (720p)' }
+  },
+  isGenerated: {
+    type: Boolean,
+    default: false
   },
   completedAt: {
     type: Date

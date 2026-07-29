@@ -80,6 +80,7 @@ const RoomDetail = () => {
   }
 
   const hasGenerations = selectedGeneration || generations.length > 0;
+  const isImageGenerated = selectedGeneration?.isGenerated || !!selectedGeneration?.generatedImage?.url;
   const activeImage = getImageUrl(selectedGeneration?.generatedImage?.url) ||
     "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1200&auto=format&fit=crop";
 
@@ -115,7 +116,7 @@ const RoomDetail = () => {
                 className="flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-primary-variant shadow-md hover:scale-105 active:scale-95"
               >
                 <Icon name="auto_awesome" size={18} />
-                <span>New Design</span>
+                <span>{isImageGenerated ? "New Design" : "Complete Generation"}</span>
               </button>
             </div>
           )}
@@ -132,6 +133,12 @@ const RoomDetail = () => {
                 <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
                   {room?.roomType || "Bedroom"}
                 </span>
+                {!isImageGenerated && hasGenerations && (
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-600 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                    <Icon name="hourglass_empty" size={14} />
+                    Render Pending
+                  </span>
+                )}
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-6 text-sm text-on-surface-variant">
                 {room?.dimensions && (
@@ -148,6 +155,33 @@ const RoomDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Pending Generation Banner if room choice saved but image not generated */}
+        {hasGenerations && !isImageGenerated && (
+          <div className="mb-8 p-6 rounded-[2rem] bg-gradient-to-r from-amber-500/10 via-primary/10 to-amber-500/10 border border-amber-500/30 neomorph-raised flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-600">
+                <Icon name="auto_awesome" size={26} />
+              </div>
+              <div>
+                <h3 className="font-headline font-bold text-base text-on-surface">
+                  Room Configuration Saved — Final Render Ready!
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Your prompt and selected products ({selectedProductsList.length} items) are saved. Start rendering to generate your AI composite room image.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => navigate(`/room-generation?roomId=${roomId}&apartmentId=${apartmentId}`)}
+              className="px-6 py-3 rounded-xl bg-primary text-on-primary font-headline font-bold text-sm shadow-md hover:bg-primary-variant transition-all flex items-center gap-2 whitespace-nowrap"
+            >
+              <Icon name="play_arrow" size={18} />
+              <span>Start Generation</span>
+            </button>
+          </div>
+        )}
 
         {!hasGenerations ? (
           /* Empty State: No Generations Yet */
@@ -176,20 +210,43 @@ const RoomDetail = () => {
             <div className="lg:col-span-2 flex flex-col gap-6">
               <div className="neomorph-raised rounded-[2rem] p-4 lg:p-6 overflow-hidden relative group">
                 <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden neomorph-inset bg-black/5">
-                  <img
-                    src={activeImage}
-                    alt="Rendered Room Design"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2">
-                    <Icon name="auto_awesome" size={16} className="text-amber-400" />
-                    <span>AI Rendered Composite</span>
-                  </div>
+                  {isImageGenerated ? (
+                    <>
+                      <img
+                        src={activeImage}
+                        alt="Rendered Room Design"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2">
+                        <Icon name="auto_awesome" size={16} className="text-amber-400" />
+                        <span>AI Rendered Composite ({(typeof selectedGeneration?.resolution === 'string' ? selectedGeneration.resolution : (selectedGeneration?.resolution?.resolution || "1080P")).toUpperCase()})</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-surface-bright/20">
+                      <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 mb-3">
+                        <Icon name="image" size={32} />
+                      </div>
+                      <h4 className="font-headline font-bold text-base text-on-surface mb-1">
+                        Image Not Generated Yet
+                      </h4>
+                      <p className="text-xs text-on-surface-variant max-w-sm mb-4">
+                        Your choices are saved! Click below to trigger the AI rendering pipeline.
+                      </p>
+                      <button
+                        onClick={() => navigate(`/room-generation?roomId=${roomId}&apartmentId=${apartmentId}`)}
+                        className="px-6 py-2.5 rounded-xl bg-primary text-on-primary font-bold text-xs shadow-md hover:bg-primary-variant transition-all flex items-center gap-2"
+                      >
+                        <Icon name="auto_awesome" size={16} />
+                        <span>Start Generation</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between px-2">
                   <span className="text-xs font-medium text-on-surface-variant">
-                    Generated: {selectedGeneration?.createdAt ? new Date(selectedGeneration.createdAt).toLocaleDateString() : "Recent"}
+                    {selectedGeneration?.createdAt ? `Created: ${new Date(selectedGeneration.createdAt).toLocaleDateString()}` : "Recent"}
                   </span>
 
                   <button
@@ -197,7 +254,7 @@ const RoomDetail = () => {
                     className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
                   >
                     <Icon name="edit" size={14} />
-                    Edit Design Parameters
+                    Edit Design & Products
                   </button>
                 </div>
               </div>
@@ -223,7 +280,7 @@ const RoomDetail = () => {
                       const pData = item.productData || item;
                       const title = pData.title || pData.name || `Item ${idx + 1}`;
                       const price = pData.price || item.price || 0;
-                      const img = pData.imageUrl || pData.img || "/placeholder.jpg";
+                      const img = pData.primaryImage || pData.image || pData.imageUrl || pData.img || (pData.images && pData.images.length > 0 ? (pData.images[0].url || pData.images[0]) : null) || "/placeholder.jpg";
                       const isGold = item.isRecommended;
 
                       return (
@@ -237,6 +294,10 @@ const RoomDetail = () => {
                             src={getImageUrl(img)}
                             alt={title}
                             className="w-14 h-14 rounded-xl object-cover"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src = "/placeholder.jpg";
+                            }}
                           />
                           <div className="flex-grow overflow-hidden">
                             <div className="flex items-center gap-2">
@@ -309,6 +370,11 @@ const RoomDetail = () => {
                             {isActive && (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-white">
                                 Active
+                              </span>
+                            )}
+                            {!gen.isGenerated && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-600">
+                                Pending Render
                               </span>
                             )}
                           </div>

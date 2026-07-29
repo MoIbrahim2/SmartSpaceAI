@@ -397,7 +397,8 @@ const generateRoomCompositeImage = async ({
   selectedProducts = [],
   prompt = '',
   roomDimensions = {},
-  roomType = 'room'
+  roomType = 'room',
+  resolution = { width: 1280, height: 720 }
 }) => {
   const modelUsed = process.env.QWEN_MODEL_FOR_IMAGE_GEN || 'qwen-image-2.0-pro';
   const apiKey = process.env.QWEN_API_KEY || process.env.DASHSCOPE_API_KEY;
@@ -420,7 +421,7 @@ const generateRoomCompositeImage = async ({
         let roomImageRef = '';
         const productRefList = [];
 
-        // 1. Target Room Layout Image (Image 1)
+        // 1. Target Room Layout Image (<|image_1|>)
         if (roomImageUrl) {
           let roomImgSrc = null;
           if (roomImageUrl.startsWith('http://') || roomImageUrl.startsWith('https://')) {
@@ -439,7 +440,7 @@ const generateRoomCompositeImage = async ({
 
           if (roomImgSrc) {
             messageContent.push({ image: roomImgSrc });
-            roomImageRef = `Image 1 is the exact target room layout uploaded by the user. Maintain the background walls, floor, windows, doors, perspective, and architectural geometry of Image 1 EXACTLY identical.`;
+            roomImageRef = `<|image_1|> is the exact target room layout uploaded by the user. Maintain the background walls, floor, windows, doors, perspective, and architectural geometry of <|image_1|> EXACTLY identical.`;
             imageIndex++;
           }
         }
@@ -466,17 +467,28 @@ const generateRoomCompositeImage = async ({
             ? `${w || '?'} ${dimUnit} (W) x ${d || '?'} ${dimUnit} (D) x ${h || '?'} ${dimUnit} (H)`
             : null;
 
-          // Extract visual attributes
-          const colors = Array.isArray(pData.classification?.colors)
+          // Extract visual attributes & color keywords
+          const rawColors = Array.isArray(pData.classification?.colors) && pData.classification.colors.length > 0
             ? pData.classification.colors.join(', ')
-            : (pData.attributes?.color || pData.color || '');
+            : (Array.isArray(pData.ai?.dominantColors) && pData.ai.dominantColors.length > 0
+                ? pData.ai.dominantColors.join(', ')
+                : (pData.attributes?.color || pData.color || ''));
+          
           const materials = Array.isArray(pData.classification?.materials)
             ? pData.classification.materials.join(', ')
             : (pData.attributes?.material || pData.material || '');
+          
           const styles = Array.isArray(pData.classification?.styles)
             ? pData.classification.styles.join(', ')
             : (pData.attributes?.style || pData.style || '');
-          const attrDetails = [styles, colors, materials].filter(Boolean).join(', ');
+
+          // Helper keyword detector for color & finish from title/description
+          const fullTextSearch = `${fullTitle} ${pData.basic?.description || ''} ${pData.description || ''}`.toLowerCase();
+          const colorKeywords = ['white', 'black', 'grey', 'gray', 'beige', 'cream', 'brown', 'gold', 'silver', 'oak', 'walnut', 'natural wood', 'marble', 'glass', 'metal', 'velvet', 'fabric', 'upholstered', 'dark'];
+          const detectedColors = colorKeywords.filter(kw => fullTextSearch.includes(kw));
+          
+          const finalColors = rawColors || (detectedColors.length > 0 ? detectedColors.join(', ') : '');
+          const attrDetails = [styles, finalColors ? `COLOR/FINISH: ${finalColors.toUpperCase()}` : '', materials ? `MATERIAL: ${materials}` : ''].filter(Boolean).join(' | ');
 
           let imgUrl = pData.image_url || pData.image || pData.imageUrl || p.image;
           if (!imgUrl && Array.isArray(pData.images) && pData.images.length > 0) {
@@ -485,74 +497,115 @@ const generateRoomCompositeImage = async ({
             imgUrl = typeof firstImg === 'string' ? firstImg : (firstImg?.url || firstImg?.src);
           }
 
+          // CRITICAL FIX: Convert ALL images to base64 data URIs
+          // Remote URLs often have CORS/hotlink protection causing the model to not see them
           let productImgSrc = null;
-          if (imgUrl && (imgUrl.startsWith('http://') || imgUrl.startsWith('https://'))) {
-            productImgSrc = imgUrl;
-          } else if (imgUrl) {
-            const localPath = path.join(process.cwd(), imgUrl.replace(/^\//, ''));
-            if (fs.existsSync(localPath)) {
-              const fileBuffer = fs.readFileSync(localPath);
-              const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'png';
-              const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-              productImgSrc = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+          if (imgUrl) {
+            if (imgUrl.startsWith('data:image/')) {
+              productImgSrc = imgUrl;
+            } else if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+              // DOWNLOAD remote image and convert to base64
+              try {
+                console.log(`[AI Service] Downloading product image for "${fullTitle}": ${imgUrl}`);
+                const imgRes = await fetch(imgUrl, {
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'image/*,*/*',
+                    'Referer': new URL(imgUrl).origin
+                  },
+                  signal: AbortSignal.timeout(15000)
+                });
+                if (imgRes.ok) {
+                  const arrayBuffer = await imgRes.arrayBuffer();
+                  const buffer = Buffer.from(arrayBuffer);
+                  if (buffer.length > 100) {
+                    const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+                    const mime = contentType.startsWith('image/') ? contentType.split(';')[0] : 'image/jpeg';
+                    productImgSrc = `data:${mime};base64,${buffer.toString('base64')}`;
+                    console.log(`[AI Service] ✓ Downloaded product image (${Math.round(buffer.length / 1024)}KB) for "${fullTitle}"`);
+                  }
+                } else {
+                  console.warn(`[AI Service] ✗ Failed to download product image (HTTP ${imgRes.status}) for "${fullTitle}"`);
+                }
+              } catch (dlErr) {
+                console.warn(`[AI Service] ✗ Error downloading product image for "${fullTitle}": ${dlErr.message}`);
+              }
             } else {
-              console.warn(`[AI Service] Product image local file not found: ${localPath}`);
+              const localPath = path.join(process.cwd(), imgUrl.replace(/^\//, ''));
+              if (fs.existsSync(localPath)) {
+                const fileBuffer = fs.readFileSync(localPath);
+                const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'png';
+                const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+                productImgSrc = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+              } else {
+                console.warn(`[AI Service] Product image local file not found: ${localPath}`);
+              }
             }
           }
 
-          console.log(`[AI Service] Product parsed: "${fullTitle}" (${category}) | Has Image: ${Boolean(productImgSrc)} | Image URL: ${imgUrl || 'N/A'}`);
+          console.log(`[AI Service] Product parsed: "${fullTitle}" (${category}) | Has Image: ${Boolean(productImgSrc)} | Attr: ${attrDetails} | Image URL: ${imgUrl || 'N/A'}`);
 
           if (productImgSrc) {
             messageContent.push({ image: productImgSrc });
+            const imgTag = `<|image_${imageIndex}|>`;
             productRefList.push(
-              `• Image ${imageIndex} [${category}]: "${fullTitle}"\n` +
-              `  - EXACT REQUIRED QUANTITY: ${qty} ${qty > 1 ? 'units' : 'unit'}\n` +
-              `  - PHYSICAL DIMENSIONS: ${dimString || 'Standard proportional sizing'}\n` +
-              `  - VISUAL FIDELITY: Replicate the exact visual silhouette, fabric, texture, material, leg design, and color from Image ${imageIndex}${attrDetails ? ` (${attrDetails})` : ''}.`
+              `• Object to Insert: ${imgTag} [Category: ${category.toUpperCase()}]\n` +
+              `  - SUPREME SOURCE OF TRUTH: ${imgTag} (Reference Product Image)\n` +
+              `  - PIXEL-PERFECT CLONING: You MUST copy the EXACT 3D geometry, headboard shape, frame structure, fabric/wood finish, and exact color from the visual pixels of ${imgTag}.\n` +
+              `  - OVERRIDE CONFLICTING TEXT: The image ${imgTag} IS the absolute single source of truth for all materials and colors.\n` +
+              `  - QUANTITY TO RENDER: Exactly ${qty} ${qty > 1 ? 'identical units' : 'unit'} placed in the room.\n` +
+              `  - PHYSICAL DIMENSIONS: ${dimString || 'Standard proportional sizing'}.`
             );
             imageIndex++;
           } else {
             productRefList.push(
-              `• [${category}]: "${fullTitle}"\n` +
-              `  - EXACT REQUIRED QUANTITY: ${qty} ${qty > 1 ? 'units' : 'unit'}\n` +
+              `• Object to Insert: [Category: ${category.toUpperCase()}]\n` +
+              `  - QUANTITY TO RENDER: Exactly ${qty} ${qty > 1 ? 'units' : 'unit'}.\n` +
               `  - PHYSICAL DIMENSIONS: ${dimString || 'Standard proportional sizing'}\n` +
-              `  - VISUAL SPECIFICATIONS: ${attrDetails || 'Modern design'}.`
+              `  - VISUAL SPECIFICATIONS: Modern design.`
             );
-          }
+           }
         }
+
+        // Count total products for verification
+        const totalProductCount = selectedProducts.reduce((sum, p) => sum + (p.quantity || 1), 0);
+        const totalUniqueProducts = selectedProducts.length;
 
         // 3. Ultra-Concentrated & Detailed System Prompt Directive for Qwen
         const qwenPrompt = `SYSTEM ROLE & PURPOSE:
-You are an ultra-high-precision Architectural Virtual Staging Engine. Your task is to perform exact visual product placement into a real target room image.
+You are an ultra-high-precision Architectural Virtual Staging Engine. Your ONLY task is to clone the EXACT furniture objects shown in reference images (<|image_2|>, <|image_3|>, etc.) into the target room layout (<|image_1|>).
 
-==================== 1. BASE ROOM ARCHITECTURE (IMAGE 1) ====================
+==================== 1. BASE ROOM ARCHITECTURE (<|image_1|>) ====================
 ${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
 - RIGID STRUCTURAL CONSTRAINTS:
-  * Do NOT alter, shift, or replace the room layout, back walls, side walls, floor material/texture, ceiling lines, doors, or window frames of Image 1.
-  * Preserved Light & Perspective: Match camera FOV, vanishing points, horizon, ceiling lights, window daylight direction, and shadow orientation strictly from Image 1.
+  * Do NOT alter, shift, or replace the room layout, back walls, side walls, floor material/texture, ceiling lines, doors, or window frames of <|image_1|>.
+  * Preserved Light & Perspective: Match camera FOV, vanishing points, horizon, ceiling lights, window daylight direction, and shadow orientation strictly from <|image_1|>.
 
-==================== 2. MANDATORY PRODUCT INVENTORY & QUANTITIES ====================
-You MUST insert ONLY the following selected products into Image 1, strictly honoring the exact visual references, specified physical dimensions, and exact quantities:
+==================== 2. MANDATORY PRODUCT INVENTORY (${totalUniqueProducts} unique products, ${totalProductCount} total items) ====================
+CRITICAL: You MUST clone the EXACT visual products from the provided images (<|image_2|>, <|image_3|>, etc.) into the room. Do NOT guess materials from memory.
 
 ${productRefList.join('\n\n')}
 
 User Custom Instructions & Preferred Layout: "${prompt || 'Arrange products logically with clean walking paths and balanced ergonomics.'}"
 
-==================== 3. PHYSICAL SCALE & DIMENSIONAL ACCURACY ====================
-- ROOM SPACE BOUNDS: Room floor is approx ${dimText}.
-- RELATIVE PROPORTION RULE: Every furniture item MUST be rendered at its exact physical real-world scale relative to the room floorplan.
-  * For example, a 200cm sofa must occupy exactly half of a 400cm wall section. Do NOT shrink sofas to look like chairs, and do NOT enlarge chairs to look like sofas.
-  * Maintain realistic floor contact, grounding shadows, contact occlusion, and depth cues.
+==================== 3. PIXEL-PERFECT VISUAL FIDELITY & MATERIAL ISOLATION ====================
+- VISUAL PIXELS ARE THE ONLY TRUTH:
+  * <|image_2|> (BED): Look at the exact image pixels of <|image_2|>. Clone its headboard shape, frame material, upholstery/wood color, and bedding style directly from <|image_2|>. Do NOT default to generic wooden bed frames. If the reference image is dark brown, the bed MUST be dark brown!
+  * <|image_3|> (NIGHTSTAND): Look at the exact image pixels of <|image_3|>. Clone its exact white & wood drawer structure and legs.
+- CRITICAL ANTI-BLEEDING CONSTRAINT: Do NOT blend or match the furniture to the floor! The bed must retain its EXACT dark color from <|image_2|> and MUST NOT become light wood to match the room's floor. Color leakage is strictly prohibited.
 
-==================== 4. STRICT NEGATIVE CONSTRAINTS (CRITICAL) ====================
-- DO NOT add hallucinated or extra furniture items (e.g. do NOT add extra sofas, extra tables, or extra chairs that are not listed in the product inventory above).
-- DO NOT deviate from item counts: If a product specifies QUANTITY: 2, render EXACTLY 2 identical units. If QUANTITY: 1, render EXACTLY 1 unit.
-- DO NOT replace or approximate product designs: The rendered furniture MUST match the exact visual product references provided in Image 2, Image 3, etc.
-- DO NOT obstruct architectural features like doors or low window sills unrealistically.`;
+==================== 4. MANDATORY RULES — VIOLATION IS UNACCEPTABLE ====================
+- RULE 1 — VISUAL PIXEL CLONING: Copy EVERY furniture item directly from its reference image pixels (<|image_2|>, <|image_3|>, etc.). Do NOT modify colors, materials, frame shapes, or headboards.
+- RULE 2 — ZERO TEXT-OVERRIDE HALLUCINATION: Ignore any text titles or default room templates that contradict the reference image pixels.
+- RULE 3 — EXACT QUANTITY & MULTIPLE COPIES: Render EXACTLY ${totalProductCount} items in total. If a product has quantity 2, place TWO IDENTICAL COPIES of THAT EXACT product image.
+- RULE 4 — PREVENT COLOR LEAKAGE: Maintain strict color separation between the floor and the bed.
+- RULE 5 — KEEP ROOM ARCHITECTURE UNCHANGED: Maintain <|image_1|> architecture strictly intact.
+
+FINAL CHECKLIST: ✓ Bed frame cloned 100% from <|image_2|> pixels and NOT light wood? ✓ Nightstands cloned from <|image_3|>? ✓ Exactly ${totalProductCount} items? ✓ Room unchanged?`;
 
         messageContent.push({ text: qwenPrompt });
 
-        console.log(`[AI Service] Calling Qwen API (${modelUsed}) with ${messageContent.length - 1} images...`);
+        console.log(`[AI Service] Calling Qwen API (${modelUsed}) with ${messageContent.filter(m => m.image).length} images (${messageContent.filter(m => m.image && m.image.startsWith('data:')).length} as base64)...`);
 
         const response = await fetch('https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
           method: 'POST',

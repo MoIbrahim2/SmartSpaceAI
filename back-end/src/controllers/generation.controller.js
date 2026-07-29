@@ -65,11 +65,39 @@ const saveSelectedProducts = asyncHandler(async (req, res) => {
 });
 
 /**
- * Trigger AI image generation for a generation
+ * Save user prompt text to a generation (step 2 persistence)
+ */
+const saveUserPrompt = asyncHandler(async (req, res) => {
+  const generation = await generationService.saveUserPrompt(req.user._id, req.params.id, req.body);
+  return sendSuccess(res, 'generation.prompt_saved', { generation }, HTTP_STATUS.OK);
+});
+
+/**
+ * Save resolution choice for a generation
+ */
+const saveResolution = asyncHandler(async (req, res) => {
+  const generation = await generationService.saveResolution(req.user._id, req.params.id, req.body);
+  return sendSuccess(res, 'generation.resolution_saved', { generation }, HTTP_STATUS.OK);
+});
+
+/**
+ * Trigger AI image generation for a generation (accepts resolution in body)
  */
 const generateRoomImage = asyncHandler(async (req, res) => {
+  // Save resolution to generation before generating if provided
+  if (req.body.resolution) {
+    await generationService.saveResolution(req.user._id, req.params.id, req.body);
+  }
   const generation = await generationService.generateRoomImage(req.user._id, req.params.id);
   return sendSuccess(res, 'generation.image_generated', { generation }, HTTP_STATUS.OK);
+});
+
+/**
+ * Get the latest generation for a specific room
+ */
+const getLatestGenerationForRoom = asyncHandler(async (req, res) => {
+  const generation = await generationService.getLatestGenerationForRoom(req.user._id, req.params.roomId);
+  return sendSuccess(res, 'generation.fetch_success', { generation }, HTTP_STATUS.OK);
 });
 
 module.exports = {
@@ -80,5 +108,8 @@ module.exports = {
   deleteGeneration,
   extractPreferences,
   saveSelectedProducts,
-  generateRoomImage
+  saveUserPrompt,
+  saveResolution,
+  generateRoomImage,
+  getLatestGenerationForRoom
 };

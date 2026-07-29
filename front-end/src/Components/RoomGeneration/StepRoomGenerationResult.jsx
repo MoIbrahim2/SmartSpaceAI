@@ -4,16 +4,31 @@ import Icon from "../Icon";
 import { API_HOST } from "../../api";
 import { parseProductDetails } from "../../utils/productUtils";
 
+const RESOLUTION_OPTIONS = [
+  { id: "720p", label: "720p (HD)", desc: "Fast generation" },
+  { id: "1080p", label: "1080p (FHD)", desc: "Balanced quality & speed", default: true },
+  { id: "1440p", label: "1440p (QHD)", desc: "High detail render" },
+  { id: "4k", label: "4K (Ultra HD)", desc: "Maximum realistic fidelity" },
+];
+
 const StepRoomGenerationResult = ({
   setStep,
   generatedImage,
   selectedProducts = [],
   isGenerating = false,
   handleRegenerate,
-  onFinish
+  onFinish,
+  resolution = "1080p",
+  setResolution,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [showProductSummary, setShowProductSummary] = useState(false);
+  
+  const safeResString = typeof resolution === "string" 
+    ? resolution 
+    : (resolution && typeof resolution === "object" && resolution.resolution ? resolution.resolution : "1080p");
+
+  const [selectedRes, setSelectedRes] = useState(safeResString);
 
   const getImageUrl = (url) => {
     if (!url) return null;
@@ -22,6 +37,19 @@ const StepRoomGenerationResult = ({
   };
 
   const finalImgUrl = getImageUrl(generatedImage?.url) || null;
+
+  const handleResChange = (resId) => {
+    setSelectedRes(resId);
+    if (setResolution) setResolution(resId);
+  };
+
+  const onGenerateClick = () => {
+    if (handleRegenerate) {
+      handleRegenerate(selectedRes);
+    }
+  };
+
+  const displayRes = (typeof selectedRes === "string" ? selectedRes : "1080p").toUpperCase();
 
   return (
     <div className="bg-background rounded-[2rem] p-6 lg:p-10 neomorph-raised flex-grow flex flex-col relative">
@@ -32,7 +60,7 @@ const StepRoomGenerationResult = ({
             {t("dashboard.stepFourTitle", "Your AI Room Design Rendering")}
           </h1>
           <p className="text-on-surface-variant text-sm mt-1">
-            Generated with smart alignment based on your room dimensions & selected products.
+            Generated with smart spatial alignment based on your room dimensions & selected products.
           </p>
         </div>
 
@@ -54,9 +82,9 @@ const StepRoomGenerationResult = ({
             const title = parsed.title;
             return (
               <div key={idx} className="flex items-center gap-3 p-2 rounded-xl bg-background neomorph-raised">
-                <img 
-                  src={getImageUrl(img)} 
-                  alt={title} 
+                <img
+                  src={getImageUrl(img)}
+                  alt={title}
                   className="w-12 h-12 rounded-lg object-cover"
                   referrerPolicy="no-referrer"
                   onError={(e) => {
@@ -78,6 +106,43 @@ const StepRoomGenerationResult = ({
         </div>
       )}
 
+      {/* Resolution Selector Toolbar */}
+      <div className="mb-6 p-4 rounded-2xl neomorph-raised bg-background flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Icon name="hd" className="text-primary" size={22} />
+          <div>
+            <span className="text-xs font-bold text-on-surface uppercase tracking-wider block">
+              Render Quality & Resolution
+            </span>
+            <span className="text-[11px] text-on-surface-variant">
+              Select output resolution for the AI composite render
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {RESOLUTION_OPTIONS.map((opt) => {
+            const active = selectedRes === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleResChange(opt.id)}
+                disabled={isGenerating}
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  active
+                    ? "bg-primary text-on-primary shadow-md"
+                    : "bg-background text-on-surface-variant neomorph-raised hover:text-on-surface active:neomorph-inset"
+                }`}
+                title={opt.desc}
+              >
+                <span>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Main Generated Image Preview */}
       <div className="flex-grow bg-background rounded-2xl neomorph-inset overflow-hidden flex items-center justify-center min-h-[420px] mb-6 relative group">
         {isGenerating ? (
@@ -90,10 +155,10 @@ const StepRoomGenerationResult = ({
               </div>
             </div>
             <h3 className="font-headline font-bold text-xl text-on-surface mb-2">
-              Generating High-Resolution Room Composite...
+              Generating {displayRes} Room Render...
             </h3>
             <p className="text-xs text-on-surface-variant max-w-md">
-              Gemini Imagen is synthesizing your room layout, furniture dimensions, materials, and soft lighting for maximum spatial accuracy.
+              Synthesizing room layout, furniture dimensions, materials, and soft lighting for maximum spatial accuracy.
             </p>
           </div>
         ) : finalImgUrl ? (
@@ -107,20 +172,28 @@ const StepRoomGenerationResult = ({
             {/* AI Watermark Badge */}
             <div className="absolute bottom-4 left-4 rtl:left-auto rtl:right-4 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/20">
               <Icon name="auto_awesome" size={14} className="text-amber-400" />
-              <span>SmartSpace AI Imagen Render</span>
+              <span>SmartSpace AI Render ({displayRes})</span>
             </div>
           </>
         ) : (
           <div className="flex flex-col items-center justify-center text-center p-8">
-            <div className="w-20 h-20 rounded-full bg-surface-variant/30 flex items-center justify-center mb-4">
-              <Icon name="image" size={36} className="text-on-surface-variant/50" />
+            <div className="w-20 h-20 rounded-full bg-surface-variant/30 flex items-center justify-center mb-4 text-primary">
+              <Icon name="auto_awesome" size={40} />
             </div>
-            <h3 className="font-headline font-bold text-lg text-on-surface mb-1">
-              No Rendered Image Yet
+            <h3 className="font-headline font-bold text-xl text-on-surface mb-2">
+              Ready to Render Your Room
             </h3>
-            <p className="text-sm text-on-surface-variant max-w-sm">
-              Click "Regenerate Image" to create an AI-rendered visualization of your room with the selected furniture.
+            <p className="text-sm text-on-surface-variant max-w-md mb-6">
+              Your room specifications and furniture selections are saved. Choose your target resolution above and click <strong>Start Generation</strong> to produce the final AI visualization.
             </p>
+            <button
+              onClick={onGenerateClick}
+              disabled={isGenerating}
+              className="px-8 py-3.5 rounded-2xl bg-primary text-on-primary font-headline font-bold text-base shadow-xl hover:bg-primary-variant active:scale-95 transition-all flex items-center gap-3 animate-bounce"
+            >
+              <Icon name="auto_awesome" size={20} />
+              <span>Start Generation ({displayRes})</span>
+            </button>
           </div>
         )}
       </div>
@@ -136,14 +209,16 @@ const StepRoomGenerationResult = ({
         </button>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleRegenerate}
-            disabled={isGenerating}
-            className="px-6 py-3 rounded-xl bg-background text-on-surface font-semibold text-sm transition-all neomorph-raised hover:text-primary active:neomorph-inset disabled:opacity-50 flex items-center gap-2"
-          >
-            <Icon name="refresh" size={18} className={isGenerating ? "animate-spin text-primary" : ""} />
-            {t("dashboard.regenerate", "Regenerate Image")}
-          </button>
+          {finalImgUrl && (
+            <button
+              onClick={onGenerateClick}
+              disabled={isGenerating}
+              className="px-6 py-3 rounded-xl bg-background text-on-surface font-semibold text-sm transition-all neomorph-raised hover:text-primary active:neomorph-inset disabled:opacity-50 flex items-center gap-2"
+            >
+              <Icon name="refresh" size={18} className={isGenerating ? "animate-spin text-primary" : ""} />
+              {t("dashboard.regenerate", "Regenerate Image")}
+            </button>
+          )}
 
           <button
             onClick={onFinish}

@@ -2,7 +2,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
-import { validateRoomLayout, getRoomLayout, getRoomById, extractPreferences, saveSelectedProducts, generateRoomImage } from "../../api";
+import {
+  validateRoomLayout,
+  getRoomLayout,
+  getRoomById,
+  extractPreferences,
+  saveSelectedProducts,
+  generateRoomImage,
+  getLatestGenerationForRoom,
+  saveResolution
+} from "../../api";
 import { getProductId } from "../../utils/productUtils";
 
 // Import step sub-components
@@ -41,6 +50,7 @@ const RoomGeneration = () => {
   // AI Generation state
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generatedImageResult, setGeneratedImageResult] = useState(null);
+  const [resolution, setResolution] = useState("1080p");
 
   // Validation state
   const [validating, setValidating] = useState(false);
@@ -121,8 +131,61 @@ const RoomGeneration = () => {
       }
     };
 
+    const loadExistingGeneration = async () => {
+      try {
+        const { data } = await getLatestGenerationForRoom(urlRoomId);
+        if (data.success && data.data.generation) {
+          const gen = data.data.generation;
+          setGenerationId(gen._id);
+          if (gen.resolution) {
+            setResolution(typeof gen.resolution === "string" ? gen.resolution : (gen.resolution.resolution || "1080p"));
+          }
+          if (gen.userPrompt) {
+            setForm((prev) => ({ ...prev, prompt: gen.userPrompt }));
+          }
+          if (gen.generatedImage) {
+            setGeneratedImageResult(gen.generatedImage);
+          }
+          if (gen.extractedPreferences) {
+            setExtractedPreferences(gen.extractedPreferences);
+          }
+
+          // Restore products if saved
+          if (gen.selectedProducts && gen.selectedProducts.length > 0) {
+            const restoredProductIds = [];
+            const restoredProductData = {};
+            const restoredCounts = {};
+
+            gen.selectedProducts.forEach((sp) => {
+              const cat = sp.category || "Furniture";
+              const pData = sp.productData || sp;
+              const pId = getProductId(pData) || String(sp.productId);
+
+              if (!restoredProductData[cat]) restoredProductData[cat] = [];
+              restoredProductData[cat].push(pData);
+
+              const qty = sp.quantity || 1;
+              for (let i = 0; i < qty; i++) {
+                restoredProductIds.push(pId);
+              }
+              restoredCounts[cat] = (restoredCounts[cat] || 0) + qty;
+            });
+
+            setProductData(restoredProductData);
+            setCategoryCounts(restoredCounts);
+            setAddedProducts(restoredProductIds);
+            const firstCat = Object.keys(restoredCounts)[0] || "sofa";
+            setActiveCategory(firstCat);
+          }
+        }
+      } catch (err) {
+        console.log("No existing generation for room:", urlRoomId);
+      }
+    };
+
     loadExistingLayout();
     loadRoomData();
+    loadExistingGeneration();
   }, [urlRoomId]);
 
   const hasFormChanged = useCallback(() => {
@@ -272,7 +335,7 @@ const RoomGeneration = () => {
           recResult.categories.forEach((catObj) => {
             const catName = catObj.category;
             const recs = (catObj.recommendations || (catObj.recommendation ? [catObj.recommendation] : [])).filter(Boolean);
-            
+
             // Mark top recommendations explicitly
             recs.forEach((r) => {
               r.isRecommended = true;
@@ -371,7 +434,6 @@ const RoomGeneration = () => {
   const handleProceedToStep4 = async () => {
     if (!generationId) {
       setStep(4);
-      triggerImageGeneration();
       return;
     }
 
@@ -413,26 +475,25 @@ const RoomGeneration = () => {
       });
 
       setStep(4);
-      triggerImageGeneration();
     } catch (err) {
       console.error("Save selected products error:", err);
-      // Proceed to Step 4 regardless
       setStep(4);
-      triggerImageGeneration();
     } finally {
       setLoading(false);
     }
   };
 
   /**
-   * Trigger AI room composite rendering using Gemini/Imagen
+   * Trigger AI room composite rendering
    */
-  const triggerImageGeneration = async () => {
+  const triggerImageGeneration = async (targetResolution) => {
     if (!generationId) return;
 
+    const resToUse = targetResolution || resolution;
     setIsGeneratingImage(true);
     try {
-      const { data } = await generateRoomImage(generationId);
+      await saveResolution(generationId, { resolution: resToUse });
+      const { data } = await generateRoomImage(generationId, { resolution: resToUse });
       if (data.success && data.data.generation?.generatedImage) {
         setGeneratedImageResult(data.data.generation.generatedImage);
       }
@@ -578,6 +639,8 @@ const RoomGeneration = () => {
                 isGenerating={isGeneratingImage}
                 handleRegenerate={triggerImageGeneration}
                 onFinish={handleFinishRoomGeneration}
+                resolution={resolution}
+                setResolution={setResolution}
               />
             )}
           </section>

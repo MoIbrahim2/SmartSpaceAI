@@ -131,6 +131,7 @@ const extractUserPreferences = async (userId, payload) => {
 
     generation.extractedPreferences = extractedPreferences;
     generation.prompt = prompt;
+    generation.userPrompt = prompt;
     if (recommendationResult) {
       generation.recommendationResult = recommendationResult;
     }
@@ -152,10 +153,10 @@ const extractUserPreferences = async (userId, payload) => {
     }
     await generation.save();
   } else {
-    // Create new generation
     const generationData = {
       ownerId: userId,
       prompt,
+      userPrompt: prompt,
       generationType: generationType || 'CREATE_FROM_SCRATCH',
       status: 'PENDING',
       extractedPreferences,
@@ -496,9 +497,10 @@ const generateRoomImage = async (userId, generationId) => {
     const imageResult = await aiService.generateRoomCompositeImage({
       roomImageUrl,
       selectedProducts: generation.selectedProducts || [],
-      prompt: generation.prompt || '',
+      prompt: generation.userPrompt || generation.prompt || '',
       roomDimensions,
       roomType,
+      resolution: generation.resolution || { width: 1280, height: 720 },
     });
 
     const generatedImageObj = {
@@ -510,6 +512,7 @@ const generateRoomImage = async (userId, generationId) => {
 
     generation.generatedImage = generatedImageObj;
     generation.status = 'COMPLETED';
+    generation.isGenerated = true;
     generation.completedAt = new Date();
 
     // Push to images array if not already present
@@ -538,6 +541,67 @@ const generateRoomImage = async (userId, generationId) => {
   }
 };
 
+/**
+ * Save user prompt text to a generation (step 2 persistence).
+ * @param {string} userId
+ * @param {string} generationId
+ * @param {Object} payload - { userPrompt }
+ * @returns {Promise<Object>} Updated generation
+ */
+const saveUserPrompt = async (userId, generationId, payload) => {
+  const generation = await Generation.findById(generationId);
+  if (!generation) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+  if (generation.ownerId.toString() !== userId.toString()) {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+  }
+
+  generation.userPrompt = payload.userPrompt || payload.prompt || '';
+  generation.prompt = payload.userPrompt || payload.prompt || generation.prompt;
+  await generation.save();
+  return generation;
+};
+
+/**
+ * Save selected resolution to a generation.
+ * @param {string} userId
+ * @param {string} generationId
+ * @param {Object} payload - { resolution: { width, height, label } }
+ * @returns {Promise<Object>} Updated generation
+ */
+const saveResolution = async (userId, generationId, payload) => {
+  const generation = await Generation.findById(generationId);
+  if (!generation) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+  if (generation.ownerId.toString() !== userId.toString()) {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+  }
+
+  if (payload.resolution) {
+    generation.resolution = {
+      width: Number(payload.resolution.width) || 1280,
+      height: Number(payload.resolution.height) || 720,
+      label: payload.resolution.label || 'Standard (720p)'
+    };
+  }
+  await generation.save();
+  return generation;
+};
+
+/**
+ * Get the latest generation for a room.
+ * @param {string} userId
+ * @param {string} roomId
+ * @returns {Promise<Object|null>} Latest generation or null
+ */
+const getLatestGenerationForRoom = async (userId, roomId) => {
+  const generation = await Generation.findOne({ roomId, ownerId: userId })
+    .sort({ createdAt: -1 });
+  return generation;
+};
+
 module.exports = {
   createGeneration,
   extractUserPreferences,
@@ -546,6 +610,8 @@ module.exports = {
   updateGeneration,
   deleteGeneration,
   saveSelectedProducts,
-  generateRoomImage
+  generateRoomImage,
+  saveUserPrompt,
+  saveResolution,
+  getLatestGenerationForRoom
 };
-
