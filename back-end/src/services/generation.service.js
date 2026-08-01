@@ -78,6 +78,25 @@ const extractUserPreferences = async (userId, payload) => {
     }
   }
 
+  let generation;
+  if (generationId) {
+    generation = await Generation.findById(generationId);
+    if (!generation) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+    }
+    if (generation.ownerId.toString() !== userId.toString()) {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+    }
+
+    if (generation.prompt === prompt && generation.recommendationResult) {
+      return {
+        generation,
+        extractedPreferences: generation.extractedPreferences,
+        recommendationResult: generation.recommendationResult
+      };
+    }
+  }
+
   // 1. Load category rules from knowledge base
   const categoryRules = promptBuilder.loadCategoryRules(roomType);
 
@@ -117,18 +136,8 @@ const extractUserPreferences = async (userId, payload) => {
   }
 
   // 6. Create or update Generation document
-  let generation;
-
-  if (generationId) {
+  if (generation) {
     // Update existing generation
-    generation = await Generation.findById(generationId);
-    if (!generation) {
-      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
-    }
-    if (generation.ownerId.toString() !== userId.toString()) {
-      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
-    }
-
     generation.extractedPreferences = extractedPreferences;
     generation.prompt = prompt;
     generation.userPrompt = prompt;

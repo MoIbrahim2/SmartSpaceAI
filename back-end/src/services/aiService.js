@@ -551,20 +551,21 @@ const generateRoomCompositeImage = async ({
             productRefList.push(
               `• Object to Insert: ${imgTag} [Category: ${category.toUpperCase()}]\n` +
               `  - SUPREME SOURCE OF TRUTH: ${imgTag} (Reference Product Image)\n` +
-              `  - PIXEL-PERFECT CLONING: You MUST copy the EXACT 3D geometry, headboard shape, frame structure, fabric/wood finish, and exact color from the visual pixels of ${imgTag}.\n` +
-              `  - OVERRIDE CONFLICTING TEXT: The image ${imgTag} IS the absolute single source of truth for all materials and colors.\n` +
+              `  - ZERO HALLUCINATION (SHAPE & DIMENSIONS): You MUST mathematically copy the exact length, width, and height proportions from ${imgTag}. Do NOT extend or stretch the object. Copy the exact geometry and aspect ratio.\n` +
+              `  - ZERO HALLUCINATION (COLOR): Extract the exact RGB color from ${imgTag} and apply it. If it is dark, it must render as dark. NO COLOR BLEEDING from the floor.\n` +
+              `  - PIXEL-PERFECT CLONING: Copy the exact fabric/wood finish and frame structure from ${imgTag}.\n` +
               `  - QUANTITY TO RENDER: Exactly ${qty} ${qty > 1 ? 'identical units' : 'unit'} placed in the room.\n` +
-              `  - PHYSICAL DIMENSIONS: ${dimString || 'Standard proportional sizing'}.`
+              `  - PHYSICAL DIMENSIONS: ${dimString || 'Maintain exact proportions from the reference image'}.`
             );
             imageIndex++;
           } else {
             productRefList.push(
               `• Object to Insert: [Category: ${category.toUpperCase()}]\n` +
               `  - QUANTITY TO RENDER: Exactly ${qty} ${qty > 1 ? 'units' : 'unit'}.\n` +
-              `  - PHYSICAL DIMENSIONS: ${dimString || 'Standard proportional sizing'}\n` +
+              `  - PHYSICAL DIMENSIONS: ${dimString || 'Maintain exact proportions'}\n` +
               `  - VISUAL SPECIFICATIONS: Modern design.`
             );
-           }
+          }
         }
 
         // Count total products for verification
@@ -572,36 +573,43 @@ const generateRoomCompositeImage = async ({
         const totalUniqueProducts = selectedProducts.length;
 
         // 3. Ultra-Concentrated & Detailed System Prompt Directive for Qwen
-        const qwenPrompt = `SYSTEM ROLE & PURPOSE:
-You are an ultra-high-precision Architectural Virtual Staging Engine. Your ONLY task is to clone the EXACT furniture objects shown in reference images (<|image_2|>, <|image_3|>, etc.) into the target room layout (<|image_1|>).
+        const qwenPrompt = `[SYSTEM ROLE & CORE DIRECTIVE]
+You are a deterministic, ultra-high-precision Architectural Virtual Staging Engine. You do not imagine, hallucinate, or generate random furniture. Your EXCLUSIVE purpose is to execute a pixel-perfect compositing operation. You will take the provided reference furniture images and clone their exact visual properties into the target room layout (<|image_1|>).
 
-==================== 1. BASE ROOM ARCHITECTURE (<|image_1|>) ====================
+[1. BASE ROOM ARCHITECTURE (<|image_1|>)]
 ${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
-- RIGID STRUCTURAL CONSTRAINTS:
-  * Do NOT alter, shift, or replace the room layout, back walls, side walls, floor material/texture, ceiling lines, doors, or window frames of <|image_1|>.
-  * Preserved Light & Perspective: Match camera FOV, vanishing points, horizon, ceiling lights, window daylight direction, and shadow orientation strictly from <|image_1|>.
+- STRUCTURAL IMMUTABILITY: The room geometry is locked. You are FORBIDDEN from altering, moving, or modifying the back walls, side walls, floor material, floor texture, ceiling lines, doors, window frames, built-in fixtures, or baseboards.
+- LIGHTING & PERSPECTIVE LOCK: Match the camera Field of View (FOV), vanishing points, horizon line, and room scale perfectly. Analyze the direction of natural daylight (from windows) and artificial light (from ceiling) in <|image_1|>. All placed furniture must cast physically accurate contact shadows and directional shadows that match this exact lighting environment. 
+- NO ARCHITECTURAL BLEEDING: The room's floor texture or wall colors MUST NOT bleed onto the furniture.
 
-==================== 2. MANDATORY PRODUCT INVENTORY (${totalUniqueProducts} unique products, ${totalProductCount} total items) ====================
-CRITICAL: You MUST clone the EXACT visual products from the provided images (<|image_2|>, <|image_3|>, etc.) into the room. Do NOT guess materials from memory.
+[2. MANDATORY PRODUCT INVENTORY (${totalUniqueProducts} unique products, ${totalProductCount} total items)]
+CRITICAL REQUIREMENT: You MUST clone the EXACT visual products from the provided images into the room. You may not substitute them with generic 3D models from your training data.
 
+--- INVENTORY LIST ---
 ${productRefList.join('\n\n')}
+----------------------
 
-User Custom Instructions & Preferred Layout: "${prompt || 'Arrange products logically with clean walking paths and balanced ergonomics.'}"
+[3. PIXEL-PERFECT VISUAL FIDELITY, COLOR, & MATERIAL REPLICATION]
+- EXACT RGB COLOR MATCHING: You must analyze the hex colors of the reference images. A dark brown wooden bed in the reference MUST remain a dark brown wooden bed in the generated image. DO NOT lighten or change the color to match the floor or walls.
+- PROHIBITION OF COLOR LEAKAGE: Do NOT blend the furniture colors with the room's floor or walls. Color leakage is strictly prohibited and constitutes a total failure.
+- GEOMETRIC & DIMENSIONAL ACCURACY: Replicate exact leg shapes, headboard heights, armrest curves, cushion tufting, and frame thicknesses. Do NOT hallucinate longer beds or taller headboards. Lock the aspect ratio of the object to match its reference image exactly.
 
-==================== 3. PIXEL-PERFECT VISUAL FIDELITY & MATERIAL ISOLATION ====================
-- VISUAL PIXELS ARE THE ONLY TRUTH:
-  * <|image_2|> (BED): Look at the exact image pixels of <|image_2|>. Clone its headboard shape, frame material, upholstery/wood color, and bedding style directly from <|image_2|>. Do NOT default to generic wooden bed frames. If the reference image is dark brown, the bed MUST be dark brown!
-  * <|image_3|> (NIGHTSTAND): Look at the exact image pixels of <|image_3|>. Clone its exact white & wood drawer structure and legs.
-- CRITICAL ANTI-BLEEDING CONSTRAINT: Do NOT blend or match the furniture to the floor! The bed must retain its EXACT dark color from <|image_2|> and MUST NOT become light wood to match the room's floor. Color leakage is strictly prohibited.
+[4. SPATIAL AWARENESS & PLACEMENT LOGIC]
+- User Custom Instructions: "${prompt || 'Arrange products logically with clean walking paths, realistic spacing, and balanced ergonomics.'}"
+- SCALE & PROPORTION: Adhere strictly to the physical dimensions provided in the inventory. Use the room's doors and windows (which have standard heights) as a scale reference. DO NOT stretch objects along the Z-axis (e.g., creating an unnaturally long bed). 
+- PHYSICAL MECHANICS: Furniture must rest firmly on the floor. No floating objects. Objects must not clip through walls, intersect with other furniture, or block structural doors. Provide realistic spacing between items (e.g., clearance between a bed and a nightstand).
 
-==================== 4. MANDATORY RULES — VIOLATION IS UNACCEPTABLE ====================
-- RULE 1 — VISUAL PIXEL CLONING: Copy EVERY furniture item directly from its reference image pixels (<|image_2|>, <|image_3|>, etc.). Do NOT modify colors, materials, frame shapes, or headboards.
-- RULE 2 — ZERO TEXT-OVERRIDE HALLUCINATION: Ignore any text titles or default room templates that contradict the reference image pixels.
-- RULE 3 — EXACT QUANTITY & MULTIPLE COPIES: Render EXACTLY ${totalProductCount} items in total. If a product has quantity 2, place TWO IDENTICAL COPIES of THAT EXACT product image.
-- RULE 4 — PREVENT COLOR LEAKAGE: Maintain strict color separation between the floor and the bed.
-- RULE 5 — KEEP ROOM ARCHITECTURE UNCHANGED: Maintain <|image_1|> architecture strictly intact.
+[5. ABSOLUTE MANDATORY RULES (VIOLATION IS UNACCEPTABLE)]
+- RULE 1 (ZERO HALLUCINATION OF SHAPE/COLOR): Ignore any text titles, default room templates, or your own assumptions that contradict the reference image pixels. The reference image is absolute law.
+- RULE 2 (EXACT QUANTITY): Render EXACTLY ${totalProductCount} total items. If a product has a quantity of 2, you must place TWO IDENTICAL, separate copies of that exact product image in the room. Do not combine them. Do not omit them.
+- RULE 3 (NO STRAY OBJECTS): DO NOT add random decor, plants, rugs, or lamps unless they are explicitly listed in the inventory above. The room must only contain <|image_1|>'s architecture and the exact products listed.
 
-FINAL CHECKLIST: ✓ Bed frame cloned 100% from <|image_2|> pixels and NOT light wood? ✓ Nightstands cloned from <|image_3|>? ✓ Exactly ${totalProductCount} items? ✓ Room unchanged?`;
+[FINAL COMPLIANCE CHECKLIST]
+✓ Are the exact RGB colors, textures, and dimensions cloned 100% from the reference images?
+✓ Are the proportions correct without any unnatural stretching (like elongated beds)?
+✓ Is the room's original architecture, flooring, and perspective 100% preserved?
+✓ Are there EXACTLY ${totalProductCount} inserted items, with no unrequested decor?
+✓ Are the contact shadows physically accurate without altering the object's true color?`;
 
         messageContent.push({ text: qwenPrompt });
 
