@@ -229,6 +229,11 @@ const buildResponseSchema = (categoryNames) => {
               type: Type.STRING,
               nullable: true,
               description: 'How important this category seems to the user (HIGH, MEDIUM, LOW). null if not mentioned.'
+            },
+            action: {
+              type: Type.STRING,
+              nullable: true,
+              description: 'Action for ENHANCE_ROOM mode: REPLACE, ADD, KEEP, or REMOVE. null if not mentioned.'
             }
           },
           required: [
@@ -242,7 +247,8 @@ const buildResponseSchema = (categoryNames) => {
             'preferredShape',
             'preferredSize',
             'budgetAdjustment',
-            'importance'
+            'importance',
+            'action'
           ]
         },
         description: 'Per-category preferences for each available furniture category.'
@@ -398,6 +404,7 @@ const generateRoomCompositeImage = async ({
   prompt = '',
   roomDimensions = {},
   roomType = 'room',
+  generationType = 'CREATE_FROM_SCRATCH',
   resolution = { width: 1280, height: 720 }
 }) => {
   const modelUsed = process.env.QWEN_MODEL_FOR_IMAGE_GEN || 'qwen-image-2.0-pro';
@@ -571,16 +578,17 @@ const generateRoomCompositeImage = async ({
         // Count total products for verification
         const totalProductCount = selectedProducts.reduce((sum, p) => sum + (p.quantity || 1), 0);
         const totalUniqueProducts = selectedProducts.length;
+        const isEnhance = generationType === 'ENHANCE_ROOM' || generationType === 'ENHANCE_EXISTING';
 
         // 3. Ultra-Concentrated & Detailed System Prompt Directive for Qwen
         const qwenPrompt = `[SYSTEM ROLE & CORE DIRECTIVE]
-You are a deterministic, ultra-high-precision Architectural Virtual Staging Engine. You do not imagine, hallucinate, or generate random furniture. Your EXCLUSIVE purpose is to execute a pixel-perfect compositing operation. You will take the provided reference furniture images and clone their exact visual properties into the target room layout (<|image_1|>).
+You are a deterministic, ultra-high-precision Architectural Virtual Staging & ${isEnhance ? 'Room Enhancement' : 'Compositing'} Engine. You do not imagine, hallucinate, or generate random furniture. Your EXCLUSIVE purpose is to execute a pixel-perfect ${isEnhance ? 'room enhancement, restyling, and inpainting' : 'compositing'} operation. You will take the provided reference furniture images and clone their exact visual properties into the target room layout (<|image_1|>).
 
-[1. BASE ROOM ARCHITECTURE (<|image_1|>)]
+[1. BASE ROOM ARCHITECTURE & LAYOUT (<|image_1|>)]
 ${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
 - STRUCTURAL IMMUTABILITY: The room geometry is locked. You are FORBIDDEN from altering, moving, or modifying the back walls, side walls, floor material, floor texture, ceiling lines, doors, window frames, built-in fixtures, or baseboards.
-- LIGHTING & PERSPECTIVE LOCK: Match the camera Field of View (FOV), vanishing points, horizon line, and room scale perfectly. Analyze the direction of natural daylight (from windows) and artificial light (from ceiling) in <|image_1|>. All placed furniture must cast physically accurate contact shadows and directional shadows that match this exact lighting environment. 
-- NO ARCHITECTURAL BLEEDING: The room's floor texture or wall colors MUST NOT bleed onto the furniture.
+- LIGHTING & PERSPECTIVE LOCK: Match the camera Field of View (FOV), vanishing points, horizon line, and room scale perfectly. Analyze natural daylight (windows) and artificial light (ceiling) in <|image_1|>. All placed furniture must cast physically accurate contact shadows and directional shadows matching this exact lighting environment. 
+${isEnhance ? '- EXISTING FURNITURE & RESTYLING DIRECTIVE: <|image_1|> contains an existing furnished room layout. RETAIN existing furniture items visible in <|image_1|> EXCEPT for items explicitly replaced, removed, or added by the new product inventory below. Perform smooth inpainting and seamless visual integration for new items.' : '- NO ARCHITECTURAL BLEEDING: The room\'s floor texture or wall colors MUST NOT bleed onto the furniture.'}
 
 [2. MANDATORY PRODUCT INVENTORY (${totalUniqueProducts} unique products, ${totalProductCount} total items)]
 CRITICAL REQUIREMENT: You MUST clone the EXACT visual products from the provided images into the room. You may not substitute them with generic 3D models from your training data.
@@ -591,25 +599,25 @@ ${productRefList.join('\n\n')}
 
 [3. PIXEL-PERFECT VISUAL FIDELITY, COLOR, & MATERIAL REPLICATION]
 - EXACT RGB COLOR MATCHING: You must analyze the hex colors of the reference images. A dark brown wooden bed in the reference MUST remain a dark brown wooden bed in the generated image. DO NOT lighten or change the color to match the floor or walls.
-- PROHIBITION OF COLOR LEAKAGE: Do NOT blend the furniture colors with the room's floor or walls. Color leakage is strictly prohibited and constitutes a total failure.
+- PROHIBITION OF COLOR LEAKAGE: Do NOT blend the furniture colors with the room's floor or walls. Color leakage is strictly prohibited.
 - GEOMETRIC & DIMENSIONAL ACCURACY: Replicate exact leg shapes, headboard heights, armrest curves, cushion tufting, and frame thicknesses. Do NOT hallucinate longer beds or taller headboards. Lock the aspect ratio of the object to match its reference image exactly.
 
 [4. SPATIAL AWARENESS & PLACEMENT LOGIC]
 - User Custom Instructions: "${prompt || 'Arrange products logically with clean walking paths, realistic spacing, and balanced ergonomics.'}"
-- SCALE & PROPORTION: Adhere strictly to the physical dimensions provided in the inventory. Use the room's doors and windows (which have standard heights) as a scale reference. DO NOT stretch objects along the Z-axis (e.g., creating an unnaturally long bed). 
-- PHYSICAL MECHANICS: Furniture must rest firmly on the floor. No floating objects. Objects must not clip through walls, intersect with other furniture, or block structural doors. Provide realistic spacing between items (e.g., clearance between a bed and a nightstand).
+- SCALE & PROPORTION: Adhere strictly to the physical dimensions provided in the inventory. Use the room's doors and windows (which have standard heights) as a scale reference. DO NOT stretch objects along the Z-axis.
+- PHYSICAL MECHANICS: Furniture must rest firmly on the floor. No floating objects. Objects must not clip through walls, intersect with other furniture, or block structural doors. Provide realistic spacing between items.
 
 [5. ABSOLUTE MANDATORY RULES (VIOLATION IS UNACCEPTABLE)]
 - RULE 1 (ZERO HALLUCINATION OF SHAPE/COLOR): Ignore any text titles, default room templates, or your own assumptions that contradict the reference image pixels. The reference image is absolute law.
-- RULE 2 (EXACT QUANTITY): Render EXACTLY ${totalProductCount} total items. If a product has a quantity of 2, you must place TWO IDENTICAL, separate copies of that exact product image in the room. Do not combine them. Do not omit them.
-- RULE 3 (NO STRAY OBJECTS): DO NOT add random decor, plants, rugs, or lamps unless they are explicitly listed in the inventory above. The room must only contain <|image_1|>'s architecture and the exact products listed.
+- RULE 2 (EXACT QUANTITY): Render EXACTLY ${totalProductCount} total items from the inventory list. If a product has a quantity of 2, place TWO IDENTICAL, separate copies in the room.
+- RULE 3 (${isEnhance ? 'RESTYLING & CLEAN INTEGRATION' : 'NO STRAY OBJECTS'}): ${isEnhance ? 'Preserve non-replaced items in <|image_1|>, remove/replace old items targeted by the new inventory, and seamlessly composite the new furniture items into <|image_1|> without unrequested clutter.' : 'DO NOT add random decor, plants, rugs, or lamps unless explicitly listed in the inventory above. The room must only contain <|image_1|>\'s architecture and the exact products listed.'}
 
 [FINAL COMPLIANCE CHECKLIST]
 ✓ Are the exact RGB colors, textures, and dimensions cloned 100% from the reference images?
-✓ Are the proportions correct without any unnatural stretching (like elongated beds)?
+✓ Are the proportions correct without any unnatural stretching?
 ✓ Is the room's original architecture, flooring, and perspective 100% preserved?
 ✓ Are there EXACTLY ${totalProductCount} inserted items, with no unrequested decor?
-✓ Are the contact shadows physically accurate without altering the object's true color?`;
+✓ Are contact shadows physically accurate without altering the object's true color?`;
 
         messageContent.push({ text: qwenPrompt });
 

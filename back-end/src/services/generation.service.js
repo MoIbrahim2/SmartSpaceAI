@@ -105,11 +105,12 @@ const extractUserPreferences = async (userId, payload) => {
   const categoryNames = availableCategories.map((c) => c.category);
 
   // 3. Build prompts
-  const systemPrompt = promptBuilder.buildSystemPrompt(availableCategories);
+  const systemPrompt = promptBuilder.buildSystemPrompt(availableCategories, generationType);
   const userPrompt = promptBuilder.buildUserPrompt(
     { roomType, length, width, height, budget },
     prompt,
-    availableCategories
+    availableCategories,
+    generationType
   );
 
   // 4. Call Gemini to extract preferences
@@ -509,6 +510,7 @@ const generateRoomImage = async (userId, generationId) => {
       prompt: generation.userPrompt || generation.prompt || '',
       roomDimensions,
       roomType,
+      generationType: generation.generationType || 'CREATE_FROM_SCRATCH',
       resolution: generation.resolution || { width: 1280, height: 720 },
     });
 

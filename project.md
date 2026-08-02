@@ -46,6 +46,7 @@ SmartSpaceAI/
 │   ├── doc/                              # Detailed module specs & Postman exports
 │   │   ├── codebase_documentation.md     # Architecture & security guide
 │   │   ├── RECOMMENDATION_ENGINE_SPEC.md # Spec for 3-stage recommendation processing
+│   │   ├── ENHANCE_ROOM_FEATURE_SPEC.md  # Spec for ENHANCE_ROOM pipeline & NLU actions
 │   │   ├── rooms_and_generations_documentation.md # Spec for Rooms & Generations endpoints
 │   │   └── postman_collection.json       # Exported Postman tests & environment
 │   ├── knowledge_base/                   # Rules & templates for recommendation engine
@@ -261,9 +262,11 @@ flowchart TD
 
 ### D. AI Room Generation & Prompt Pipeline
 
-- **Google Gemini Integration (`aiService.js`)**: Uses `@google/genai` to analyze user inputs, room photos, and text instructions.
-- **Structured Preference Extraction**: Parses raw user prompts into structured JSON (`roomPreferences`, `categoryPreferences`, `negativePreferences`).
+- **Google Gemini Integration (`aiService.js`)**: Uses `@google/genai` (Gemini 2.5 Flash Vision) to validate uploaded room photos (`validateRoomImage`) and extract structured design preferences (`extractPreferences`).
+- **Vision Guardrail**: Evaluates room images for structural composition (corner shot), lighting quality, and empty space requirements before permitting AI generation.
+- **Structured Preference Extraction**: Parses raw user prompts into structured JSON (`roomPreferences`, `categoryPreferences`, `negativePreferences`). For `ENHANCE_ROOM` mode, extracts per-category `action` (`REPLACE`, `ADD`, `KEEP`, `REMOVE`).
 - **Pixel-Cloning & Visual Fidelity**: `promptBuilder.service.js` enforces strict pixel-cloning directives to lock room dimensions and eliminate AI hallucinations.
+- **Multimodal Composite Rendering Engine**: Supports both `CREATE_FROM_SCRATCH` (empty space staging) and `ENHANCE_ROOM` (inpainting & restyling of existing furnished layouts). Transforms room and product reference photos into Base64 Data URIs and calls Qwen Multimodal API for exact RGB/geometric cloning, with fallback mechanisms.
 - **Product Rendering Cache**: Implements caching for identical generation requests to save API tokens and compute power.
 
 ---

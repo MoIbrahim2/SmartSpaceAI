@@ -298,6 +298,7 @@ const RoomGeneration = () => {
         width: parseFloat(form.width) || 350,
         height: parseFloat(form.height) || 280,
         prompt: form.prompt.trim(),
+        generationType: form.generationType || "CREATE_FROM_SCRATCH",
       };
 
       if (form.roomId || urlRoomId) payload.roomId = form.roomId || urlRoomId;

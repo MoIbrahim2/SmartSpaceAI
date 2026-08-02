@@ -73,9 +73,11 @@ const extractAvailableCategories = (categoryRules) => {
  * Gemini is strictly scoped to preference extraction — NO recommendations,
  * budget allocation, placement, or product filtering.
  * @param {Array<Object>} availableCategories
+ * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
  * @returns {string}
  */
-const buildSystemPrompt = (availableCategories) => {
+const buildSystemPrompt = (availableCategories, generationType = 'CREATE_FROM_SCRATCH') => {
+  const isEnhance = generationType === 'ENHANCE_ROOM' || generationType === 'ENHANCE_EXISTING';
   const categoryList = availableCategories
     .map((c) => {
       let qInfo = '';
@@ -86,9 +88,22 @@ const buildSystemPrompt = (availableCategories) => {
     })
     .join('\n');
 
+  const enhanceInstructions = isEnhance
+    ? `\nSPECIAL MODE: ENHANCE_ROOM (Room Enhancement & Restyling)
+- The room is ALREADY FURNISHED. The user is asking to modify, upgrade, replace, or add specific furniture, or change overall colors/materials/lighting.
+- Unmentioned categories do NOT imply rejection; existing items may remain in the room layout.
+- For each category, extract the user's intended 'action':
+  * 'REPLACE': User wants to swap out an existing piece for a new one (e.g. "replace the bed", "change the sofa").
+  * 'ADD': User wants to introduce a new piece into an empty spot (e.g. "add a rug", "put a floor lamp in corner").
+  * 'KEEP': User explicitly asks to retain an existing piece (e.g. "keep the current wardrobe", "leave the desk as is").
+  * 'REMOVE': User explicitly wants to discard an item.
+  * null: Not mentioned by user.`
+    : '';
+
   return `You are an intent and design-preference extraction system for an AI-powered interior design platform called SmartSpaceAI.
 
 Your ONLY responsibility is to understand the user's natural language description and extract their design preferences.
+${enhanceInstructions}
 
 Core Inclusion & Priority Rules:
 - If the user explicitly mentions or requests specific furniture items in their description (e.g., "I want a sofa", "two armchairs", "a coffee table", "add a rug", "TV unit", "two side tables", "include a floor lamp", "wall art"):
@@ -132,7 +147,7 @@ ${categoryList}
 
 You must return a structured JSON response with the following schema:
 1. roomPreferences: The overall room design preferences (style, theme, mood, lighting, colorPalette)
-2. categoryPreferences: Per-category preferences for each available category (including category, included, excluded, quantity, preferredMaterial, preferredColor, preferredStyle, preferredShape, preferredSize, budgetAdjustment, importance)
+2. categoryPreferences: Per-category preferences for each available category (including category, included, excluded, quantity, preferredMaterial, preferredColor, preferredStyle, preferredShape, preferredSize, budgetAdjustment, importance, action)
 3. negativePreferences: Things the user explicitly wants to avoid`;
 };
 
@@ -143,13 +158,15 @@ You must return a structured JSON response with the following schema:
  * @param {Object} roomDetails - { roomType, length, width, height, budget }
  * @param {string} userPrompt - The user's free-text design description
  * @param {Array<Object>} availableCategories
+ * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
  * @returns {string}
  */
-const buildUserPrompt = (roomDetails, userPrompt, availableCategories) => {
+const buildUserPrompt = (roomDetails, userPrompt, availableCategories, generationType = 'CREATE_FROM_SCRATCH') => {
   const categoryNames = availableCategories.map((c) => c.category).join(', ');
 
   return `Room Information:
 - Room Type: ${roomDetails.roomType}
+- Generation Mode: ${generationType}
 - Dimensions: ${roomDetails.length}cm (L) × ${roomDetails.width}cm (W) × ${roomDetails.height}cm (H)
 - Budget: ${roomDetails.budget} EGP
 
@@ -158,7 +175,7 @@ Available Categories: ${categoryNames}
 User's Design Description:
 "${userPrompt}"
 
-Based on the user's description above, extract their design preferences. For each available category, determine if the user expressed any preference about it (including explicit product quantity if requested). If unknown or not specified, use null.`;
+Based on the user's description above, extract their design preferences. For each available category, determine if the user expressed any preference about it (including explicit product quantity and action if requested). If unknown or not specified, use null.`;
 };
 
 module.exports = {
