@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import AuthLayout from "../Layouts/AuthLayout";
 import DashboardLayout from "../Layouts/DashboardLayout";
 import AdminLayout from "../Layouts/AdminLayout";
+import SellerLayout from "../Layouts/SellerLayout";
 import Login from "../Pages/Auth/Login";
 import Register from "../Pages/Auth/Registar";
 import Credits from "../Pages/Dashboard/Credits";
@@ -23,6 +24,12 @@ import CommissionReports from "../Pages/Admin/CommissionReports";
 import ModerationQueue from "../Pages/Admin/ModerationQueue";
 import Orders from "../Pages/Admin/Orders";
 import Settings from "../Pages/Admin/Settings";
+
+import SellerDashboard from "../Pages/Seller/SellerDashboard";
+import SellerProducts from "../Pages/Seller/SellerProducts";
+import SellerProductForm from "../Pages/Seller/SellerProductForm";
+import SellerOrders from "../Pages/Seller/SellerOrders";
+import SellerEarnings from "../Pages/Seller/SellerEarnings";
 
 const router = createBrowserRouter([
   {
@@ -70,6 +77,23 @@ const router = createBrowserRouter([
       { path: "moderation", element: <ModerationQueue /> },
       { path: "orders", element: <Orders /> },
       { path: "settings", element: <Settings /> },
+    ],
+  },
+  {
+    path: "/seller",
+    element: (
+      <ProtectedRoute>
+        <SellerLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <SellerDashboard /> },
+      { path: "dashboard", element: <SellerDashboard /> },
+      { path: "products", element: <SellerProducts /> },
+      { path: "products/create", element: <SellerProductForm /> },
+      { path: "products/:id/edit", element: <SellerProductForm /> },
+      { path: "orders", element: <SellerOrders /> },
+      { path: "earnings", element: <SellerEarnings /> },
     ],
   },
   {
