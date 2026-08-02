@@ -1,20 +1,20 @@
-# 🛠️ توثيق ميزة وسيناريو تحسين الغرف المفروشة (ENHANCE_ROOM Feature Specification)
+# 🛠️ ENHANCE_ROOM Feature Specification & Architecture Documentation
 
-وثيقة مرجعية تقنية تشرح التفاصيل المعمارية والتغييرات التي تم تطبيقها لدعم وضع **`ENHANCE_ROOM`** بشكل مستقل ومخصص في منصة **SmartSpaceAI**.
-
----
-
-## 📌 1. نظرة عامة (Overview)
-
-كان وضع تحسين الغرف (`ENHANCE_ROOM`) يعتمد سابقاً على نفس المسار وشروط التوليد الخاصة بـ `CREATE_FROM_SCRATCH`. تم تحديث المعمارية كلياً لتوفير مسار منفصل ومستقل يراعي وجود أثاث مسبق في الغرفة، ويعتمد تقنيات الـ **Inpainting & Restyling** واستخراج الإجراءات التفصيلية لكل قطعة أثاث (`REPLACE`, `ADD`, `KEEP`, `REMOVE`).
+A comprehensive technical reference document detailing the architectural changes, pipeline integrations, and AI directives introduced to support the **`ENHANCE_ROOM`** mode in **SmartSpaceAI**.
 
 ---
 
-## 🏗️ 2. التغييرات الهيكلية في قاعدة البيانات والـ Validators
+## 📌 1. Overview
 
-### أ. موديل التوليد ([`generation.model.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/models/generation.model.js))
-- **تحديث `generationType` enum**: تم توحيد اسم الملاحظة في الموديل ليصبح `['CREATE_FROM_SCRATCH', 'ENHANCE_ROOM']`.
-- **إضافة حقل `action`**: أُضيف الحقل `action` ضمن مصفوفة `categoryPreferences` لدعم تصنيف تفضيلات الفئات:
+Previously, the room enhancement feature (`ENHANCE_ROOM`) shared the same pipeline and generation assumptions as `CREATE_FROM_SCRATCH`. The system architecture has been updated to decouple `ENHANCE_ROOM` into a dedicated workflow that accounts for pre-existing furniture, leveraging **Inpainting & Restyling** techniques alongside granular per-category intent extraction (`REPLACE`, `ADD`, `KEEP`, `REMOVE`).
+
+---
+
+## 🏗️ 2. Database Schema & Validator Modifications
+
+### A. Generation Model ([`generation.model.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/models/generation.model.js))
+- **Unified `generationType` Enum**: Updated the enum definition to `['CREATE_FROM_SCRATCH', 'ENHANCE_ROOM']`.
+- **Added `action` Field**: Added an `action` property to the `categoryPreferences` array to support intent categorization:
   ```javascript
   categoryPreferences: [{
     category: { type: String, required: true },
@@ -36,51 +36,51 @@
   }]
   ```
 
-### ب. المتحقق من المدخلات ([`generation.validator.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/validators/generation.validator.js))
-- تحديث قواعد الـ Joi Validation في `createGenerationSchema` و `extractPreferencesSchema` لتقبل `ENHANCE_ROOM` كقيمة رسمية معتمدة.
+### B. Payload Validation ([`generation.validator.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/validators/generation.validator.js))
+- Updated Joi schema rules in `createGenerationSchema` and `extractPreferencesSchema` to validate `ENHANCE_ROOM` as an official generation mode.
 
 ---
 
-## 🤖 3. تحديثات خدمات الذكاء الاصطناعي (AI Services)
+## 🤖 3. AI Services & Prompt Pipeline Updates
 
-### أ. استخراج التفضيلات NLU ([`promptBuilder.service.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/promptBuilder.service.js))
+### A. NLU Preference Extraction ([`promptBuilder.service.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/promptBuilder.service.js))
 - **`buildSystemPrompt(availableCategories, generationType)`**:
-  - عند اختيار `ENHANCE_ROOM`؛ يتم تزويد نموذج Gemini بتعليمات صريحة تفيد بأن الغرفة **مفروشة مسبقاً**، وتوجهه لاستخراج الـ `action` المناسب لكل فئة أثاث:
-    * `REPLACE`: استبدال قطعة أثاث قائمة بقطعة جديدة.
-    * `ADD`: إضافة قطعة أثاث جديدة في مكان شاغر.
-    * `KEEP`: المحافظة على قطعة الأثاث الحالية كما هي دون تغيير.
-    * `REMOVE`: إزالة وحذف قطعة أثاث من الغرفة.
+  - Accepts `generationType`. When set to `ENHANCE_ROOM`, injects dedicated instructions informing Google Gemini that the room is **already furnished** and guides it to extract per-category actions:
+    * `REPLACE`: Swap out an existing item for a new catalog product.
+    * `ADD`: Introduce a new product into an available empty space.
+    * `KEEP`: Explicitly retain an existing room item as-is.
+    * `REMOVE`: Discard an existing room item.
 - **`buildUserPrompt(roomDetails, userPrompt, availableCategories, generationType)`**:
-  - إرسال نوع نمط التوليد `Generation Mode: ENHANCE_ROOM` ضمن البرومبت المرسل للنموذج.
+  - Contextualizes prompt extraction with `Generation Mode: ENHANCE_ROOM`.
 
-### ب. هيكل استجابة Gemini ([`aiService.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/aiService.js))
-- تحديث `buildResponseSchema` في `aiService.js` لتلقي حقل `action` ضمن كائن `categoryPreferences`.
+### B. Structured Schema Config ([`aiService.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/aiService.js))
+- Updated `buildResponseSchema` in `aiService.js` to include the `action` property inside `categoryPreferences` objects for structured Gemini output.
 
-### ج. التوليد البصري المركب Qwen Multimodal Engine ([`aiService.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/aiService.js))
-- **تحديث `generateRoomCompositeImage`**:
-  - قبول `generationType` ضمن المدخلات.
-  - صياغة توجيهات Qwen System Prompt مخصصة لوضع `ENHANCE_ROOM`:
-    * **EXISTING FURNITURE DIRECTIVE**: الإبقاء على قطع الأثاث غير المطلوبة استبدالها في `<|image_1|>`.
-    * **INPAINTING & RESTYLING**: تنفيذ عمليات دمج بصرية ناعمة (Smooth Inpainting) لقطع الأثاث الجديدة مع المحافظة على الظلال والإضاءة المعمارية للغرفة.
-    * **RESTYLING & CLEAN INTEGRATION**: إزالة وتفريغ المساحات الخاصة بالقطع المراد استبدالها أو حذفها بنظافة.
-  - **إصلاح خطأ `systemPrompt ReferenceError`**: تم تصحيح القراءة في مسار التوليد الاحتياطي (Fallback) لاستخدام `prompt` بسلامة ومرونة.
-
----
-
-## 📡 4. ربط بروتوكول البيانات والواجهة الأمامية (Pipeline & Frontend)
-
-### أ. خدمة الجيل الباك إند ([`generation.service.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/generation.service.js))
-- تمرير `generationType` من طلب المستخدم إلى دالة `promptBuilder.buildSystemPrompt` و `promptBuilder.buildUserPrompt`.
-- تمرير `generation.generationType` المنسق إلى دالة التوليد البصري `aiService.generateRoomCompositeImage`.
-
-### ب. الواجهة الأمامية ([`RoomGeneration.jsx`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/front-end/src/Pages/Dashboard/RoomGeneration.jsx))
-- إرسال `generationType: form.generationType` ضمن طلب `extractPreferences` API.
-- معالجة وإعادة تفعيل شريط إظهار الأخطاء في الخطوتين 3 و 4 لضمان عدم ابتلاع أخطاء الشبكة أو التوليد.
+### C. Qwen Multimodal Composite Engine ([`aiService.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/aiService.js))
+- **Updated `generateRoomCompositeImage`**:
+  - Accepts `generationType` in parameters.
+  - Constructs tailored Qwen System Prompt directives for `ENHANCE_ROOM`:
+    * **EXISTING FURNITURE DIRECTIVE**: Preserves existing furniture in `<|image_1|>` except items targeted for replacement/removal.
+    * **INPAINTING & RESTYLING**: Performs smooth inpainting and visual integration of newly selected products while maintaining natural perspective and contact shadows.
+    * **RESTYLING & CLEAN INTEGRATION**: Seamlessly composites replacement products without unrequested clutter.
+  - **Fixed `ReferenceError`**: Resolved fallback return bug where an undeclared `systemPrompt` variable caused 500 runtime errors.
 
 ---
 
-## 📑 5. توثيق المشروع التراكمي ([`project.md`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/project.md))
+## 📡 4. Pipeline & Frontend Integration
 
-تم تحديث مستند المرجعية العام للمشروع (`project.md`) في القسم **3.D (AI Room Generation & Prompt Pipeline)** ليعكس المعمارية الجديدة ومحرك التوليد المزدوج لـ `CREATE_FROM_SCRATCH` و `ENHANCE_ROOM`.
+### A. Generation Service ([`generation.service.js`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/back-end/src/services/generation.service.js))
+- Passes `generationType` from user request payloads through `promptBuilder.buildSystemPrompt` and `promptBuilder.buildUserPrompt`.
+- Passes `generation.generationType` to `aiService.generateRoomCompositeImage`.
+
+### B. Frontend Stepper Flow ([`RoomGeneration.jsx`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/front-end/src/Pages/Dashboard/RoomGeneration.jsx))
+- Includes `generationType: form.generationType` in `extractPreferences` API calls.
+- Updated error banner visibility logic to render inline API and validation errors across steps 3 and 4 instead of swallowing them.
+
+---
+
+## 📑 5. Project Documentation Synchronization ([`project.md`](file:///d:/iti/SmartSpaceAi/SmartSpaceAI/project.md))
+
+Updated the authoritative system context document (`project.md`) under Section **3.D (AI Room Generation & Prompt Pipeline)** to reflect the dual-mode rendering architecture (`CREATE_FROM_SCRATCH` vs `ENHANCE_ROOM`).
 
 ---
