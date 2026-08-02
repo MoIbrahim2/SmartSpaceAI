@@ -25,6 +25,13 @@ import ModerationQueue from "./Pages/Admin/ModerationQueue";
 import Orders from "./Pages/Admin/Orders";
 import Settings from "./Pages/Admin/Settings";
 
+import SellerLayout from "./Layouts/SellerLayout";
+import SellerDashboard from "./Pages/Seller/SellerDashboard";
+import SellerProducts from "./Pages/Seller/SellerProducts";
+import SellerProductForm from "./Pages/Seller/SellerProductForm";
+import SellerOrders from "./Pages/Seller/SellerOrders";
+import SellerEarnings from "./Pages/Seller/SellerEarnings";
+
 function App() {
   return (
     <AuthProvider>
@@ -62,6 +69,22 @@ function App() {
             <Route path="moderation" element={<ModerationQueue />} />
             <Route path="orders" element={<Orders />} />
             <Route path="settings" element={<Settings />} />
+          </Route>
+          <Route
+            path="/seller"
+            element={
+              <ProtectedRoute>
+                <SellerLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<SellerDashboard />} />
+            <Route path="dashboard" element={<SellerDashboard />} />
+            <Route path="products" element={<SellerProducts />} />
+            <Route path="products/create" element={<SellerProductForm />} />
+            <Route path="products/:id/edit" element={<SellerProductForm />} />
+            <Route path="orders" element={<SellerOrders />} />
+            <Route path="earnings" element={<SellerEarnings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

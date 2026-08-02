@@ -127,6 +127,14 @@ const StudioHeader = () => {
                   <Link
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
+                    to="/seller/dashboard"
+                  >
+                    <Icon name="domain" size={20} />
+                    Seller Dashboard
+                  </Link>
+                  <Link
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
                     to="/profile"
                   >
                     <Icon name="settings" size={20} />
