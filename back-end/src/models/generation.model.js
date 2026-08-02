@@ -15,7 +15,7 @@ const generationSchema = new mongoose.Schema({
   },
   generationType: {
     type: String,
-    enum: ['CREATE_FROM_SCRATCH', 'ENHANCE_EXISTING'],
+    enum: ['CREATE_FROM_SCRATCH', 'ENHANCE_ROOM'],
     default: 'CREATE_FROM_SCRATCH',
     required: [true, 'fields.generationType']
   },
@@ -81,7 +81,8 @@ const generationSchema = new mongoose.Schema({
       preferredShape: { type: String, default: null },
       preferredSize: { type: String, default: null },
       budgetAdjustment: { type: String, default: null },
-      importance: { type: String, default: null }
+      importance: { type: String, default: null },
+      action: { type: String, enum: ['REPLACE', 'ADD', 'KEEP', 'REMOVE', null], default: null }
     }],
     negativePreferences: {
       materialsToAvoid: [{ type: String }],

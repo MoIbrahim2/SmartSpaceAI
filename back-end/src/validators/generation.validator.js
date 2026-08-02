@@ -20,7 +20,7 @@ const aiSchema = Joi.object({
 const createGenerationSchema = Joi.object({
   roomId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
   styleId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
-  generationType: Joi.string().valid('CREATE_FROM_SCRATCH', 'ENHANCE_EXISTING').required(),
+  generationType: Joi.string().valid('CREATE_FROM_SCRATCH', 'ENHANCE_ROOM', 'ENHANCE_EXISTING').required(),
   status: Joi.string().valid('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED').optional(),
   prompt: Joi.string().trim().allow('').optional(),
   negativePrompt: Joi.string().trim().allow('').optional(),
@@ -48,7 +48,7 @@ const extractPreferencesSchema = Joi.object({
   width: Joi.number().positive().required(),
   height: Joi.number().positive().required(),
   prompt: Joi.string().trim().min(10).max(2000).required(),
-  generationType: Joi.string().valid('CREATE_FROM_SCRATCH', 'ENHANCE_EXISTING').optional().default('CREATE_FROM_SCRATCH'),
+  generationType: Joi.string().valid('CREATE_FROM_SCRATCH', 'ENHANCE_ROOM', 'ENHANCE_EXISTING').optional().default('CREATE_FROM_SCRATCH'),
   roomId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
   generationId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional()
 });
