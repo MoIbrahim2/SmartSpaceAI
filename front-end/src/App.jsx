@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import AuthLayout from "./Layouts/AuthLayout";
 import DashboardLayout from "./Layouts/DashboardLayout";
+import AdminLayout from "./Layouts/AdminLayout";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Registar";
 import Credits from "./Pages/Dashboard/Credits";
@@ -16,6 +17,13 @@ import PaymentSuccess from "./Pages/Dashboard/PaymentSuccess";
 import NotFound from "./Pages/NotFound";
 import LandingPage from "./Pages/LandingPage/LandingPage";
 import ContactUs from "./Pages/ContactUs/contactUs";
+
+import AdminDashboard from "./Pages/Admin/AdminDashboard";
+import SellerManagement from "./Pages/Admin/SellerManagement";
+import CommissionReports from "./Pages/Admin/CommissionReports";
+import ModerationQueue from "./Pages/Admin/ModerationQueue";
+import Orders from "./Pages/Admin/Orders";
+import Settings from "./Pages/Admin/Settings";
 
 function App() {
   return (
@@ -47,6 +55,14 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
           </Route>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="sellers" element={<SellerManagement />} />
+            <Route path="commissions" element={<CommissionReports />} />
+            <Route path="moderation" element={<ModerationQueue />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
@@ -55,3 +71,4 @@ function App() {
 }
 
 export default App;
+

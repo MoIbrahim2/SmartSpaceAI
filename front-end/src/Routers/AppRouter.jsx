@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import AuthLayout from "../Layouts/AuthLayout";
 import DashboardLayout from "../Layouts/DashboardLayout";
+import AdminLayout from "../Layouts/AdminLayout";
 import Login from "../Pages/Auth/Login";
 import Register from "../Pages/Auth/Registar";
 import Credits from "../Pages/Dashboard/Credits";
@@ -15,6 +16,13 @@ import NotFound from "../Pages/NotFound";
 import LandingPage from "../Pages/LandingPage/LandingPage";
 import ContactUs from "../Pages/ContactUs/contactUs";
 import ProtectedRoute from "../Components/ProtectedRoute";
+
+import AdminDashboard from "../Pages/Admin/AdminDashboard";
+import SellerManagement from "../Pages/Admin/SellerManagement";
+import CommissionReports from "../Pages/Admin/CommissionReports";
+import ModerationQueue from "../Pages/Admin/ModerationQueue";
+import Orders from "../Pages/Admin/Orders";
+import Settings from "../Pages/Admin/Settings";
 
 const router = createBrowserRouter([
   {
@@ -53,9 +61,22 @@ const router = createBrowserRouter([
     ],
   },
   {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "sellers", element: <SellerManagement /> },
+      { path: "commissions", element: <CommissionReports /> },
+      { path: "moderation", element: <ModerationQueue /> },
+      { path: "orders", element: <Orders /> },
+      { path: "settings", element: <Settings /> },
+    ],
+  },
+  {
     path: "*",
     element: <NotFound />,
   },
 ]);
 
 export default router;
+
