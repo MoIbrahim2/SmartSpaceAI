@@ -6,5 +6,7 @@ export * from "./GenerationApi";
 export * from "./UserApi";
 export * from "./BillingApi";
 export * from "./ContactApi";
+export * from "./SellerApi";
 export { default, API_HOST, BASE_URL } from "./axios";
+
 

@@ -114,13 +114,14 @@ SmartSpaceAI/
         │       ├── BudgetWarningModal.jsx
         │       └── ValidationOverlay.jsx
         ├── context/                      # Global React Contexts (`AuthContext.jsx`)
-        ├── Layouts/                      # Page layout wrappers (`AuthLayout.jsx`, `DashboardLayout.jsx`)
+        ├── Layouts/                      # Page layout wrappers (`AuthLayout.jsx`, `DashboardLayout.jsx`, `SellerLayout.jsx`)
         ├── locales/                      # Locale dictionaries (`en.js`, `ar.js`)
         ├── Pages/                        # Application screens
         │   ├── Auth/                     # Login & Register
         │   ├── Dashboard/                # Dashboard, ApartmentRooms, RoomDetail, MyRooms, RoomGeneration, Credits, Profile, PaymentSuccess
         │   ├── LandingPage/              # Interactive landing page
         │   ├── ContactUs/                # Support contact screen
+        │   ├── Seller/                   # Seller portal screens (SellerDashboard, SellerProducts, SellerProductForm, SellerOrders, SellerEarnings)
         │   └── NotFound.jsx              # 404 page
         ├── Routers/                      # React Router configuration (`AppRouter.jsx`)
         └── utils/                        # Frontend helpers (`productUtils.js`)
@@ -289,6 +290,13 @@ flowchart TD
   - `/credits` & `/billing` (Credits & Stripe Checkout)
   - `/profile` (User settings)
   - `/payment-success` (Post-stripe payment confirmation)
+- **Protected Seller Routes (`SellerLayout` guarded by `ProtectedRoute`)**:
+  - `/seller` & `/seller/dashboard` (Seller KPI overview, recent orders, AI validation feed)
+  - `/seller/products` (Catalog of products with search and AI validation filters)
+  - `/seller/products/create` (Add a product listing through a multi-step form wizard)
+  - `/seller/products/:id/edit` (Update details of an existing product)
+  - `/seller/orders` (Track customer buy requests and transition status)
+  - `/seller/earnings` (View total earnings, commission deductions, monthly ledger)
 
 ---
 
@@ -359,6 +367,18 @@ The creation workflow consists of 5 modular steps:
 
 ### Contact (`/api/contact`)
 - `POST /api/contact` - Send customer support query
+
+### Seller Portal & Fulfillments (`/api/seller` / Fallback)
+- `GET /api/seller/dashboard` - Get key KPI metrics and AI validation alerts
+- `GET /api/seller/products` - Retrieve seller's listed furniture catalog
+- `POST /api/seller/products` - Submit a new furniture product listing for validation
+- `PUT /api/seller/products/:id` - Update existing product properties
+- `DELETE /api/seller/products/:id` - Remove a product listing
+- `GET /api/seller/orders` - Fetch incoming customer buy requests
+- `PATCH /api/seller/orders/:id/status` - Transition request status (`PENDING` -> `PROCESSING` -> `DELIVERED` or `REJECTED`)
+- `GET /api/seller/earnings` - Fetch monthly financial ledgers and outstanding fees
+
+> **Seller API Fallback Layer**: To allow rapid frontend features iteration before the backend API is fully integrated, the `SellerApi.js` interface intercepts 404 responses from backend endpoints. It falls back to local simulation data stored in browser `localStorage`. This simulation fully supports state persistence, item CRUD operations, status changes, and dynamic AI validation feedback.
 
 ---
 
