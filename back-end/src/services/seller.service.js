@@ -235,6 +235,9 @@ const updateOrderStatus = async (sellerId, orderId, status) => {
     order.commission.appliedRate = commissionRate;
     order.commission.amountOwed = Math.round(order.grossTotalAmount * commissionRate);
     order.commission.isCommissionPaid = false;
+    
+    const now = new Date();
+    order.commission.settlementGroup = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }
 
   await order.save();
