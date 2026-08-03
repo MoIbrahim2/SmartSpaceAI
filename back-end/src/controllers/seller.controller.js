@@ -20,6 +20,14 @@ const createProduct = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Get a single seller product
+ */
+const getProduct = asyncHandler(async (req, res) => {
+  const product = await sellerService.getSellerProduct(req.user._id, req.params.id);
+  return sendSuccess(res, 'seller.product_fetched', product, HTTP_STATUS.OK);
+});
+
+/**
  * Update a seller product
  */
 const updateProduct = asyncHandler(async (req, res) => {
@@ -61,6 +69,7 @@ const getEarnings = asyncHandler(async (req, res) => {
 
 module.exports = {
   getProducts,
+  getProduct,
   createProduct,
   updateProduct,
   deleteProduct,

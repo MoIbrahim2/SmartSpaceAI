@@ -62,7 +62,14 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
           </Route>
-          <Route path="/admin" element={<AdminLayout />}>
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<AdminDashboard />} />
             <Route path="sellers" element={<SellerManagement />} />
             <Route path="commissions" element={<CommissionReports />} />
@@ -73,7 +80,7 @@ function App() {
           <Route
             path="/seller"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute roles={["seller", "admin"]}>
                 <SellerLayout />
               </ProtectedRoute>
             }

@@ -27,6 +27,20 @@ const listSellerProducts = async (sellerId, queryParams = {}) => {
 };
 
 /**
+ * Get a single product owned by a seller.
+ * @param {string} sellerId
+ * @param {string} productId
+ * @returns {Promise<Object>} Product document
+ */
+const getSellerProduct = async (sellerId, productId) => {
+  const product = await Product.findOne({ _id: productId, sellerId });
+  if (!product) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Product not found or not authorized');
+  }
+  return product;
+};
+
+/**
  * Create a new seller product, and trigger AI vision validation.
  * @param {string} sellerId
  * @param {Object} productData
@@ -189,7 +203,7 @@ const listSellerOrders = async (sellerId, queryParams = {}) => {
     })
     .populate({
       path: 'buyerId',
-      select: 'profile.firstName profile.lastName email'
+      select: 'profile.firstName profile.lastName authentication.email'
     })
     .sort({ createdAt: -1 });
 
@@ -245,7 +259,7 @@ const updateOrderStatus = async (sellerId, orderId, status) => {
   // Populate references for clean controller responses
   const populated = await order.populate([
     { path: 'productId', select: 'basic.name images pricing' },
-    { path: 'buyerId', select: 'profile.firstName profile.lastName email' }
+    { path: 'buyerId', select: 'profile.firstName profile.lastName authentication.email' }
   ]);
 
   return formatOrderForFrontend(populated);
@@ -338,6 +352,7 @@ const getSellerEarnings = async (sellerId) => {
 
 module.exports = {
   listSellerProducts,
+  getSellerProduct,
   createSellerProduct,
   updateSellerProduct,
   deleteSellerProduct,

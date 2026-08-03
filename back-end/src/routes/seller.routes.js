@@ -19,6 +19,7 @@ router.route('/products')
   .post(validate(createProductSchema), sellerController.createProduct);
 
 router.route('/products/:id')
+  .get(sellerController.getProduct)
   .patch(validate(updateProductSchema), sellerController.updateProduct)
   .delete(sellerController.deleteProduct);
 
