@@ -37,4 +37,15 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
+/**
+ * Middleware to restrict route access based on user role
+ * @param {...string} roles - Allowed user roles
+ */
+protect.restrictTo = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) {
+    return next(new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden'));
+  }
+  next();
+};
+
 module.exports = protect;

@@ -717,8 +717,175 @@ ${productRefList.join('\n\n')}
   });
 };
 
+/**
+ * Validate a seller product submission using Google Gemini Vision API.
+ * Checks if the image matches product name, description, materials, colors, dimensions.
+ *
+ * @param {string} productId - Product ID to validate
+ * @returns {Promise<Object>} Updated product or validation log
+ */
+const validateSellerProductSubmission = async (productId) => {
+  const Product = require('../models/product.model');
+  const product = await Product.findById(productId);
+  if (!product) {
+    console.error(`[AI Service] Product not found for validation: ${productId}`);
+    return;
+  }
+
+  try {
+    // 1. Get image to validate
+    let imgUrl = null;
+    if (product.images && product.images.length > 0) {
+      const primary = product.images.find(img => img.isPrimary);
+      const firstImg = primary || product.images[0];
+      imgUrl = firstImg.url;
+    }
+
+    if (!imgUrl) {
+      product.processing.status = 'REJECTED';
+      product.processing.issues = ['No product image was provided for validation.'];
+      await product.save();
+      return product;
+    }
+
+    // 2. Load image as base64
+    let base64Data = null;
+    let mimeType = 'image/jpeg';
+
+    if (imgUrl.startsWith('data:image/')) {
+      const parts = imgUrl.split(';base64,');
+      mimeType = parts[0].split(':')[1] || 'image/jpeg';
+      base64Data = parts[1];
+    } else if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+      const imgRes = await fetch(imgUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'image/*,*/*',
+          'Referer': new URL(imgUrl).origin
+        },
+        signal: AbortSignal.timeout(15000)
+      });
+      if (imgRes.ok) {
+        const arrayBuffer = await imgRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+        mimeType = contentType.startsWith('image/') ? contentType.split(';')[0] : 'image/jpeg';
+        base64Data = buffer.toString('base64');
+      } else {
+        throw new Error(`Failed to fetch remote image: HTTP ${imgRes.status}`);
+      }
+    } else {
+      // Local file
+      const localPath = path.join(process.cwd(), imgUrl.replace(/^\//, ''));
+      if (fs.existsSync(localPath)) {
+        const fileBuffer = fs.readFileSync(localPath);
+        const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'jpeg';
+        mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        base64Data = fileBuffer.toString('base64');
+      } else {
+        throw new Error(`Local file not found: ${localPath}`);
+      }
+    }
+
+    if (!base64Data) {
+      throw new Error('Failed to resolve image data');
+    }
+
+    // 3. Build evaluation prompt
+    const prompt = `Analyze this product image. You are an expert retail catalogue auditor.
+Determine if this image is a correct representation of the product metadata provided below.
+Name: ${product.basic?.name || 'N/A'}
+Brand: ${product.basic?.brand || 'N/A'}
+Description: ${product.basic?.description || 'N/A'}
+Category: ${product.classification?.canonicalCategory || 'N/A'}
+Materials: ${(product.classification?.materials || []).join(', ') || 'N/A'}
+Colors: ${(product.classification?.colors || []).join(', ') || 'N/A'}
+Dimensions: ${product.dimensions?.length || '?'}cm (L) x ${product.dimensions?.width || '?'}cm (W) x ${product.dimensions?.height || '?'}cm (H)
+
+Perform the following verification checks:
+1. Verify if the primary visual item is indeed of category "${product.classification?.canonicalCategory || 'N/A'}".
+2. Check for material conflicts (e.g. description/metadata says 'Glass' or 'Wood' but visual shows plastic or fabric).
+3. Check for major color mismatches.
+4. Verify if the item proportions make sense relative to typical human scale.
+
+Return whether it is a match, your confidence score, and a list of specific mismatches (in English) if any are found.`;
+
+    const config = {
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          is_match: {
+            type: Type.BOOLEAN,
+            description: 'true ONLY if the image represents the product described by the metadata without major visual contradictions.'
+          },
+          confidence: {
+            type: Type.NUMBER,
+            description: 'Confidence score from 0.0 to 1.0.'
+          },
+          mismatches: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: 'List of specific discrepancy issues found, empty if is_match is true.'
+          }
+        },
+        required: ['is_match', 'confidence', 'mismatches']
+      }
+    };
+
+    // 4. Call Gemini
+    const evaluation = await withRetry(async () => {
+      const response = await ai.models.generateContent({
+        model: process.env.GEMINI_MODEL_FOR_GUARD || 'gemini-2.5-flash',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  mimeType,
+                  data: base64Data
+                }
+              },
+              { text: prompt }
+            ]
+          }
+        ],
+        config
+      });
+      return JSON.parse(response.text);
+    });
+
+    console.log(`[AI Service] Validation result for product ${productId}:`, evaluation);
+
+    // 5. Update product status
+    if (evaluation.is_match && evaluation.confidence >= 0.85) {
+      product.processing.status = 'ACCEPTED';
+      product.processing.issues = [];
+    } else if (!evaluation.is_match) {
+      product.processing.status = 'REJECTED';
+      product.processing.issues = evaluation.mismatches.length > 0 ? evaluation.mismatches : ['Visual details do not match metadata attributes.'];
+    } else {
+      product.processing.status = 'MANUAL_REVIEW_REQUIRED';
+      product.processing.issues = evaluation.mismatches;
+    }
+
+    await product.save();
+    return product;
+
+  } catch (error) {
+    console.error(`[AI Service] Error validating product ${productId}:`, error);
+    // On pipeline error, flag for manual review so it does not get stuck forever
+    product.processing.status = 'MANUAL_REVIEW_REQUIRED';
+    product.processing.issues = [`AI pipeline validation error: ${error.message}`];
+    await product.save();
+    return product;
+  }
+};
+
 module.exports = {
   validateRoomImage,
   extractPreferences,
-  generateRoomCompositeImage
+  generateRoomCompositeImage,
+  validateSellerProductSubmission
 };
