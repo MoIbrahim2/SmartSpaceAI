@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Save, Image, Check, HelpCircle, X, ShieldAlert, Sparkles, Loader } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Sparkles } from "lucide-react";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
-import { getSellerProducts, createSellerProduct, updateSellerProduct } from "../../api/SellerApi";
+import { getSellerProduct, createSellerProduct, updateSellerProduct } from "../../api/SellerApi";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
 
 export default function SellerProductForm() {
@@ -14,7 +14,6 @@ export default function SellerProductForm() {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [aiValidating, setAiValidating] = useState(false);
-  const [aiStep, setAiStep] = useState(0);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -42,8 +41,8 @@ export default function SellerProductForm() {
       async function loadProduct() {
         try {
           setLoading(true);
-          const res = await getSellerProducts();
-          const prod = res.data?.find((p) => p._id === id);
+          const res = await getSellerProduct(id);
+          const prod = res.data;
           if (prod) {
             setFormData({
               name: prod.basic?.name || "",
@@ -106,9 +105,17 @@ export default function SellerProductForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Simple validation
+    // Simple validation (mirrors backend createProductSchema)
     if (!formData.name || !formData.price || !formData.imageUrl) {
       showToast("Please fill in name, price, and image URL", "warning");
+      return;
+    }
+    if ((formData.description || "").trim().length < 10) {
+      showToast("Please provide a product description (at least 10 characters)", "warning");
+      return;
+    }
+    if (!formData.width || !formData.height || !formData.length) {
+      showToast("Please provide length, width, and height (cm)", "warning");
       return;
     }
 
@@ -146,53 +153,22 @@ export default function SellerProductForm() {
       }
     };
 
-    // Run custom AI Simulation
-    setAiValidating(true);
-    setAiStep(1);
-
-    setTimeout(() => {
-      setAiStep(2);
-    }, 1000);
-
-    setTimeout(() => {
-      setAiStep(3);
-    }, 2000);
-
-    setTimeout(async () => {
-      try {
-        let finalStatus = "ACCEPTED";
-        let issues = [];
-
-        // Dynamic status matching based on product input
-        const nameLower = formData.name.toLowerCase();
-        if (nameLower.includes("glass") && formData.materials.includes("Wood") && !formData.materials.includes("Glass")) {
-          finalStatus = "REJECTED";
-          issues = ["Image validation failed. Product titled 'Glass Table' but wood material was selected without glass attributes. Please align properties."];
-        } else if (nameLower.includes("marble") && formData.price < 1000) {
-          finalStatus = "MANUAL_REVIEW_REQUIRED";
-          issues = ["Price bounds warning: Premium marble table priced unusually low. Flagged for manual review."];
-        }
-
-        payload.processing = {
-          status: finalStatus,
-          issues: issues.length > 0 ? issues : undefined,
-        };
-
-        if (isEdit) {
-          await updateSellerProduct(id, payload);
-          showToast("Product listing updated successfully", "success");
-        } else {
-          await createSellerProduct(payload);
-          showToast("New product created and processed by AI", "success");
-        }
-        setAiValidating(false);
-        navigate("/seller/products");
-      } catch (error) {
-        console.error("Submit error:", error);
-        showToast("Error processing listing", "error");
-        setAiValidating(false);
+    try {
+      setAiValidating(true);
+      if (isEdit) {
+        await updateSellerProduct(id, payload);
+        showToast("Product listing updated successfully", "success");
+      } else {
+        await createSellerProduct(payload);
+        showToast("New product created and queued for AI validation", "success");
       }
-    }, 3200);
+      navigate("/seller/products");
+    } catch (error) {
+      console.error("Submit error:", error);
+      showToast("Error processing listing", "error");
+    } finally {
+      setAiValidating(false);
+    }
   };
 
   const categories = [
@@ -298,12 +274,14 @@ export default function SellerProductForm() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-bold text-on-surface-variant">Product Description</label>
+              <label className="text-sm font-bold text-on-surface-variant">Product Description *</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleTextChange}
                 rows={4}
+                required
+                minLength={10}
                 placeholder="Write a descriptive summary of this product including features and quality details..."
                 className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
               />
@@ -483,7 +461,7 @@ export default function SellerProductForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Length (cm)</label>
+                <label className="text-sm font-bold text-on-surface-variant">Length (cm) *</label>
                 <input
                   type="number"
                   name="length"
@@ -491,10 +469,11 @@ export default function SellerProductForm() {
                   onChange={handleTextChange}
                   placeholder="e.g. 90"
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  required
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Width (cm)</label>
+                <label className="text-sm font-bold text-on-surface-variant">Width (cm) *</label>
                 <input
                   type="number"
                   name="width"
@@ -502,10 +481,11 @@ export default function SellerProductForm() {
                   onChange={handleTextChange}
                   placeholder="e.g. 80"
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  required
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Height (cm)</label>
+                <label className="text-sm font-bold text-on-surface-variant">Height (cm) *</label>
                 <input
                   type="number"
                   name="height"
@@ -513,6 +493,7 @@ export default function SellerProductForm() {
                   onChange={handleTextChange}
                   placeholder="e.g. 75"
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                  required
                 />
               </div>
             </div>
@@ -572,6 +553,7 @@ export default function SellerProductForm() {
           {currentStep < 4 ? (
             <button
               type="button"
+              key="wizard-next"
               onClick={nextStep}
               className="bg-primary text-white rounded-xl px-5 py-2.5 text-sm font-bold neo-shadow hover:bg-primary/95 flex items-center gap-2 transition-all"
             >
@@ -580,7 +562,9 @@ export default function SellerProductForm() {
             </button>
           ) : (
             <button
-              type="submit"
+              type="button"
+              key="wizard-submit"
+              onClick={handleSubmit}
               className="bg-emerald-600 text-white rounded-xl px-6 py-2.5 text-sm font-bold neo-shadow hover:bg-emerald-700 flex items-center gap-2 transition-all"
             >
               <Save className="size-4" />
@@ -603,53 +587,9 @@ export default function SellerProductForm() {
 
             <div className="space-y-2">
               <h4 className="text-lg font-extrabold text-on-surface">SmartSpace AI Engine</h4>
-              <p className="text-xs text-on-surface-variant font-medium">Validating product properties against catalog design systems...</p>
-            </div>
-
-            {/* Checklist */}
-            <div className="text-left space-y-3 bg-surface p-4 rounded-2xl border border-outline/10 neo-inset text-xs">
-              <div className="flex items-center gap-3">
-                {aiStep >= 1 ? (
-                  <span className="p-1 rounded-full bg-emerald-500/10 text-emerald-600">
-                    <Check className="size-3.5" />
-                  </span>
-                ) : (
-                  <Loader className="size-3.5 animate-spin text-outline" />
-                )}
-                <span className={`font-semibold ${aiStep >= 1 ? "text-on-surface" : "text-on-surface-variant/40"}`}>
-                  Checking category taxonomy mapping
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {aiStep >= 2 ? (
-                  <span className="p-1 rounded-full bg-emerald-500/10 text-emerald-600">
-                    <Check className="size-3.5" />
-                  </span>
-                ) : aiStep === 1 ? (
-                  <Loader className="size-3.5 animate-spin text-primary" />
-                ) : (
-                  <span className="w-5 h-5 rounded-full border border-outline/20" />
-                )}
-                <span className={`font-semibold ${aiStep >= 2 ? "text-on-surface" : "text-on-surface-variant/40"}`}>
-                  Verifying material-to-image description
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {aiStep >= 3 ? (
-                  <span className="p-1 rounded-full bg-emerald-500/10 text-emerald-600">
-                    <Check className="size-3.5" />
-                  </span>
-                ) : aiStep === 2 ? (
-                  <Loader className="size-3.5 animate-spin text-primary" />
-                ) : (
-                  <span className="w-5 h-5 rounded-full border border-outline/20" />
-                )}
-                <span className={`font-semibold ${aiStep >= 3 ? "text-on-surface" : "text-on-surface-variant/40"}`}>
-                  Executing dimension range validity check
-                </span>
-              </div>
+              <p className="text-xs text-on-surface-variant font-medium">
+                Submitting your listing for AI validation against catalog design systems...
+              </p>
             </div>
           </div>
         </div>

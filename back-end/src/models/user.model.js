@@ -2,6 +2,22 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
+  role: {
+    type: String,
+    enum: ['user', 'seller', 'admin'],
+    default: 'user',
+    required: true
+  },
+  sellerProfile: {
+    commissionRate: {
+      type: Number,
+      default: 0.12, // 12% default commission rate
+      min: 0,
+      max: 1
+    },
+    businessName: { type: String },
+    phone: { type: String }
+  },
   credits: {
     type: Number,
     default: 20,
