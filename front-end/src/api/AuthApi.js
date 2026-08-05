@@ -16,3 +16,15 @@ export const signin = (email, password) =>
 export const logout = () => api.post("/auth/logout");
 
 export const refreshToken = () => api.post("/auth/refresh");
+
+export const activateSeller = (data) =>
+  api.post("/auth/activate-seller", {
+    email: data.email,
+    verificationCode: data.verificationCode,
+    password: data.password,
+    confirmPassword: data.confirmPassword,
+  });
+
+export const resendSellerCode = (email) =>
+  api.post("/auth/resend-seller-code", { email });
+
