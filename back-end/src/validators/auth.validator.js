@@ -40,12 +40,12 @@ const signupSchema = Joi.object({
     }),
   password: Joi.string()
     .min(8)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
     .required()
     .messages({
       'string.empty': 'Password is required',
       'string.min': 'Password must be at least 8 characters long',
-      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
     }),
   confirmPassword: Joi.any()
     .equal(Joi.ref('password'))
@@ -91,12 +91,12 @@ const activateSellerSchema = Joi.object({
     }),
   password: Joi.string()
     .min(8)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
     .required()
     .messages({
       'string.empty': 'Password is required',
       'string.min': 'Password must be at least 8 characters long',
-      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
     }),
   confirmPassword: Joi.any()
     .equal(Joi.ref('password'))
