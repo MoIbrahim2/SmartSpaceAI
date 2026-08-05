@@ -19,6 +19,12 @@
     "activation_success": "Seller account activated successfully. You can now sign in",
     "code_resent": "Verification code sent successfully"
   },
+  "admin": {
+    "seller_created": "Seller account registered successfully",
+    "sellers_fetched": "Seller profiles retrieved successfully",
+    "commission_updated": "Seller commission rate updated successfully",
+    "seller_deleted": "Seller account and associated products permanently deleted"
+  },
   "user": {
     "profile_fetched": "Profile fetched successfully",
     "profile_updated": "Profile updated successfully",

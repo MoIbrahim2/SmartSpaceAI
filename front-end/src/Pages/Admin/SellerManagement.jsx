@@ -234,7 +234,7 @@ export default function SellerManagement() {
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline/10 neomorph-raised">
         <SearchInput value={search} onChange={setSearch} placeholder="Search seller or email..." />
-        <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Verified", "Pending Verification", "Suspended"]} />
+        <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Verified", "Pending Verification"]} />
       </div>
 
       {sellers.length === 0 ? (

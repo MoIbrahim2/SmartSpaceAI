@@ -8,6 +8,8 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
     email: "",
     base_commission_percentage: 12,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);

@@ -11,6 +11,7 @@ const roomLayoutRoutes = require('./roomLayout.routes');
 const recommendationRoutes = require('./recommendation.routes');
 const adminRoutes = require('./admin.routes');
 const sellerRoutes = require('./seller.routes');
+const adminRoutes = require('./admin.routes');
 
 // Health check for azure vm
 router.get("/health", (req, res) => {
@@ -33,5 +34,7 @@ router.use('/billing', billingRoutes);
 router.use('/v1/rooms', roomLayoutRoutes);
 router.use('/recommendations', recommendationRoutes);
 router.use('/seller', sellerRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router;
+
