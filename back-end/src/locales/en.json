@@ -13,7 +13,10 @@
     "forbidden": "Access denied. You do not have permission to access this resource"
   },
   "admin": {
-    "seller_created": "Seller account registered successfully"
+    "seller_created": "Seller account registered successfully",
+    "sellers_fetched": "Seller profiles retrieved successfully",
+    "commission_updated": "Seller commission rate updated successfully",
+    "seller_deleted": "Seller account and associated products permanently deleted"
   },
   "user": {
     "profile_fetched": "Profile fetched successfully",

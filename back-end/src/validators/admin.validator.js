@@ -35,6 +35,20 @@ const createSellerSchema = Joi.object({
     })
 });
 
+const updateCommissionSchema = Joi.object({
+  commissionRate: Joi.number()
+    .min(0)
+    .max(50)
+    .required()
+    .messages({
+      'any.required': 'Commission rate is required',
+      'number.min': 'Commission rate cannot be less than 0%',
+      'number.max': 'Commission rate cannot exceed 50%'
+    })
+});
+
 module.exports = {
-  createSellerSchema
+  createSellerSchema,
+  updateCommissionSchema
 };
+

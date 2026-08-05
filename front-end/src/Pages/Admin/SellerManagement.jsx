@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserPlus, Eye, Edit2, Ban, Trash2, Users, CheckCircle, ShieldAlert } from "lucide-react";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import StatCard from "../../Components/Admin/Shared/StatCard";
@@ -13,12 +13,12 @@ import CreateSellerModal from "../../Components/Admin/Sellers/CreateSellerModal"
 import SellerDetailsDrawer from "../../Components/Admin/Sellers/SellerDetailsDrawer";
 import EditCommissionModal from "../../Components/Admin/Sellers/EditCommissionModal";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
-import { mockSellers } from "./adminMockData";
-import { createSeller } from "../../api";
+import { createSeller, getSellers, updateSellerCommission, deleteSeller } from "../../api";
 
 export default function SellerManagement() {
   const { showToast } = useToast();
-  const [sellers, setSellers] = useState(mockSellers);
+  const [sellers, setSellers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
 
@@ -27,6 +27,34 @@ export default function SellerManagement() {
   const [editCommissionOpen, setEditCommissionOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    fetchSellersList();
+  }, []);
+
+  const fetchSellersList = async () => {
+    try {
+      setLoading(true);
+      const response = await getSellers();
+      if (response.success && response.data?.sellers) {
+        const mapped = response.data.sellers.map((s) => ({
+          id: s._id,
+          name: s.sellerProfile?.businessName || `${s.profile?.firstName || ''} ${s.profile?.lastName || ''}`.trim() || 'Store Name',
+          email: s.authentication?.email || '',
+          phone: s.sellerProfile?.phone || '',
+          commissionRate: Math.round((s.sellerProfile?.commissionRate || 0) * 100),
+          productsCount: s.productsCount || 0,
+          totalSales: `$${(s.totalSales || 0).toLocaleString()}`,
+          status: s.sellerProfile?.phone ? "Verified" : "Pending Verification"
+        }));
+        setSellers(mapped);
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || "Failed to load seller list", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filtered = sellers.filter((s) => {
     const matchesSearch =
@@ -83,20 +111,6 @@ export default function SellerManagement() {
               },
             },
             {
-              label: row.status === "Suspended" ? "Activate Seller" : "Suspend Seller",
-              icon: Ban,
-              onClick: () => {
-                setSellers((prev) =>
-                  prev.map((s) =>
-                    s.id === row.id
-                      ? { ...s, status: s.status === "Suspended" ? "Verified" : "Suspended" }
-                      : s
-                  )
-                );
-                showToast(`Status updated for '${row.name}'`, "info");
-              },
-            },
-            {
               label: "Delete Seller Account",
               icon: Trash2,
               variant: "danger",
@@ -134,14 +148,20 @@ export default function SellerManagement() {
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline/10 neomorph-raised">
         <SearchInput value={search} onChange={setSearch} placeholder="Search seller or email..." />
-        <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Verified", "Pending Verification", "Suspended"]} />
+        <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Verified", "Pending Verification"]} />
       </div>
 
-      {filtered.length === 0 ? (
-        <EmptyState title="No sellers found" description="Try clearing search query or changing filters." />
-      ) : (
-        <DataTable columns={columns} data={filtered} />
-      )}
+      <div className="bg-surface rounded-2xl p-5 border border-outline/10 neo-shadow">
+        {loading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState title="No sellers found" description="Try clearing search query or changing filters." />
+        ) : (
+          <DataTable columns={columns} data={filtered} />
+        )}
+      </div>
 
       <SellerDetailsDrawer seller={activeSeller} isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
@@ -149,9 +169,18 @@ export default function SellerManagement() {
         seller={activeSeller}
         isOpen={editCommissionOpen}
         onClose={() => setEditCommissionOpen(false)}
-        onUpdate={(id, rate) => {
-          setSellers((prev) => prev.map((s) => (s.id === id ? { ...s, commissionRate: rate } : s)));
-          showToast("Commission rate updated!", "success");
+        onUpdate={async (id, rate) => {
+          try {
+            const response = await updateSellerCommission(id, rate);
+            if (response.success) {
+              setSellers((prev) => prev.map((s) => (s.id === id ? { ...s, commissionRate: rate } : s)));
+              showToast("Commission rate updated!", "success");
+            } else {
+              throw new Error(response.message || "Failed to update commission rate");
+            }
+          } catch (err) {
+            showToast(err.response?.data?.message || err.message || "Failed to update commission rate", "error");
+          }
         }}
       />
 
@@ -171,7 +200,7 @@ export default function SellerManagement() {
                 commissionRate: Math.round((created.sellerProfile?.commissionRate || 0) * 100),
                 productsCount: 0,
                 totalSales: "$0",
-                status: "Verified"
+                status: created.sellerProfile?.phone ? "Verified" : "Pending Verification"
               };
               setSellers((prev) => [newRow, ...prev]);
               showToast(`Seller '${newRow.name}' created!`, "success");
@@ -185,17 +214,25 @@ export default function SellerManagement() {
         }}
       />
 
-
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
         title="Delete Seller Account"
-        message={`Are you sure you want to permanently delete '${activeSeller?.name}'?`}
+        message={`Are you sure you want to permanently delete '${activeSeller?.name}'? This will delete all products owned by this seller.`}
         confirmText="Delete Seller"
         variant="danger"
-        onConfirm={() => {
-          setSellers((prev) => prev.filter((s) => s.id !== activeSeller?.id));
-          showToast("Seller account deleted.", "error");
+        onConfirm={async () => {
+          try {
+            const response = await deleteSeller(activeSeller.id);
+            if (response.success) {
+              setSellers((prev) => prev.filter((s) => s.id !== activeSeller?.id));
+              showToast("Seller account deleted.", "error");
+            } else {
+              throw new Error(response.message || "Failed to delete seller");
+            }
+          } catch (err) {
+            showToast(err.response?.data?.message || err.message || "Failed to delete seller", "error");
+          }
         }}
       />
     </div>
