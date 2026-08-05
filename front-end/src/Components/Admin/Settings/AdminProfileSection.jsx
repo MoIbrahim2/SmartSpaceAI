@@ -1,21 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Save } from "lucide-react";
 import SectionHeader from "../Shared/SectionHeader";
 import { useToast } from "../Shared/ToastContext";
+import { useAuth } from "../../../context/AuthContext";
+import { editProfile } from "../../../api/UserApi";
 
 export default function AdminProfileSection() {
   const { showToast } = useToast();
+  const { user, setUser } = useAuth();
+
   const [profile, setProfile] = useState({
-    firstName: "System",
-    lastName: "Administrator",
-    email: "admin@smartspace.ai",
-    role: "Super Admin",
+    firstName: user?.firstName || "System",
+    lastName: user?.lastName || "Administrator",
+    email: user?.email || "admin@smartspace.ai",
+    role: user?.role || "ADMIN",
   });
 
-  const handleSubmit = (e) => {
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        role: user.role || "ADMIN",
+      });
+    }
+  }, [user]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    showToast("Admin profile updated successfully!", "success");
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append("firstName", profile.firstName);
+      formData.append("lastName", profile.lastName);
+      const res = await editProfile(formData);
+      if (res?.data?.data?.user || res?.data?.data) {
+        setUser(res.data.data.user || res.data.data);
+      }
+      showToast("Admin profile updated successfully!", "success");
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || "Failed to update profile", "error");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const initials = `${(profile.firstName[0] || "A").toUpperCase()}${(profile.lastName[0] || "D").toUpperCase()}`;
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl bg-surface p-6 border border-outline/10 neomorph-raised space-y-4">
@@ -23,7 +56,7 @@ export default function AdminProfileSection() {
 
       <div className="flex items-center gap-4 py-2">
         <div className="size-16 rounded-full bg-primary text-white flex items-center justify-center font-extrabold text-xl neo-shadow">
-          SA
+          {initials}
         </div>
         <div>
           <h4 className="font-extrabold text-base text-on-surface">
@@ -66,19 +99,20 @@ export default function AdminProfileSection() {
         </label>
         <input
           type="email"
+          disabled
           value={profile.email}
-          onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
-          className="w-full rounded-xl bg-surface-bright px-4 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40 border border-outline/20"
+          className="w-full rounded-xl bg-surface-bright/50 px-4 py-2.5 text-sm text-on-surface-variant outline-none border border-outline/10 cursor-not-allowed"
         />
       </div>
 
       <div className="flex justify-end pt-2">
         <button
           type="submit"
-          className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all"
+          disabled={saving}
+          className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all disabled:opacity-50"
         >
           <Save className="size-4" />
-          <span>Save Profile</span>
+          <span>{saving ? "Saving..." : "Save Profile"}</span>
         </button>
       </div>
     </form>

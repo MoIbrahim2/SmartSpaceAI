@@ -9,6 +9,7 @@ const contactRoutes = require('./contact.routes');
 const billingRoutes = require('./billing.routes');
 const roomLayoutRoutes = require('./roomLayout.routes');
 const recommendationRoutes = require('./recommendation.routes');
+const adminRoutes = require('./admin.routes');
 
 // Health check for azure vm
 router.get("/health", (req, res) => {
@@ -21,6 +22,7 @@ router.get("/health", (req, res) => {
 
 // Connect sub-routers
 router.use('/auth', authRoutes);
+router.use('/admin', adminRoutes);
 router.use('/users', userRoutes);
 router.use('/apartments', apartmentRoutes);
 router.use('/rooms', roomRoutes);

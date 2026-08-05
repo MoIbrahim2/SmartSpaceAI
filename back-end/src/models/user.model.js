@@ -1,7 +1,15 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const ROLES = require('../constants/roles');
 
 const userSchema = new mongoose.Schema({
+  role: {
+    type: String,
+    enum: Object.values(ROLES),
+    default: ROLES.USER,
+    uppercase: true,
+    trim: true
+  },
   credits: {
     type: Number,
     default: 20,
@@ -60,6 +68,21 @@ const userSchema = new mongoose.Schema({
       select: false
     }
   },
+  status: {
+    type: String,
+    enum: ['PENDING_ACTIVATION', 'ACTIVE', 'SUSPENDED'],
+    default: 'ACTIVE'
+  },
+  verificationCode: {
+    type: String,
+    select: false
+  },
+  verificationCodeExpiresAt: {
+    type: Date
+  },
+  activatedAt: {
+    type: Date
+  },
   preferences: {
     theme: {
       type: String
@@ -70,6 +93,12 @@ const userSchema = new mongoose.Schema({
     timezone: {
       type: String
     }
+  },
+  base_commission_percentage: {
+    type: Number,
+    default: 10,
+    min: 0,
+    max: 100
   }
 }, {
   timestamps: true,
@@ -79,6 +108,7 @@ const userSchema = new mongoose.Schema({
         delete ret.authentication.passwordHash;
         delete ret.authentication.refreshToken;
       }
+      delete ret.verificationCode;
       delete ret.__v;
       return ret;
     }
@@ -89,6 +119,7 @@ const userSchema = new mongoose.Schema({
         delete ret.authentication.passwordHash;
         delete ret.authentication.refreshToken;
       }
+      delete ret.verificationCode;
       delete ret.__v;
       return ret;
     }

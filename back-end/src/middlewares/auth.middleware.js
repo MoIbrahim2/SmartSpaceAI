@@ -37,4 +37,26 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
+/**
+ * Middleware to authorize user roles
+ * @param  {...string} roles - Allowed roles (e.g., 'ADMIN', 'SELLER')
+ */
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.unauthorized'));
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return next(new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden'));
+    }
+
+    next();
+  };
+};
+
 module.exports = protect;
+module.exports.protect = protect;
+module.exports.authorizeRoles = authorizeRoles;
+module.exports.authorize = authorizeRoles;
+

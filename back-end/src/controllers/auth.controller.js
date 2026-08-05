@@ -96,9 +96,27 @@ const refresh = asyncHandler(async (req, res) => {
   }, HTTP_STATUS.OK);
 });
 
+/**
+ * Handle seller account activation
+ */
+const activateSeller = asyncHandler(async (req, res) => {
+  const user = await authService.activateSeller(req.body);
+  return sendSuccess(res, 'auth.activation_success', { user }, HTTP_STATUS.OK);
+});
+
+/**
+ * Handle resending seller activation code
+ */
+const resendSellerCode = asyncHandler(async (req, res) => {
+  const result = await authService.resendSellerCode(req.body);
+  return sendSuccess(res, 'auth.code_resent', result, HTTP_STATUS.OK);
+});
+
 module.exports = {
   signup,
   signin,
   logout,
-  refresh
+  refresh,
+  activateSeller,
+  resendSellerCode
 };

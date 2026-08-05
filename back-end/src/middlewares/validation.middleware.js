@@ -44,7 +44,8 @@ const validate = (schema) => (req, res, next) => {
       };
     });
 
-    const failedMessage = req.t ? req.t('validation.failed') : 'Validation failed';
+    const detailedSummary = errorDetails.map((e) => e.message).filter(Boolean).join('. ');
+    const failedMessage = detailedSummary || (req.t ? req.t('validation.failed') : 'Validation failed');
     return next(new ApiError(HTTP_STATUS.BAD_REQUEST, failedMessage, errorDetails));
   }
 
