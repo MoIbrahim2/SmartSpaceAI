@@ -12,6 +12,9 @@
     "invalid_refresh": "Invalid or expired refresh token",
     "forbidden": "Access denied. You do not have permission to access this resource"
   },
+  "admin": {
+    "seller_created": "Seller account registered successfully"
+  },
   "user": {
     "profile_fetched": "Profile fetched successfully",
     "profile_updated": "Profile updated successfully",

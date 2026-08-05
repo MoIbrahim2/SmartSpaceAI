@@ -8,17 +8,32 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
     phone: "",
     commissionRate: 12,
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onCreate(form);
-    setForm({ name: "", email: "", phone: "", commissionRate: 12 });
-    onClose();
+    setLoading(true);
+    setError("");
+    try {
+      await onCreate(form);
+      setForm({ name: "", email: "", phone: "", commissionRate: 12 });
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to register seller");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Register New Seller">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="rounded-xl bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
             Store / Seller Name
@@ -79,15 +94,17 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface border border-outline/20"
+            disabled={loading}
+            className="rounded-xl px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface border border-outline/20 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all"
+            disabled={loading}
+            className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all disabled:opacity-50"
           >
-            Create Seller
+            {loading ? "Creating..." : "Create Seller"}
           </button>
         </div>
       </form>

@@ -14,6 +14,7 @@ import SellerDetailsDrawer from "../../Components/Admin/Sellers/SellerDetailsDra
 import EditCommissionModal from "../../Components/Admin/Sellers/EditCommissionModal";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
 import { mockSellers } from "./adminMockData";
+import { createSeller } from "../../api";
 
 export default function SellerManagement() {
   const { showToast } = useToast();
@@ -157,12 +158,33 @@ export default function SellerManagement() {
       <CreateSellerModal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        onCreate={(newS) => {
-          const sellerObj = { ...newS, id: `SEL-${Date.now()}`, status: "Verified", productsCount: 0, totalSales: "$0" };
-          setSellers((prev) => [sellerObj, ...prev]);
-          showToast(`Seller '${newS.name}' created!`, "success");
+        onCreate={async (newS) => {
+          try {
+            const response = await createSeller(newS);
+            if (response.success && response.data?.seller) {
+              const created = response.data.seller;
+              const newRow = {
+                id: created._id,
+                name: created.sellerProfile?.businessName || `${created.profile?.firstName} ${created.profile?.lastName}`,
+                email: created.authentication?.email || '',
+                phone: created.sellerProfile?.phone || '',
+                commissionRate: Math.round((created.sellerProfile?.commissionRate || 0) * 100),
+                productsCount: 0,
+                totalSales: "$0",
+                status: "Verified"
+              };
+              setSellers((prev) => [newRow, ...prev]);
+              showToast(`Seller '${newRow.name}' created!`, "success");
+            } else {
+              throw new Error(response.message || "Failed to create seller");
+            }
+          } catch (err) {
+            const message = err.response?.data?.message || err.message || "Failed to create seller";
+            throw new Error(message);
+          }
         }}
       />
+
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
