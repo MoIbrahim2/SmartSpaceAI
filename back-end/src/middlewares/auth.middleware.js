@@ -42,12 +42,14 @@ const protect = asyncHandler(async (req, res, next) => {
  * @param  {...string} roles - Allowed roles (e.g., 'ADMIN', 'SELLER')
  */
 const authorizeRoles = (...roles) => {
+  const normalizedRoles = roles.map((r) => r.toUpperCase());
   return (req, res, next) => {
     if (!req.user) {
       return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.unauthorized'));
     }
 
-    if (!roles.includes(req.user.role)) {
+    const userRole = (req.user.role || '').toUpperCase();
+    if (!normalizedRoles.includes(userRole)) {
       return next(new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden'));
     }
 
@@ -55,8 +57,12 @@ const authorizeRoles = (...roles) => {
   };
 };
 
+protect.restrictTo = authorizeRoles;
+protect.authorizeRoles = authorizeRoles;
+
 module.exports = protect;
 module.exports.protect = protect;
 module.exports.authorizeRoles = authorizeRoles;
 module.exports.authorize = authorizeRoles;
+module.exports.restrictTo = authorizeRoles;
 

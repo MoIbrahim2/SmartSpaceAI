@@ -9,9 +9,10 @@ const {
   updateOrderStatusSchema
 } = require('../validators/seller.validator');
 
+const ROLES = require('../constants/roles');
+
 // All seller routes require authentication and seller role verification
-router.use(protect);
-router.use(protect.restrictTo('seller', 'admin'));
+router.use(protect, protect.restrictTo(ROLES.SELLER, ROLES.ADMIN));
 
 // Inventory management routes
 router.route('/products')
