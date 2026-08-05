@@ -32,21 +32,37 @@ export default function CommissionReports() {
       const data = await getMonthlyCommissions({ year: year !== "All" ? year : undefined, month: month !== "All" ? month : undefined });
       const rawReports = data.reports || data.items || (Array.isArray(data) ? data : []);
 
-      const formatted = rawReports.map((c) => ({
-        id: c.payoutId || c._id || `COM-${Math.floor(Math.random() * 9000)}`,
-        sellerId: c.sellerId,
-        sellerName: c.sellerName || c.storeName || "Seller Store",
-        period: c.period || `${c.month || "May"} ${c.year || "2026"}`,
-        month: c.month || "May",
-        year: c.year || "2026",
-        grossSales: `$${(c.grossSales || 0).toLocaleString()}`,
-        commissionRate: `${c.commissionRate || 10}%`,
-        earnedCommission: `$${(c.earnedCommission || 0).toLocaleString()}`,
-        numericEarned: c.earnedCommission || 0,
-        payoutStatus: c.payoutStatus || c.status || "Pending",
-        payoutDate: c.payoutDate ? new Date(c.payoutDate).toISOString().split("T")[0] : "Pending",
-        transactionsCount: c.transactionsCount || 0,
-      }));
+      const formatted = rawReports.map((c) => {
+        const sellerObj = c.seller || {};
+        const firstName = sellerObj.firstName || c.firstName || "";
+        const lastName = sellerObj.lastName || c.lastName || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        const displayName =
+          fullName ||
+          c.sellerName ||
+          c.storeName ||
+          sellerObj.name ||
+          sellerObj.email ||
+          c.email ||
+          "Seller";
+
+        return {
+          id: c.payoutId || c._id || `COM-${Math.floor(Math.random() * 9000)}`,
+          sellerId: c.sellerId || sellerObj._id,
+          sellerName: displayName,
+          sellerEmail: sellerObj.email || c.email || "",
+          period: c.period || `${c.month || "May"} ${c.year || "2026"}`,
+          month: c.month || "May",
+          year: c.year || "2026",
+          grossSales: `$${(c.grossSales || 0).toLocaleString()}`,
+          commissionRate: `${c.commissionRate || sellerObj.base_commission_percentage || 10}%`,
+          earnedCommission: `$${(c.earnedCommission || c.commissionAmount || 0).toLocaleString()}`,
+          numericEarned: c.earnedCommission || c.commissionAmount || 0,
+          payoutStatus: c.payoutStatus || c.status || "Pending",
+          payoutDate: c.payoutDate ? new Date(c.payoutDate).toISOString().split("T")[0] : "Pending",
+          transactionsCount: c.transactionsCount || c.totalOrders || 0,
+        };
+      });
 
       setReports(formatted);
     } catch (err) {
@@ -100,7 +116,9 @@ export default function CommissionReports() {
       render: (row) => (
         <div>
           <p className="font-bold text-on-surface">{row.sellerName}</p>
-          <p className="text-xs text-on-surface-variant">{row.period}</p>
+          <p className="text-xs text-on-surface-variant">
+            {row.sellerEmail ? `${row.sellerEmail} • ${row.period}` : row.period}
+          </p>
         </div>
       ),
     },
