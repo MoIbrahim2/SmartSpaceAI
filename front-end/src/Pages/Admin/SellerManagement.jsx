@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserPlus, Eye, Edit2, Ban, Trash2, Users, CheckCircle, ShieldAlert } from "lucide-react";
+import { UserPlus, Eye, Edit2, Ban, Trash2, Users, CheckCircle, ShieldAlert, Send } from "lucide-react";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import StatCard from "../../Components/Admin/Shared/StatCard";
 import DataTable from "../../Components/Admin/Shared/DataTable";
@@ -12,8 +12,15 @@ import ConfirmDialog from "../../Components/Admin/Shared/ConfirmDialog";
 import CreateSellerModal from "../../Components/Admin/Sellers/CreateSellerModal";
 import SellerDetailsDrawer from "../../Components/Admin/Sellers/SellerDetailsDrawer";
 import EditCommissionModal from "../../Components/Admin/Sellers/EditCommissionModal";
+import LoadingState from "../../Components/Admin/LoadingState";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
-import { createSeller, getSellers, updateSellerCommission, deleteSeller } from "../../api";
+import {
+  getSellers,
+  createSeller,
+  updateSellerCommission,
+  deleteSeller,
+  resendSellerVerificationCode
+} from "../../api/AdminApi";
 
 export default function SellerManagement() {
   const { showToast } = useToast();
@@ -28,41 +35,100 @@ export default function SellerManagement() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  useEffect(() => {
-    fetchSellersList();
-  }, []);
-
   const fetchSellersList = async () => {
     try {
       setLoading(true);
-      const response = await getSellers();
-      if (response.success && response.data?.sellers) {
-        const mapped = response.data.sellers.map((s) => ({
-          id: s._id,
-          name: s.sellerProfile?.businessName || `${s.profile?.firstName || ''} ${s.profile?.lastName || ''}`.trim() || 'Store Name',
-          email: s.authentication?.email || '',
-          phone: s.sellerProfile?.phone || '',
-          commissionRate: Math.round((s.sellerProfile?.commissionRate || 0) * 100),
-          productsCount: s.productsCount || 0,
-          totalSales: `$${(s.totalSales || 0).toLocaleString()}`,
-          status: s.sellerProfile?.phone ? "Verified" : "Pending Verification"
-        }));
-        setSellers(mapped);
-      }
+      const res = await getSellers({ search, status });
+      const rawSellers = res.sellers || res.data || (Array.isArray(res) ? res : []);
+
+      const formatted = rawSellers.map((s) => ({
+        id: s._id || s.id,
+        _id: s._id || s.id,
+        name: s.storeName || `${s.profile?.firstName || ""} ${s.profile?.lastName || ""}`.trim() || s.name || s.email,
+        email: s.authentication?.email || s.email || "",
+        phone: s.phone || "+20 100 000 0000",
+        storeUrl: s.storeUrl || "https://smartspace.ai",
+        address: s.address || "Cairo, Egypt",
+        productsCount: s.productsCount || 0,
+        commissionRate: s.sellerMetrics?.baseCommissionPercentage ?? s.baseCommissionPercentage ?? s.commissionRate ?? 10,
+        status: s.status || "Verified",
+        totalSales: `$${(s.sellerMetrics?.totalSalesAmount || 0).toLocaleString()}`,
+        joinedDate: s.createdAt ? new Date(s.createdAt).toISOString().split("T")[0] : "2025-01-01",
+        taxId: s.taxId || "TAX-000000",
+        bankAccount: s.bankAccount || "N/A",
+      }));
+
+      setSellers(formatted);
     } catch (err) {
-      showToast(err.response?.data?.message || err.message || "Failed to load seller list", "error");
+      console.error("Failed to fetch sellers:", err);
+      showToast("Failed to load seller accounts", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const filtered = sellers.filter((s) => {
-    const matchesSearch =
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = status === "All" || s.status === status;
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    fetchSellersList();
+  }, [search, status]);
+
+  const handleCreateSeller = async (formData) => {
+    try {
+      await createSeller(formData);
+      showToast(`Seller account '${formData.email}' registered successfully!`, "success");
+      setCreateModalOpen(false);
+      fetchSellersList();
+    } catch (err) {
+      let errMsg = "Failed to create seller";
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors) && err.response.data.errors.length > 0) {
+        errMsg = err.response.data.errors.map((e) => (typeof e === "string" ? e : e.message)).join(". ");
+      } else if (err.response?.data?.message) {
+        errMsg = err.response.data.message;
+      } else if (err.message) {
+        errMsg = err.message;
+      }
+      showToast(errMsg, "error");
+      throw err;
+    }
+  };
+
+  const handleUpdateCommission = async (sellerId, newRate) => {
+    try {
+      await updateSellerCommission(sellerId, newRate);
+      showToast("Commission rate updated!", "success");
+      setEditCommissionOpen(false);
+      fetchSellersList();
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || "Failed to update commission", "error");
+    }
+  };
+
+  const handleResendCode = async (seller) => {
+    try {
+      await resendSellerVerificationCode(seller.id);
+      showToast(`Verification code sent to ${seller.email}!`, "success");
+    } catch (err) {
+      showToast(
+        err.response?.data?.message || err.message || "Failed to resend verification code",
+        "error"
+      );
+    }
+  };
+
+  const handleDeleteSeller = async () => {
+    if (!activeSeller) return;
+    try {
+      await deleteSeller(activeSeller.id);
+      showToast(`Seller account '${activeSeller.name}' permanently deleted.`, "success");
+      setDeleteConfirmOpen(false);
+      setActiveSeller(null);
+      fetchSellersList();
+    } catch (err) {
+      showToast(
+        err.response?.data?.message || err.message || "Failed to delete seller account",
+        "error"
+      );
+    }
+  };
 
   const columns = [
     {
@@ -91,39 +157,59 @@ export default function SellerManagement() {
       label: "Actions",
       key: "actions",
       sortable: false,
-      render: (row) => (
-        <ActionDropdown
-          actions={[
-            {
-              label: "View Profile Details",
-              icon: Eye,
-              onClick: () => {
-                setActiveSeller(row);
-                setDrawerOpen(true);
+      render: (row) => {
+        const isPending =
+          row.status === "PENDING_ACTIVATION" ||
+          row.status === "Pending Verification" ||
+          String(row.status).toLowerCase().includes("pending");
+
+        return (
+          <ActionDropdown
+            actions={[
+              {
+                label: "View Profile Details",
+                icon: Eye,
+                onClick: () => {
+                  setActiveSeller(row);
+                  setDrawerOpen(true);
+                },
               },
-            },
-            {
-              label: "Edit Commission",
-              icon: Edit2,
-              onClick: () => {
-                setActiveSeller(row);
-                setEditCommissionOpen(true);
+              ...(isPending
+                ? [
+                    {
+                      label: "Resend Verification Code",
+                      icon: Send,
+                      onClick: () => handleResendCode(row),
+                    },
+                  ]
+                : []),
+              {
+                label: "Edit Commission",
+                icon: Edit2,
+                onClick: () => {
+                  setActiveSeller(row);
+                  setEditCommissionOpen(true);
+                },
               },
-            },
-            {
-              label: "Delete Seller Account",
-              icon: Trash2,
-              variant: "danger",
-              onClick: () => {
-                setActiveSeller(row);
-                setDeleteConfirmOpen(true);
+              {
+                label: "Delete Seller Account",
+                icon: Trash2,
+                variant: "danger",
+                onClick: () => {
+                  setActiveSeller(row);
+                  setDeleteConfirmOpen(true);
+                },
               },
-            },
-          ]}
-        />
-      ),
+            ]}
+          />
+        );
+      },
     },
   ];
+
+  if (loading && sellers.length === 0) {
+    return <LoadingState message="Loading sellers..." />;
+  }
 
   return (
     <div className="space-y-6">
@@ -142,8 +228,8 @@ export default function SellerManagement() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <StatCard title="Total Stores" value={sellers.length} icon={Users} />
-        <StatCard title="Verified Sellers" value={sellers.filter((s) => s.status === "Verified").length} isPositive={true} icon={CheckCircle} />
-        <StatCard title="Pending Review" value={sellers.filter((s) => s.status.includes("Pending")).length} icon={ShieldAlert} />
+        <StatCard title="Verified Sellers" value={sellers.filter((s) => s.status === "Verified" || s.status === "ACTIVE").length} isPositive={true} icon={CheckCircle} />
+        <StatCard title="Pending Review" value={sellers.filter((s) => s.status.includes("Pending") || s.status === "PENDING_ACTIVATION").length} icon={ShieldAlert} />
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline/10 neomorph-raised">
@@ -151,17 +237,11 @@ export default function SellerManagement() {
         <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Verified", "Pending Verification"]} />
       </div>
 
-      <div className="bg-surface rounded-2xl p-5 border border-outline/10 neo-shadow">
-        {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <EmptyState title="No sellers found" description="Try clearing search query or changing filters." />
-        ) : (
-          <DataTable columns={columns} data={filtered} />
-        )}
-      </div>
+      {sellers.length === 0 ? (
+        <EmptyState title="No sellers found" description="Try clearing search query or changing filters." />
+      ) : (
+        <DataTable columns={columns} data={sellers} />
+      )}
 
       <SellerDetailsDrawer seller={activeSeller} isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
@@ -169,72 +249,25 @@ export default function SellerManagement() {
         seller={activeSeller}
         isOpen={editCommissionOpen}
         onClose={() => setEditCommissionOpen(false)}
-        onUpdate={async (id, rate) => {
-          try {
-            const response = await updateSellerCommission(id, rate);
-            if (response.success) {
-              setSellers((prev) => prev.map((s) => (s.id === id ? { ...s, commissionRate: rate } : s)));
-              showToast("Commission rate updated!", "success");
-            } else {
-              throw new Error(response.message || "Failed to update commission rate");
-            }
-          } catch (err) {
-            showToast(err.response?.data?.message || err.message || "Failed to update commission rate", "error");
-          }
-        }}
+        onUpdate={(id, rate) => handleUpdateCommission(id, rate)}
       />
 
       <CreateSellerModal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        onCreate={async (newS) => {
-          try {
-            const response = await createSeller(newS);
-            if (response.success && response.data?.seller) {
-              const created = response.data.seller;
-              const newRow = {
-                id: created._id,
-                name: created.sellerProfile?.businessName || `${created.profile?.firstName} ${created.profile?.lastName}`,
-                email: created.authentication?.email || '',
-                phone: created.sellerProfile?.phone || '',
-                commissionRate: Math.round((created.sellerProfile?.commissionRate || 0) * 100),
-                productsCount: 0,
-                totalSales: "$0",
-                status: created.sellerProfile?.phone ? "Verified" : "Pending Verification"
-              };
-              setSellers((prev) => [newRow, ...prev]);
-              showToast(`Seller '${newRow.name}' created!`, "success");
-            } else {
-              throw new Error(response.message || "Failed to create seller");
-            }
-          } catch (err) {
-            const message = err.response?.data?.message || err.message || "Failed to create seller";
-            throw new Error(message);
-          }
-        }}
+        onCreate={handleCreateSeller}
       />
 
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
         title="Delete Seller Account"
-        message={`Are you sure you want to permanently delete '${activeSeller?.name}'? This will delete all products owned by this seller.`}
+        message={`Are you sure you want to permanently delete '${activeSeller?.name}' from the users database?`}
         confirmText="Delete Seller"
         variant="danger"
-        onConfirm={async () => {
-          try {
-            const response = await deleteSeller(activeSeller.id);
-            if (response.success) {
-              setSellers((prev) => prev.filter((s) => s.id !== activeSeller?.id));
-              showToast("Seller account deleted.", "error");
-            } else {
-              throw new Error(response.message || "Failed to delete seller");
-            }
-          } catch (err) {
-            showToast(err.response?.data?.message || err.message || "Failed to delete seller", "error");
-          }
-        }}
+        onConfirm={handleDeleteSeller}
       />
     </div>
   );
 }
+

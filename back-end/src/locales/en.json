@@ -8,9 +8,16 @@
     "password_mismatch": "Password and password confirmation do not match",
     "invalid_credentials": "Invalid email or password",
     "unauthorized": "Access denied. No token provided",
+    "forbidden": "Access denied. You do not have permission to perform this action",
     "invalid_token": "Invalid or expired access token",
     "invalid_refresh": "Invalid or expired refresh token",
-    "forbidden": "Access denied. You do not have permission to access this resource"
+    "pending_activation": "Please activate your account before signing in",
+    "suspended": "Your account has been suspended",
+    "invalid_code": "Invalid verification code",
+    "code_expired": "Verification code has expired. Please request a new code",
+    "already_activated": "Seller account is already activated",
+    "activation_success": "Seller account activated successfully. You can now sign in",
+    "code_resent": "Verification code sent successfully"
   },
   "admin": {
     "seller_created": "Seller account registered successfully",
@@ -32,6 +39,28 @@
     "orders_fetched": "Seller orders retrieved successfully",
     "order_status_updated": "Order status updated successfully",
     "earnings_fetched": "Seller financial earnings report retrieved successfully"
+  },
+  "seller": {
+    "created": "Seller created successfully",
+    "fetched_list": "Sellers retrieved successfully",
+    "fetched_details": "Seller details retrieved successfully",
+    "commission_updated": "Seller commission updated successfully",
+    "not_found": "Seller not found",
+    "invalid_id": "Invalid seller ID"
+  },
+  "order": {
+    "created": "Order created successfully",
+    "fetched_list": "Orders retrieved successfully",
+    "fetched_details": "Order details retrieved successfully",
+    "status_updated": "Order status updated successfully",
+    "not_found": "Order not found",
+    "invalid_id": "Invalid order ID"
+  },
+  "commission": {
+    "fetched_reports": "Monthly commission reports retrieved successfully",
+    "fetched_history": "Seller commission history retrieved successfully",
+    "marked_paid": "Commission payout marked as paid successfully",
+    "already_paid": "Commission payout for this month has already been marked as paid"
   },
   "apartment": {
     "create_success": "Apartment created successfully",

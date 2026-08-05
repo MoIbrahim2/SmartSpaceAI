@@ -1,6 +1,8 @@
 const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
+const ROLES = require('../constants/roles');
+const emailService = require('./email.service');
 const crypto = require('crypto');
 const {
   generateAccessToken,
@@ -103,6 +105,14 @@ const signIn = async (email, password) => {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_credentials');
   }
 
+  // Check user status
+  if (user.status === 'PENDING_ACTIVATION') {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.pending_activation');
+  }
+  if (user.status === 'SUSPENDED') {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.suspended');
+  }
+
   // Generate tokens
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
@@ -120,6 +130,105 @@ const signIn = async (email, password) => {
     accessToken,
     refreshToken
   };
+};
+
+/**
+ * Activate a seller account using 6-digit OTP verification code and set password
+ * @param {Object} activationData - email, verificationCode, password, confirmPassword
+ */
+const activateSeller = async (activationData) => {
+  const { email, verificationCode, password, confirmPassword } = activationData;
+  const normalizedEmail = email.toLowerCase();
+
+  if (password && password !== confirmPassword) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.password_mismatch');
+  }
+
+  // Find user and explicitly select verificationCode and passwordHash
+  const user = await User.findOne({
+    'authentication.email': normalizedEmail,
+    role: ROLES.SELLER
+  }).select('+verificationCode +authentication.passwordHash');
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+
+  if (user.status === 'ACTIVE') {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.already_activated');
+  }
+
+  if (user.status !== 'PENDING_ACTIVATION') {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden');
+  }
+
+  // Verify code expiration
+  if (!user.verificationCodeExpiresAt || user.verificationCodeExpiresAt < new Date()) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.code_expired');
+  }
+
+  // Hash incoming code and compare
+  const incomingHash = crypto.createHash('sha256').update(verificationCode.trim()).digest('hex');
+  if (!user.verificationCode || user.verificationCode !== incomingHash) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.invalid_code');
+  }
+
+  // Activate account
+  if (password) {
+    user.authentication.passwordHash = password;
+  }
+  user.authentication.emailVerified = true;
+  user.status = 'ACTIVE';
+  user.activatedAt = new Date();
+  user.verificationCode = undefined;
+  user.verificationCodeExpiresAt = undefined;
+
+  await user.save();
+
+  return user;
+};
+
+/**
+ * Resend a 6-digit OTP verification code for seller activation
+ * @param {Object} data - email
+ */
+const resendSellerCode = async (data) => {
+  const { email } = data;
+  const normalizedEmail = email.toLowerCase();
+
+  const user = await User.findOne({
+    'authentication.email': normalizedEmail,
+    role: ROLES.SELLER
+  }).select('+verificationCode');
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+
+  if (user.status === 'ACTIVE') {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.already_activated');
+  }
+
+  if (user.status !== 'PENDING_ACTIVATION') {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden');
+  }
+
+  // Generate new code
+  const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedCode = crypto.createHash('sha256').update(rawCode).digest('hex');
+
+  user.verificationCode = hashedCode;
+  user.verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  await user.save();
+
+  // Send new email
+  await emailService.sendSellerInvitationEmail({
+    email: normalizedEmail,
+    firstName: user.profile?.firstName || 'Seller',
+    verificationCode: rawCode
+  });
+
+  return { email: normalizedEmail };
 };
 
 /**
@@ -181,5 +290,7 @@ module.exports = {
   signUp,
   signIn,
   logout,
-  refresh
+  refresh,
+  activateSeller,
+  resendSellerCode
 };

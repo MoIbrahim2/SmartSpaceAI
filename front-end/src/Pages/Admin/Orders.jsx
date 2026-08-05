@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingBag, Eye, RefreshCw } from "lucide-react";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import DataTable from "../../Components/Admin/Shared/DataTable";
@@ -8,26 +8,71 @@ import FilterDropdown from "../../Components/Admin/Shared/FilterDropdown";
 import ActionDropdown from "../../Components/Admin/Shared/ActionDropdown";
 import EmptyState from "../../Components/Admin/Shared/EmptyState";
 import OrderDetailsDrawer from "../../Components/Admin/Orders/OrderDetailsDrawer";
+import LoadingState from "../../Components/Admin/LoadingState";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
-import { mockOrders } from "./adminMockData";
+import { getOrders, updateOrderStatus } from "../../api/AdminApi";
 
 export default function Orders() {
   const { showToast } = useToast();
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
 
   const [activeOrder, setActiveOrder] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const filtered = orders.filter((o) => {
-    const matchesSearch =
-      o.id.toLowerCase().includes(search.toLowerCase()) ||
-      o.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      o.sellerName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = status === "All" || o.status === status;
-    return matchesSearch && matchesStatus;
-  });
+  const fetchOrdersList = async () => {
+    try {
+      setLoading(true);
+      const data = await getOrders({ search, status });
+      const rawOrders = data.orders || data.items || (Array.isArray(data) ? data : []);
+
+      const formatted = rawOrders.map((o) => ({
+        id: o.orderNumber || o._id || `ORD-${o.id}`,
+        _id: o._id || o.id,
+        customerName: o.customerInfo?.name || o.shippingAddress?.fullName || o.customerName || "Customer",
+        customerEmail: o.customerInfo?.email || o.customerEmail || "",
+        customerPhone: o.customerInfo?.phone || o.customerPhone || "",
+        sellerName: o.sellerId?.storeName || o.sellerName || "Store Seller",
+        itemsCount: o.itemsCount || (o.items ? o.items.length : 1),
+        totalAmount: `$${(o.totalAmount || 0).toLocaleString()}`,
+        status: o.status || "Pending",
+        date: o.createdAt ? new Date(o.createdAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        shippingAddress: typeof o.shippingAddress === "string" ? o.shippingAddress : (o.shippingAddress?.street || "Cairo, Egypt"),
+        paymentMethod: o.paymentMethod || "Card Payment",
+        items: (o.items || []).map((item) => ({
+          name: item.name || item.productTitle || "Furniture Item",
+          qty: item.quantity || item.qty || 1,
+          price: `$${(item.price || 0).toLocaleString()}`,
+        })),
+        timeline: o.timeline || [
+          { status: "Order Placed", date: o.createdAt ? new Date(o.createdAt).toLocaleString() : "Recently", done: true },
+        ],
+      }));
+
+      setOrders(formatted);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      showToast("Failed to load orders list", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrdersList();
+  }, [search, status]);
+
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      showToast(`Order status updated to '${newStatus}'!`, "success");
+      fetchOrdersList();
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || "Failed to update order status", "error");
+    }
+  };
 
   const columns = [
     {
@@ -75,18 +120,17 @@ export default function Orders() {
             {
               label: "Advance Fulfillment",
               icon: RefreshCw,
-              onClick: () => {
-                setOrders((prev) =>
-                  prev.map((o) => (o.id === row.id ? { ...o, status: "Shipped" } : o))
-                );
-                showToast(`Order '${row.id}' status updated to Shipped!`, "success");
-              },
+              onClick: () => handleUpdateStatus(row._id || row.id, "Shipped"),
             },
           ]}
         />
       ),
     },
   ];
+
+  if (loading && orders.length === 0) {
+    return <LoadingState message="Loading orders..." />;
+  }
 
   return (
     <div className="space-y-6">
@@ -105,10 +149,10 @@ export default function Orders() {
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {orders.length === 0 ? (
         <EmptyState title="No orders found" description="Try clearing filters or search terms." icon={ShoppingBag} />
       ) : (
-        <DataTable columns={columns} data={filtered} />
+        <DataTable columns={columns} data={orders} />
       )}
 
       <OrderDetailsDrawer order={activeOrder} isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />

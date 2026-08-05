@@ -6,6 +6,7 @@ import DashboardLayout from "./Layouts/DashboardLayout";
 import AdminLayout from "./Layouts/AdminLayout";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Registar";
+import ActivateSeller from "./Pages/Auth/ActivateSeller";
 import Credits from "./Pages/Dashboard/Credits";
 import Dashboard from "./Pages/Dashboard/Dashboard";
 import ApartmentRooms from "./Pages/Dashboard/ApartmentRooms";
@@ -42,6 +43,7 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/activate-seller" element={<ActivateSeller />} />
           </Route>
           <Route
             element={
@@ -65,7 +67,7 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute roles={["admin"]}>
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
                 <AdminLayout />
               </ProtectedRoute>
             }
@@ -80,7 +82,7 @@ function App() {
           <Route
             path="/seller"
             element={
-              <ProtectedRoute roles={["seller", "admin"]}>
+              <ProtectedRoute allowedRoles={["SELLER", "ADMIN"]}>
                 <SellerLayout />
               </ProtectedRoute>
             }

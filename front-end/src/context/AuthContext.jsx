@@ -7,6 +7,7 @@ const normalizeUser = (userData) => {
   if (!userData) return null;
   return {
     ...userData,
+    role: userData.role || userData.profile?.role || "USER",
     firstName: userData.profile?.firstName || userData.firstName || "",
     lastName: userData.profile?.lastName || userData.lastName || "",
     dateOfBirth: userData.profile?.dateOfBirth || userData.dateOfBirth || "",

@@ -1,16 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-/**
- * Route guard that requires authentication and optionally restricts access to
- * specific roles.
- *
- * @param {Object} props
- * @param {Array<string>} [props.roles] - Allowed roles (e.g. ['seller'], ['admin']).
- *   When omitted, any authenticated user is allowed.
- * @param {ReactNode} props.children
- */
-export default function ProtectedRoute({ children, roles }) {
+export default function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -29,8 +20,21 @@ export default function ProtectedRoute({ children, roles }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/home" replace />;
+  if (allowedRoles && allowedRoles.length > 0) {
+    const userRole = (user.role || "USER").toUpperCase();
+    const isAllowed = allowedRoles.some(
+      (role) => role.toUpperCase() === userRole
+    );
+
+    if (!isAllowed) {
+      const fallbackPath =
+        userRole === "ADMIN"
+          ? "/admin"
+          : userRole === "SELLER"
+          ? "/seller"
+          : "/home";
+      return <Navigate to={fallbackPath} replace />;
+    }
   }
 
   return children;

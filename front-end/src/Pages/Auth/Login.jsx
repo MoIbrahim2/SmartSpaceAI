@@ -17,7 +17,14 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const from = location.state?.from?.pathname || "/home";
+  const getRoleDefaultPath = (u) => {
+    const role = (u?.role || "").toUpperCase();
+    if (role === "ADMIN") return "/admin";
+    if (role === "SELLER") return "/seller";
+    return "/home";
+  };
+
+  const redirectPath = location.state?.from?.pathname || getRoleDefaultPath(user);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -35,7 +42,7 @@ const Login = () => {
   }, []);
 
   if (!authLoading && user) {
-    return <Navigate to={from} replace />;
+    return <Navigate to={redirectPath} replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -43,8 +50,10 @@ const Login = () => {
     setError("");
     setLoading(true);
     try {
-      await signin(email, password);
-      navigate(from, { replace: true });
+      const authData = await signin(email, password);
+      const targetUser = authData?.user || user;
+      const targetPath = location.state?.from?.pathname || getRoleDefaultPath(targetUser);
+      navigate(targetPath, { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || err.message || t("auth.loginFailed"));
     } finally {

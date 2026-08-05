@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShieldCheck, Eye, Check, X, Sparkles } from "lucide-react";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import DataTable from "../../Components/Admin/Shared/DataTable";
@@ -10,12 +10,14 @@ import EmptyState from "../../Components/Admin/Shared/EmptyState";
 import ConfirmDialog from "../../Components/Admin/Shared/ConfirmDialog";
 import ProductDetailsDrawer from "../../Components/Admin/Moderation/ProductDetailsDrawer";
 import RejectReasonModal from "../../Components/Admin/Moderation/RejectReasonModal";
+import LoadingState from "../../Components/Admin/LoadingState";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
-import { mockModerationQueue } from "./adminMockData";
+import { getModerationItems, updateModerationStatus } from "../../api/AdminApi";
 
 export default function ModerationQueue() {
   const { showToast } = useToast();
-  const [queue, setQueue] = useState(mockModerationQueue);
+  const [queue, setQueue] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
 
@@ -24,23 +26,47 @@ export default function ModerationQueue() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
 
-  const handleApprove = (id) => {
-    setQueue((prev) => prev.filter((p) => p.id !== id));
-    showToast("Product approved and published to catalog!", "success");
+  const fetchModerationQueue = async () => {
+    try {
+      setLoading(true);
+      const res = await getModerationItems({ search, status });
+      const items = res.items || (Array.isArray(res) ? res : []);
+      setQueue(items);
+    } catch (err) {
+      console.error("Failed to fetch moderation queue:", err);
+      showToast("Failed to load moderation items", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = (id, reason) => {
-    setQueue((prev) => prev.filter((p) => p.id !== id));
-    showToast(`Product rejected. Reason: ${reason}`, "warning");
+  useEffect(() => {
+    fetchModerationQueue();
+  }, [search, status]);
+
+  const handleApprove = async (id) => {
+    try {
+      await updateModerationStatus(id, "ACCEPTED", "Approved by admin review");
+      showToast("Product approved and published to catalog!", "success");
+      setApproveConfirmOpen(false);
+      setDrawerOpen(false);
+      fetchModerationQueue();
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || "Failed to approve product", "error");
+    }
   };
 
-  const filtered = queue.filter((item) => {
-    const matchesSearch =
-      item.productTitle.toLowerCase().includes(search.toLowerCase()) ||
-      item.sellerName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = status === "All" || item.status === status;
-    return matchesSearch && matchesStatus;
-  });
+  const handleReject = async (id, reason) => {
+    try {
+      await updateModerationStatus(id, "REJECTED", reason);
+      showToast(`Product rejected. Reason: ${reason}`, "warning");
+      setRejectModalOpen(false);
+      setDrawerOpen(false);
+      fetchModerationQueue();
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || "Failed to reject product", "error");
+    }
+  };
 
   const columns = [
     {
@@ -125,6 +151,10 @@ export default function ModerationQueue() {
     },
   ];
 
+  if (loading && queue.length === 0) {
+    return <LoadingState message="Loading moderation queue..." />;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -137,10 +167,10 @@ export default function ModerationQueue() {
         <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Pending Review", "Flagged Issues"]} />
       </div>
 
-      {filtered.length === 0 ? (
+      {queue.length === 0 ? (
         <EmptyState title="Moderation queue clear" description="All submitted products have been reviewed!" icon={ShieldCheck} />
       ) : (
-        <DataTable columns={columns} data={filtered} />
+        <DataTable columns={columns} data={queue} />
       )}
 
       <ProductDetailsDrawer

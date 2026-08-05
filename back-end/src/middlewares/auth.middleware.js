@@ -38,14 +38,31 @@ const protect = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * Middleware to restrict route access based on user role
- * @param {...string} roles - Allowed user roles
+ * Middleware to authorize user roles
+ * @param  {...string} roles - Allowed roles (e.g., 'ADMIN', 'SELLER')
  */
-protect.restrictTo = (...roles) => (req, res, next) => {
-  if (!req.user || !roles.includes(req.user.role)) {
-    return next(new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden'));
-  }
-  next();
+const authorizeRoles = (...roles) => {
+  const normalizedRoles = roles.map((r) => r.toUpperCase());
+  return (req, res, next) => {
+    if (!req.user) {
+      return next(new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.unauthorized'));
+    }
+
+    const userRole = (req.user.role || '').toUpperCase();
+    if (!normalizedRoles.includes(userRole)) {
+      return next(new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden'));
+    }
+
+    next();
+  };
 };
 
+protect.restrictTo = authorizeRoles;
+protect.authorizeRoles = authorizeRoles;
+
 module.exports = protect;
+module.exports.protect = protect;
+module.exports.authorizeRoles = authorizeRoles;
+module.exports.authorize = authorizeRoles;
+module.exports.restrictTo = authorizeRoles;
+

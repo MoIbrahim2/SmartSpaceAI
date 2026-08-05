@@ -209,7 +209,7 @@ const Register = () => {
                   />
                 </div>
                 <p className="px-2 text-xs text-on-surface-variant/70">
-                  {t("auth.passwordHint", { defaultValue: "Must be at least 8 characters, include an uppercase, a lowercase, a number, and a special character." })}
+                  {t("auth.passwordHint", { defaultValue: "Must be at least 8 characters, include an uppercase letter, a lowercase letter, and a number." })}
                 </p>
               </div>
 

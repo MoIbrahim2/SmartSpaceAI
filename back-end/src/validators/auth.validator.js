@@ -40,12 +40,12 @@ const signupSchema = Joi.object({
     }),
   password: Joi.string()
     .min(8)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
     .required()
     .messages({
       'string.empty': 'Password is required',
       'string.min': 'Password must be at least 8 characters long',
-      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
     }),
   confirmPassword: Joi.any()
     .equal(Joi.ref('password'))
@@ -72,7 +72,56 @@ const signinSchema = Joi.object({
     })
 });
 
+const activateSellerSchema = Joi.object({
+  email: Joi.string()
+    .trim()
+    .email()
+    .required()
+    .messages({
+      'string.empty': 'Email is required',
+      'string.email': 'Please provide a valid email address'
+    }),
+  verificationCode: Joi.string()
+    .trim()
+    .length(6)
+    .required()
+    .messages({
+      'string.empty': 'Verification code is required',
+      'string.length': 'Verification code must be 6 digits'
+    }),
+  password: Joi.string()
+    .min(8)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
+    .optional()
+    .messages({
+      'string.min': 'Password must be at least 8 characters long',
+      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    }),
+  confirmPassword: Joi.any()
+    .when('password', {
+      is: Joi.exist().not(''),
+      then: Joi.equal(Joi.ref('password')).required().messages({
+        'any.only': 'Confirm password does not match the password',
+        'any.required': 'Confirm password is required'
+      }),
+      otherwise: Joi.optional()
+    })
+});
+
+const resendSellerCodeSchema = Joi.object({
+  email: Joi.string()
+    .trim()
+    .email()
+    .required()
+    .messages({
+      'string.empty': 'Email is required',
+      'string.email': 'Please provide a valid email address'
+    })
+});
+
 module.exports = {
   signupSchema,
-  signinSchema
+  signinSchema,
+  activateSellerSchema,
+  resendSellerCodeSchema
 };
