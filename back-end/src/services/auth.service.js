@@ -141,7 +141,7 @@ const activateSeller = async (activationData) => {
   const { email, verificationCode, password, confirmPassword } = activationData;
   const normalizedEmail = email.toLowerCase();
 
-  if (password !== confirmPassword) {
+  if (password && password !== confirmPassword) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.password_mismatch');
   }
 
@@ -174,8 +174,10 @@ const activateSeller = async (activationData) => {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.invalid_code');
   }
 
-  // Activate account and set password
-  user.authentication.passwordHash = password;
+  // Activate account
+  if (password) {
+    user.authentication.passwordHash = password;
+  }
   user.authentication.emailVerified = true;
   user.status = 'ACTIVE';
   user.activatedAt = new Date();

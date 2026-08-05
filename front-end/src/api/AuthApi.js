@@ -21,8 +21,8 @@ export const activateSeller = (data) =>
   api.post("/auth/activate-seller", {
     email: data.email,
     verificationCode: data.verificationCode,
-    password: data.password,
-    confirmPassword: data.confirmPassword,
+    ...(data.password ? { password: data.password } : {}),
+    ...(data.confirmPassword ? { confirmPassword: data.confirmPassword } : {}),
   });
 
 export const resendSellerCode = (email) =>

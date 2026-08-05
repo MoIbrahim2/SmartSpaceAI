@@ -92,18 +92,19 @@ const activateSellerSchema = Joi.object({
   password: Joi.string()
     .min(8)
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)
-    .required()
+    .optional()
     .messages({
-      'string.empty': 'Password is required',
       'string.min': 'Password must be at least 8 characters long',
       'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
     }),
   confirmPassword: Joi.any()
-    .equal(Joi.ref('password'))
-    .required()
-    .messages({
-      'any.only': 'Confirm password does not match the password',
-      'any.required': 'Confirm password is required'
+    .when('password', {
+      is: Joi.exist().not(''),
+      then: Joi.equal(Joi.ref('password')).required().messages({
+        'any.only': 'Confirm password does not match the password',
+        'any.required': 'Confirm password is required'
+      }),
+      otherwise: Joi.optional()
     })
 });
 
