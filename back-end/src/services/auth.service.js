@@ -65,7 +65,20 @@ const signUp = async (userData) => {
     }
   });
 
-  return newUser;
+  // Issue tokens immediately so the client is authenticated after signup
+  const accessToken = generateAccessToken(newUser._id);
+  const refreshToken = generateRefreshToken(newUser._id);
+
+  // Hash the refresh token before storing it in the database
+  newUser.authentication.refreshToken = hashToken(refreshToken);
+  newUser.authentication.lastLogin = new Date();
+  await newUser.save();
+
+  return {
+    user: newUser,
+    accessToken,
+    refreshToken
+  };
 };
 
 /**

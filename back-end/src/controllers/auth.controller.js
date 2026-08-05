@@ -38,8 +38,15 @@ const getCookieOptions = () => {
  * Handle user registration
  */
 const signup = asyncHandler(async (req, res) => {
-  const newUser = await authService.signUp(req.body);
-  return sendSuccess(res, 'auth.signup_success', { user: newUser }, HTTP_STATUS.CREATED);
+  const { user, accessToken, refreshToken } = await authService.signUp(req.body);
+
+  // Set the refresh token inside an HttpOnly Cookie
+  res.cookie('refreshToken', refreshToken, getCookieOptions());
+
+  return sendSuccess(res, 'auth.signup_success', {
+    user,
+    accessToken
+  }, HTTP_STATUS.CREATED);
 });
 
 /**

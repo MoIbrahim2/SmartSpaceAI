@@ -68,9 +68,9 @@ export default function DataTable({ columns, data, keyField = "id", pageSize = 5
                 </td>
               </tr>
             ) : (
-              paginatedData.map((row) => (
+              paginatedData.map((row, rowIdx) => (
                 <tr
-                  key={row[keyField]}
+                  key={row[keyField] ?? row._id ?? rowIdx}
                   className="transition-colors hover:bg-surface-container/60"
                 >
                   {columns.map((col, idx) => (

@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
   externalId: { type: String },
-  sellerId: { type: mongoose.Schema.Types.ObjectId },
+  sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
 
   source: {
     marketplace: { type: String },
@@ -80,11 +80,17 @@ const productSchema = new mongoose.Schema({
   },
 
   processing: {
-    status: { type: String, default: 'ACCEPTED' },
+    status: { 
+      type: String, 
+      enum: ['PENDING_AI_VALIDATION', 'ACCEPTED', 'MANUAL_REVIEW_REQUIRED', 'REJECTED'],
+      default: 'ACCEPTED',
+      index: true
+    },
     categoryConfidence: { type: Number },
     qualityScore: { type: Number },
     issues: [{ type: String }],
     normalizationVersion: { type: String },
+    reviewerNote: { type: String },
   },
 }, {
   timestamps: false, // Products are managed by the data pipeline, not this app

@@ -61,19 +61,22 @@ export default function SellerDashboard() {
         );
         setValidationAlerts(alerts);
 
-        // Chart Data based on delivered orders
+        // Chart Data based on delivered orders (actual monthly revenue)
         const delivered = orders.filter((o) => o.status === "DELIVERED");
-        const salesByMonth = {
-          "May": 12000,
-          "Jun": 18500,
-          "Jul": 24000,
-          "Aug": earnings.grossRevenue || 0,
-        };
-        
-        const generatedChartData = Object.keys(salesByMonth).map((month) => ({
-          month,
-          revenue: salesByMonth[month],
-        }));
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const salesByMonth = {};
+        delivered.forEach((o) => {
+          const d = new Date(o.createdAt);
+          const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+          salesByMonth[key] = (salesByMonth[key] || 0) + (o.totalAmount || 0);
+        });
+
+        const generatedChartData = Object.keys(salesByMonth)
+          .sort((a, b) => new Date(a) - new Date(b))
+          .map((month) => ({
+            month,
+            revenue: salesByMonth[month],
+          }));
         setChartData(generatedChartData);
 
       } catch (error) {

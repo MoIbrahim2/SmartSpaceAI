@@ -31,5 +31,6 @@ router.use('/contact', contactRoutes);
 router.use('/billing', billingRoutes);
 router.use('/v1/rooms', roomLayoutRoutes);
 router.use('/recommendations', recommendationRoutes);
+router.use('/seller', sellerRoutes);
 
 module.exports = router;

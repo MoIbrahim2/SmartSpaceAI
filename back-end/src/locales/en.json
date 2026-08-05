@@ -22,7 +22,17 @@
   "user": {
     "profile_fetched": "Profile fetched successfully",
     "profile_updated": "Profile updated successfully",
-    "not_found": "User not found"
+    "not_found": "User not found",
+    "unauthorized_seller_role": "User account does not possess verified seller permissions"
+  },
+  "seller": {
+    "products_fetched": "Seller products retrieved successfully",
+    "product_created": "Seller product created and queued for AI validation",
+    "product_updated": "Seller product updated successfully",
+    "product_deleted": "Seller product deleted successfully",
+    "orders_fetched": "Seller orders retrieved successfully",
+    "order_status_updated": "Order status updated successfully",
+    "earnings_fetched": "Seller financial earnings report retrieved successfully"
   },
   "seller": {
     "created": "Seller created successfully",
