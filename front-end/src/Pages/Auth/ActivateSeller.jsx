@@ -11,6 +11,11 @@ const ActivateSeller = () => {
 
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -72,11 +77,23 @@ const ActivateSeller = () => {
       return;
     }
 
+    if (!password) {
+      setError(t("auth.password") + " " + t("common.required", "is required"));
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError(t("auth.passwordsMatchError"));
+      return;
+    }
+
     setLoading(true);
     try {
       await activateSeller({
         email,
         verificationCode: verificationCode.trim(),
+        password,
+        confirmPassword,
       });
       setSuccess(true);
       setTimeout(() => {
@@ -104,7 +121,7 @@ const ActivateSeller = () => {
           <p className="mt-2 text-sm text-on-surface-variant">
             {email ? (
               <>
-                Enter the 6-digit code sent to{" "}
+                Enter code and set password for{" "}
                 <span className="font-semibold text-on-surface">{email}</span>
               </>
             ) : (
@@ -135,7 +152,7 @@ const ActivateSeller = () => {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="rounded-xl bg-error/10 px-4 py-3 text-sm font-medium text-error">
                 {error}
@@ -177,15 +194,69 @@ const ActivateSeller = () => {
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="123456"
-                  className="w-full tracking-[0.5em] text-center font-mono text-2xl font-bold rounded-2xl border border-outline/30 bg-surface-container-lowest py-4 px-4 text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-inner"
+                  className="w-full tracking-[0.5em] text-center font-mono text-xl font-bold rounded-2xl border border-outline/30 bg-surface-container-lowest py-3.5 px-4 text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-inner"
                 />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                {t("auth.password")}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant/60 rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3">
+                  <Icon name="lock" size={18} />
+                </span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-2xl border border-outline/30 bg-surface-container-lowest py-3 pl-10 pr-10 text-on-surface placeholder:text-on-surface-variant/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 rtl:pl-10 rtl:pr-10 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant/60 hover:text-on-surface rtl:left-0 rtl:right-auto rtl:pl-3 rtl:pr-0"
+                >
+                  <Icon name={showPassword ? "visibility_off" : "visibility"} size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                {t("auth.confirmPassword")}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-on-surface-variant/60 rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3">
+                  <Icon name="lock" size={18} />
+                </span>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-2xl border border-outline/30 bg-surface-container-lowest py-3 pl-10 pr-10 text-on-surface placeholder:text-on-surface-variant/40 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 rtl:pl-10 rtl:pr-10 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant/60 hover:text-on-surface rtl:left-0 rtl:right-auto rtl:pl-3 rtl:pr-0"
+                >
+                  <Icon name={showConfirmPassword ? "visibility_off" : "visibility"} size={18} />
+                </button>
               </div>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || verificationCode.trim().length !== 6}
+              disabled={loading || verificationCode.trim().length !== 6 || !password}
               className="flex w-full items-center justify-center rounded-2xl bg-primary py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:bg-primary-hover active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? t("auth.activatingAccount") : t("auth.activateAccountBtn")}
