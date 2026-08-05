@@ -43,6 +43,23 @@ export const updateSellerCommission = async (id, baseCommissionPercentage) => {
 };
 
 /**
+ * Permanently delete a seller account
+ */
+export const deleteSeller = async (id) => {
+  const { data } = await api.delete(`/admin/sellers/${id}`);
+  return data.data;
+};
+
+/**
+ * Resend verification code to seller pending activation
+ */
+export const resendSellerVerificationCode = async (id) => {
+  const { data } = await api.post(`/admin/sellers/${id}/resend-code`);
+  return data.data;
+};
+
+
+/**
  * Fetch paginated list of orders
  */
 export const getOrders = async (params = {}) => {

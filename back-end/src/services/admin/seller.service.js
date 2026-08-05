@@ -191,9 +191,67 @@ const updateSellerCommission = async (sellerId, base_commission_percentage) => {
   return seller;
 };
 
+/**
+ * Permanently delete seller account from users collection
+ * @param {string} sellerId
+ * @returns {Promise<Object>} Deleted seller user object
+ */
+const deleteSeller = async (sellerId) => {
+  if (!mongoose.Types.ObjectId.isValid(sellerId)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'seller.invalid_id');
+  }
+
+  const seller = await User.findOneAndDelete({ _id: sellerId, role: ROLES.SELLER });
+  if (!seller) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'seller.not_found');
+  }
+
+  return seller;
+};
+
+/**
+ * Resend verification code for a seller pending activation
+ * @param {string} sellerId
+ * @returns {Promise<Object>} Seller user object
+ */
+const resendSellerVerificationCode = async (sellerId) => {
+  if (!mongoose.Types.ObjectId.isValid(sellerId)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'seller.invalid_id');
+  }
+
+  const seller = await User.findOne({ _id: sellerId, role: ROLES.SELLER });
+  if (!seller) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'seller.not_found');
+  }
+
+  if (seller.status === 'ACTIVE') {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.already_activated');
+  }
+
+  // Generate new 6-digit verification code OTP
+  const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedCode = crypto.createHash('sha256').update(rawCode).digest('hex');
+
+  seller.verificationCode = hashedCode;
+  seller.verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  await seller.save();
+
+  // Send invitation email with new verification code
+  await emailService.sendSellerInvitationEmail({
+    email: seller.authentication.email,
+    firstName: seller.profile?.firstName || 'Seller',
+    verificationCode: rawCode
+  });
+
+  return seller;
+};
+
 module.exports = {
   createSeller,
   getSellers,
   getSellerById,
-  updateSellerCommission
+  updateSellerCommission,
+  deleteSeller,
+  resendSellerVerificationCode
 };
+

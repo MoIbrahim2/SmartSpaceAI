@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserPlus, Eye, Edit2, Ban, Trash2, Users, CheckCircle, ShieldAlert } from "lucide-react";
+import { UserPlus, Eye, Edit2, Ban, Trash2, Users, CheckCircle, ShieldAlert, Send } from "lucide-react";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import StatCard from "../../Components/Admin/Shared/StatCard";
 import DataTable from "../../Components/Admin/Shared/DataTable";
@@ -14,7 +14,13 @@ import SellerDetailsDrawer from "../../Components/Admin/Sellers/SellerDetailsDra
 import EditCommissionModal from "../../Components/Admin/Sellers/EditCommissionModal";
 import LoadingState from "../../Components/Admin/LoadingState";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
-import { getSellers, createSeller, updateSellerCommission } from "../../api/AdminApi";
+import {
+  getSellers,
+  createSeller,
+  updateSellerCommission,
+  deleteSeller,
+  resendSellerVerificationCode
+} from "../../api/AdminApi";
 
 export default function SellerManagement() {
   const { showToast } = useToast();
@@ -96,6 +102,34 @@ export default function SellerManagement() {
     }
   };
 
+  const handleResendCode = async (seller) => {
+    try {
+      await resendSellerVerificationCode(seller.id);
+      showToast(`Verification code sent to ${seller.email}!`, "success");
+    } catch (err) {
+      showToast(
+        err.response?.data?.message || err.message || "Failed to resend verification code",
+        "error"
+      );
+    }
+  };
+
+  const handleDeleteSeller = async () => {
+    if (!activeSeller) return;
+    try {
+      await deleteSeller(activeSeller.id);
+      showToast(`Seller account '${activeSeller.name}' permanently deleted.`, "success");
+      setDeleteConfirmOpen(false);
+      setActiveSeller(null);
+      fetchSellersList();
+    } catch (err) {
+      showToast(
+        err.response?.data?.message || err.message || "Failed to delete seller account",
+        "error"
+      );
+    }
+  };
+
   const columns = [
     {
       label: "Seller Name",
@@ -123,37 +157,53 @@ export default function SellerManagement() {
       label: "Actions",
       key: "actions",
       sortable: false,
-      render: (row) => (
-        <ActionDropdown
-          actions={[
-            {
-              label: "View Profile Details",
-              icon: Eye,
-              onClick: () => {
-                setActiveSeller(row);
-                setDrawerOpen(true);
+      render: (row) => {
+        const isPending =
+          row.status === "PENDING_ACTIVATION" ||
+          row.status === "Pending Verification" ||
+          String(row.status).toLowerCase().includes("pending");
+
+        return (
+          <ActionDropdown
+            actions={[
+              {
+                label: "View Profile Details",
+                icon: Eye,
+                onClick: () => {
+                  setActiveSeller(row);
+                  setDrawerOpen(true);
+                },
               },
-            },
-            {
-              label: "Edit Commission",
-              icon: Edit2,
-              onClick: () => {
-                setActiveSeller(row);
-                setEditCommissionOpen(true);
+              ...(isPending
+                ? [
+                    {
+                      label: "Resend Verification Code",
+                      icon: Send,
+                      onClick: () => handleResendCode(row),
+                    },
+                  ]
+                : []),
+              {
+                label: "Edit Commission",
+                icon: Edit2,
+                onClick: () => {
+                  setActiveSeller(row);
+                  setEditCommissionOpen(true);
+                },
               },
-            },
-            {
-              label: "Delete Seller Account",
-              icon: Trash2,
-              variant: "danger",
-              onClick: () => {
-                setActiveSeller(row);
-                setDeleteConfirmOpen(true);
+              {
+                label: "Delete Seller Account",
+                icon: Trash2,
+                variant: "danger",
+                onClick: () => {
+                  setActiveSeller(row);
+                  setDeleteConfirmOpen(true);
+                },
               },
-            },
-          ]}
-        />
-      ),
+            ]}
+          />
+        );
+      },
     },
   ];
 
@@ -212,14 +262,12 @@ export default function SellerManagement() {
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
         title="Delete Seller Account"
-        message={`Are you sure you want to permanently delete '${activeSeller?.name}'?`}
+        message={`Are you sure you want to permanently delete '${activeSeller?.name}' from the users database?`}
         confirmText="Delete Seller"
         variant="danger"
-        onConfirm={() => {
-          setSellers((prev) => prev.filter((s) => s.id !== activeSeller?.id));
-          showToast("Seller account deleted.", "error");
-        }}
+        onConfirm={handleDeleteSeller}
       />
     </div>
   );
 }
+

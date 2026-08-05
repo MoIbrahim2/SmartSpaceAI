@@ -86,6 +86,21 @@ router.get('/sellers/:id', sellerController.getSellerById);
  */
 router.patch('/sellers/:id/commission', validate(updateCommissionSchema), sellerController.updateSellerCommission);
 
+/**
+ * @route   DELETE /api/admin/sellers/:id
+ * @desc    Permanently delete seller account from users collection
+ * @access  Private (ADMIN)
+ */
+router.delete('/sellers/:id', sellerController.deleteSeller);
+
+/**
+ * @route   POST /api/admin/sellers/:id/resend-code
+ * @desc    Resend 6-digit verification code to pending seller
+ * @access  Private (ADMIN)
+ */
+router.post('/sellers/:id/resend-code', sellerController.resendSellerVerificationCode);
+
+
 /* ==========================================================================
    Order / Buy Request Management Routes
    ========================================================================== */
