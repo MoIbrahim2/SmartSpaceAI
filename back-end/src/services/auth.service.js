@@ -1,6 +1,8 @@
 const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
+const ROLES = require('../constants/roles');
+const emailService = require('./email.service');
 const crypto = require('crypto');
 const {
   generateAccessToken,
@@ -96,9 +98,6 @@ const signIn = async (email, password) => {
   if (!user) {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_credentials');
   }
-
-const ROLES = require('../constants/roles');
-const emailService = require('./email.service');
 
   // Verify password
   const isMatch = await user.comparePassword(password);
