@@ -76,6 +76,20 @@ describe('Seller Services', () => {
       ).rejects.toThrow(ApiError);
     });
 
+    test('should throw error if seller account is pending activation', async () => {
+      User.findById.mockResolvedValue({ _id: mockSellerId, role: 'seller', status: 'PENDING_ACTIVATION' });
+      await expect(
+        sellerService.createSellerProduct(mockSellerId, {})
+      ).rejects.toThrow(ApiError);
+    });
+
+    test('should throw error if seller account is suspended', async () => {
+      User.findById.mockResolvedValue({ _id: mockSellerId, role: 'seller', status: 'SUSPENDED' });
+      await expect(
+        sellerService.createSellerProduct(mockSellerId, {})
+      ).rejects.toThrow(ApiError);
+    });
+
     test('should create a product and trigger background AI validation', async () => {
       User.findById.mockResolvedValue({ _id: mockSellerId, role: 'seller' });
       

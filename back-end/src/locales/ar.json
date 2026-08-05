@@ -29,7 +29,8 @@
     "profile_fetched": "تم جلب البيانات الشخصية بنجاح",
     "profile_updated": "تم تحديث البيانات الشخصية بنجاح",
     "not_found": "المستخدم غير موجود",
-    "unauthorized_seller_role": "حساب المستخدم لا يمتلك صلاحيات بائع مؤكدة"
+    "unauthorized_seller_role": "حساب المستخدم لا يمتلك صلاحيات بائع مؤكدة",
+    "seller_not_activated": "يجب تفعيل حساب البائع الخاص بك قبل إضافة المنتجات."
   },
   "seller": {
     "products_fetched": "تم جلب منتجات البائع بنجاح",
@@ -38,9 +39,7 @@
     "product_deleted": "تم حذف منتج البائع بنجاح",
     "orders_fetched": "تم جلب طلبات البائع بنجاح",
     "order_status_updated": "تم تحديث حالة الطلب بنجاح",
-    "earnings_fetched": "تم جلب تقرير أرباح البائع بنجاح"
-  },
-  "seller": {
+    "earnings_fetched": "تم جلب تقرير أرباح البائع بنجاح",
     "created": "تم إنشاء البائع بنجاح",
     "fetched_list": "تم جلب قائمة البائعين بنجاح",
     "fetched_details": "تم جلب تفاصيل البائع بنجاح",

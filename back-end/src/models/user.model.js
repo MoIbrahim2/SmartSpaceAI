@@ -99,6 +99,20 @@ const userSchema = new mongoose.Schema({
     default: 10,
     min: 0,
     max: 100
+  },
+  sellerProfile: {
+    commissionRate: {
+      type: Number,
+      default: 0.10
+    },
+    businessName: {
+      type: String,
+      trim: true
+    },
+    phone: {
+      type: String,
+      trim: true
+    }
   }
 }, {
   timestamps: true,
