@@ -3,6 +3,7 @@ const Product = require('../src/models/product.model');
 const BuyRequest = require('../src/models/buyRequest.model');
 const adminController = require('../src/controllers/admin.controller');
 const ApiError = require('../src/errors/ApiError');
+const ROLES = require('../src/constants/roles');
 
 jest.mock('../src/models/user.model');
 jest.mock('../src/models/product.model');
@@ -137,7 +138,7 @@ describe('Admin Controller Tests', () => {
 
       await new Promise((resolve) => setImmediate(resolve));
 
-      expect(User.find).toHaveBeenCalledWith({ role: 'seller' });
+      expect(User.find).toHaveBeenCalledWith({ role: ROLES.SELLER });
       expect(Product.aggregate).toHaveBeenCalled();
       expect(BuyRequest.aggregate).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith(
@@ -181,7 +182,7 @@ describe('Admin Controller Tests', () => {
 
       await new Promise((resolve) => setImmediate(resolve));
 
-      expect(User.findOne).toHaveBeenCalledWith({ _id: 'seller1', role: 'seller' });
+      expect(User.findOne).toHaveBeenCalledWith({ _id: 'seller1', role: ROLES.SELLER });
       expect(mockSeller.sellerProfile.commissionRate).toBe(0.2);
       expect(mockSave).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith(
@@ -238,7 +239,7 @@ describe('Admin Controller Tests', () => {
 
       await new Promise((resolve) => setImmediate(resolve));
 
-      expect(User.findOne).toHaveBeenCalledWith({ _id: 'seller1', role: 'seller' });
+      expect(User.findOne).toHaveBeenCalledWith({ _id: 'seller1', role: ROLES.SELLER });
       expect(BuyRequest.countDocuments).toHaveBeenCalledWith({
         sellerId: 'seller1',
         status: { $in: ['PENDING', 'PROCESSING', 'SHIPPED'] }

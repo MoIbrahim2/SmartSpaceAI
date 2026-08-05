@@ -3,6 +3,7 @@ const BuyRequest = require('../models/buyRequest.model');
 const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
+const ROLES = require('../constants/roles');
 const { validateSellerProductSubmission } = require('./aiService');
 
 /**
@@ -49,8 +50,16 @@ const getSellerProduct = async (sellerId, productId) => {
 const createSellerProduct = async (sellerId, productData) => {
   // Ensure the user actually exists and is a seller
   const seller = await User.findById(sellerId);
-  if (!seller || seller.role !== 'seller') {
+  if (!seller || (seller.role || '').toUpperCase() !== ROLES.SELLER) {
     throw new ApiError(HTTP_STATUS.FORBIDDEN, 'user.unauthorized_seller_role');
+  }
+
+  if (seller.status === 'PENDING_ACTIVATION') {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'user.seller_not_activated');
+  }
+
+  if (seller.status === 'SUSPENDED') {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.suspended');
   }
 
   const product = new Product({

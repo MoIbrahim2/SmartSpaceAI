@@ -3,6 +3,7 @@ const Product = require('../models/product.model');
 const BuyRequest = require('../models/buyRequest.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
+const ROLES = require('../constants/roles');
 const { sendSuccess } = require('../utils/responseHelper');
 const asyncHandler = require('../utils/asyncHandler');
 const crypto = require('crypto');
@@ -33,7 +34,7 @@ const createSeller = asyncHandler(async (req, res) => {
 
   // Create new seller user
   const newSeller = await User.create({
-    role: 'seller',
+    role: ROLES.SELLER,
     sellerProfile: {
       commissionRate: commissionRate / 100, // Store as decimal (e.g., 12% -> 0.12)
       businessName: name,
@@ -59,7 +60,7 @@ const createSeller = asyncHandler(async (req, res) => {
  * Retrieve all registered sellers along with product counts and total sales
  */
 const getSellers = asyncHandler(async (req, res) => {
-  const sellers = await User.find({ role: 'seller' }).sort({ createdAt: -1 }).lean();
+  const sellers = await User.find({ role: ROLES.SELLER }).sort({ createdAt: -1 }).lean();
 
   if (sellers.length === 0) {
     return sendSuccess(res, 'admin.sellers_fetched', { sellers: [] });
@@ -107,7 +108,7 @@ const updateSellerCommission = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { commissionRate } = req.body;
 
-  const seller = await User.findOne({ _id: id, role: 'seller' });
+  const seller = await User.findOne({ _id: id, role: ROLES.SELLER });
   if (!seller) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
   }
@@ -124,7 +125,7 @@ const updateSellerCommission = asyncHandler(async (req, res) => {
 const deleteSeller = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const seller = await User.findOne({ _id: id, role: 'seller' });
+  const seller = await User.findOne({ _id: id, role: ROLES.SELLER });
   if (!seller) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
   }
