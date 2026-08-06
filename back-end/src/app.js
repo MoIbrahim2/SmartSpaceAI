@@ -8,7 +8,7 @@ const compression = require('compression');
 const path = require('path');
 
 const routes = require('./routes');
-const limiter = require('./middlewares/rateLimiter.middleware');
+const { generalLimiter } = require('./middlewares/rateLimiter.middleware');
 const notFound = require('./middlewares/notFound.middleware');
 const errorMiddleware = require('./middlewares/error.middleware');
 const { i18nMiddleware } = require('./middlewares/i18n.middleware');
@@ -30,7 +30,7 @@ app.use(cors({
 app.use(i18nMiddleware);
 
 // Apply Rate Limiting
-app.use('/api', limiter);
+app.use('/api', generalLimiter);
 
 // Stripe webhook needs raw body for signature verification (must be before express.json)
 app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));

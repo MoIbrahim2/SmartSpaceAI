@@ -4,6 +4,7 @@ const generationController = require('../controllers/generation.controller');
 const protect = require('../middlewares/auth.middleware');
 const { uploadGenerationImages } = require('../middlewares/upload.middleware');
 const validate = require('../middlewares/validation.middleware');
+const { aiLimiter } = require('../middlewares/rateLimiter.middleware');
 const { createGenerationSchema, updateGenerationSchema, extractPreferencesSchema } = require('../validators/generation.validator');
 
 /**
@@ -37,7 +38,7 @@ router.get('/room/:roomId/latest', protect, generationController.getLatestGenera
 router.post('/:id/save-prompt', protect, generationController.saveUserPrompt);
 router.post('/:id/save-resolution', protect, generationController.saveResolution);
 router.post('/:id/save-products', protect, generationController.saveSelectedProducts);
-router.post('/:id/generate-image', protect, generationController.generateRoomImage);
+router.post('/:id/generate-image', protect, aiLimiter, generationController.generateRoomImage);
 router.post('/', protect, uploadGenerationImages, parseGenerationBody, validate(createGenerationSchema), generationController.createGeneration);
 router.patch('/:id', protect, uploadGenerationImages, parseGenerationBody, validate(updateGenerationSchema), generationController.updateGeneration);
 router.delete('/:id', protect, generationController.deleteGeneration);
