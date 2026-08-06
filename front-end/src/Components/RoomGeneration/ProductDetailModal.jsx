@@ -1,9 +1,11 @@
 import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
-import { parseProductDetails, getProductId } from "../../utils/productUtils";
+import { parseProductDetails, getProductId, getExternalStoreUrl } from "../../utils/productUtils";
+import { useCart } from "../../context/CartContext";
 
 const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelected, onToggleSelect, onIncrement, onDecrement, formatCurrency }) => {
   const { t } = useTranslation();
+  const { addToCart } = useCart();
 
   if (!isOpen || !product) return null;
 
@@ -13,7 +15,8 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
   const price = parsed.price;
   const desc = parsed.description;
   const img = parsed.img;
-  const storeUrl = parsed.storeUrl;
+  const externalUrl = getExternalStoreUrl(product);
+  const isInternal = parsed.isInternal;
 
   const dimensions = parsed.dimensions;
   const attributes = parsed.attributes;
@@ -55,9 +58,20 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
 
           <div className="w-full md:w-1/2 flex flex-col justify-between gap-4">
             <div>
-              <span className="px-3 py-1 rounded-lg bg-surface-variant text-primary text-xs font-semibold uppercase tracking-wider">
-                {brand}
-              </span>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-3 py-1 rounded-lg bg-surface-variant text-primary text-xs font-semibold uppercase tracking-wider">
+                  {brand}
+                </span>
+                {isInternal ? (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
+                    SmartSpace Seller Product
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold border border-sky-500/30">
+                    Live Scraped
+                  </span>
+                )}
+              </div>
               <h2 className="font-headline text-2xl font-bold text-on-surface mt-2 leading-tight">
                 {title}
               </h2>
@@ -117,16 +131,26 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
 
         {/* Footer Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-outline-variant/20">
-          {storeUrl && storeUrl !== "#" && (
+          {externalUrl ? (
             <a
-              href={storeUrl}
+              href={externalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-3 px-4 rounded-xl font-semibold text-on-surface bg-surface neomorph-raised hover:text-primary transition-all flex items-center justify-center gap-2 text-sm"
+              className="flex-1 py-3.5 px-5 rounded-xl font-headline font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all flex items-center justify-center gap-2 text-sm shadow-md"
             >
-              <Icon name="open_in_new" size={16} />
-              Visit Retailer Store
+              <Icon name="open_in_new" size={18} />
+              Buy from Store ({brand})
             </a>
+          ) : isInternal && (
+            <button
+              onClick={() => {
+                addToCart(product);
+              }}
+              className="flex-1 py-3.5 px-5 rounded-xl font-headline font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 text-sm shadow-md"
+            >
+              <Icon name="shopping_cart" size={18} />
+              Add to SmartSpace Cart
+            </button>
           )}
 
           {selectedQty > 0 ? (
@@ -160,7 +184,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
               className="flex-1 py-3 px-6 rounded-xl font-headline font-semibold text-sm transition-all flex items-center justify-center gap-2 bg-primary text-white shadow-lg hover:bg-primary-variant"
             >
               <Icon name="check_circle" size={18} />
-              Select Product
+              Select for AI Render
             </button>
           )}
         </div>

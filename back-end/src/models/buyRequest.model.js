@@ -13,19 +13,29 @@ const buyRequestSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  // Items array for multi-item seller batch orders
+  items: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    },
+    name: { type: String, required: true },
+    image: { type: String },
+    price: { type: Number, required: true },
+    quantity: { type: Number, required: true, default: 1 },
+    totalPrice: { type: Number, required: true }
+  }],
+  // Single product fields kept optional for backward compatibility
   productId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true
+    ref: 'Product'
   },
   quantity: {
     type: Number,
-    required: true,
     min: [1, 'Quantity must be at least 1']
   },
   unitPriceAtPurchase: {
-    type: Number,
-    required: true
+    type: Number
   },
   grossTotalAmount: {
     type: Number,

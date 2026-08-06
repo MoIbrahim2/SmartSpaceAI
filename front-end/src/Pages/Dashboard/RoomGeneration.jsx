@@ -506,10 +506,13 @@ const RoomGeneration = () => {
   };
 
   const handleFinishRoomGeneration = () => {
-    if (urlRoomId) {
-      navigate(`/dashboard/rooms/${urlRoomId}`);
+    const targetApartmentId = searchParams.get("apartmentId") || roomData?.apartmentId || roomData?.apartment;
+    if (urlRoomId && targetApartmentId) {
+      navigate(`/apartments/${targetApartmentId}/rooms/${urlRoomId}`);
+    } else if (urlRoomId) {
+      navigate(`/rooms`);
     } else {
-      navigate("/dashboard");
+      navigate("/home");
     }
   };
 

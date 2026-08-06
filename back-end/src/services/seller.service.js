@@ -174,19 +174,30 @@ const formatOrderForFrontend = (order) => {
   if (!order) return null;
   const orderObj = order.toObject ? order.toObject() : order;
 
-  const price = orderObj.unitPriceAtPurchase || (orderObj.productId?.pricing?.currentPrice) || 0;
-  const name = orderObj.productId?.basic?.name || 'Unknown Product';
-
-  orderObj.items = [
-    {
+  if (Array.isArray(orderObj.items) && orderObj.items.length > 0) {
+    orderObj.items = orderObj.items.map((i) => ({
       product: {
-        _id: orderObj.productId?._id || orderObj.productId,
-        name,
-        price
+        _id: i.productId?._id || i.productId,
+        name: i.name || i.product?.name || orderObj.productId?.basic?.name || 'Furniture Piece',
+        price: i.price || i.unitPriceAtPurchase || 0,
+        image: i.image
       },
-      quantity: orderObj.quantity || 1
-    }
-  ];
+      quantity: i.quantity || 1
+    }));
+  } else {
+    const price = orderObj.unitPriceAtPurchase || (orderObj.productId?.pricing?.currentPrice) || 0;
+    const name = orderObj.productId?.basic?.name || 'Unknown Product';
+    orderObj.items = [
+      {
+        product: {
+          _id: orderObj.productId?._id || orderObj.productId,
+          name,
+          price
+        },
+        quantity: orderObj.quantity || 1
+      }
+    ];
+  }
 
   orderObj.totalAmount = orderObj.grossTotalAmount;
   return orderObj;

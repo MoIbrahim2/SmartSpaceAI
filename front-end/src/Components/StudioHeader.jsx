@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
@@ -9,6 +10,7 @@ const StudioHeader = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { cartCount, toggleDrawer } = useCart();
   const activeApartments =
     location.pathname === "/projects" ||
     location.pathname === "/apartments" ||
@@ -50,7 +52,7 @@ const StudioHeader = () => {
   return (
     <header className="sticky top-0 z-50 mb-4 bg-surface-bright px-6 py-4 neo-shadow md:px-20">
       <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/home")}>
           <div className="flex items-center justify-center rounded-lg bg-primary p-2 text-white neo-shadow">
             <svg className="size-6 text-white" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -62,7 +64,7 @@ const StudioHeader = () => {
           <h1 className="text-xl font-bold tracking-tight text-on-surface">SmartSpace</h1>
         </div>
         <div className="flex items-center gap-6 md:gap-8">
-          <nav className="hidden md:block space-x-6">
+          <nav className="hidden md:flex items-center space-x-6 rtl:space-x-reverse">
             <Link
               className={`pb-1 font-semibold transition-colors ${
                 activeApartments
@@ -72,6 +74,16 @@ const StudioHeader = () => {
               to="/projects"
             >
               Apartments
+            </Link>
+            <Link
+              className={`pb-1 font-semibold transition-colors ${
+                location.pathname === "/orders"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-on-surface-variant hover:text-primary"
+              }`}
+              to="/orders"
+            >
+              My Orders
             </Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -89,8 +101,17 @@ const StudioHeader = () => {
             >
               <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} />
             </button>
-            <button className="size-10 rounded-xl bg-surface-bright text-on-surface-variant transition-all hover:text-primary neo-shadow neo-button" aria-label="Notifications">
-              <Icon name="notifications" />
+            <button
+              onClick={toggleDrawer}
+              className="relative size-10 rounded-xl bg-surface-bright text-on-surface-variant transition-all hover:text-primary neo-shadow neo-button flex items-center justify-center"
+              aria-label="Shopping Cart"
+            >
+              <Icon name="shopping_cart" size={20} />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[11px] font-black text-white shadow-md animate-pulse">
+                  {cartCount}
+                </span>
+              )}
             </button>
             <div className="relative">
               <button
@@ -124,6 +145,14 @@ const StudioHeader = () => {
                     <br />
                     <span className="text-xs text-on-surface-variant">{user?.email}</span>
                   </div>
+                  <Link
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
+                    to="/orders"
+                  >
+                    <Icon name="local_shipping" size={20} />
+                    My Orders
+                  </Link>
                   <Link
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"

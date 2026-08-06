@@ -67,8 +67,10 @@ export const getProductId = (product) => {
   const candidates = [
     product._id,
     product.id,
+    product.productId,
     pData._id,
     pData.id,
+    pData.productId,
     product.externalId,
     pData.externalId,
     product.sellerId,
@@ -148,6 +150,8 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
   const material = (classification.materials && classification.materials[0]) || pData.material || "Wood & Fabric";
   const color = (classification.colors && classification.colors[0]) || pData.color || "Neutral";
 
+  const isInternal = !!(pData.sellerId || product.sellerId || (pData._id && !pData.source?.productUrl));
+
   return {
     id,
     title,
@@ -158,8 +162,48 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
     img,
     fallbackImg,
     storeUrl,
+    isInternal,
+    sellerId: pData.sellerId || product.sellerId || null,
     dimensions: { width, length, height },
     attributes: { style, material, color },
     raw: product
   };
+};
+
+/**
+ * Get external retail store URL for live-scraped products (Amazon, Noon, etc.)
+ */
+export const getExternalStoreUrl = (product) => {
+  if (!product) return null;
+  const pData = product.productData || product;
+
+  const candidates = [
+    product.productUrl,
+    product.source?.productUrl,
+    pData.productUrl,
+    pData.source?.productUrl,
+    product.storeUrl,
+    pData.storeUrl,
+    product.url,
+    pData.url,
+  ];
+
+  for (const u of candidates) {
+    if (u && typeof u === "string" && u.trim() !== "" && u.trim() !== "#") {
+      return u.trim();
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Check if a product is an internal seller product that can be added to the cart
+ */
+export const isInternalProduct = (product) => {
+  if (!product) return false;
+  const externalUrl = getExternalStoreUrl(product);
+  if (externalUrl) return false; // Scraped products have external URL, not internal cart
+  const pData = product.productData || product;
+  return !!(pData.sellerId || product.sellerId || pData._id || product._id || product.productId);
 };
