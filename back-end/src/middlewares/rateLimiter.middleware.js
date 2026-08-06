@@ -21,7 +21,7 @@ const buildHandler = (translationKey, defaultMsg) => (req, res, next, options) =
  * 100 requests per 15 minutes per IP.
  */
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 10 * 60 * 1000,
   max: 100,
   statusCode: HTTP_STATUS.TOO_MANY_REQUESTS,
   standardHeaders: true,

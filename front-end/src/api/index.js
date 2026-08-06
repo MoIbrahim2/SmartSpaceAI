@@ -8,6 +8,7 @@ export * from "./BillingApi";
 export * from "./ContactApi";
 export * from "./SellerApi";
 export * from "./AdminApi";
+export * from "./OrderApi";
 export { default, API_HOST, BASE_URL } from "./axios";
 
 

@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 import ProductDetailModal from "./ProductDetailModal";
 import BudgetWarningModal from "./BudgetWarningModal";
-import { parseProductDetails, getProductId } from "../../utils/productUtils";
+import { parseProductDetails, getProductId, getExternalStoreUrl } from "../../utils/productUtils";
+import { useCart } from "../../context/CartContext";
 
 const StepSelectProducts = ({
   setStep,
@@ -21,9 +22,12 @@ const StepSelectProducts = ({
   onProceedToStep4
 }) => {
   const { t, i18n } = useTranslation();
+  const { addToCart } = useCart();
   const [selectedModalProduct, setSelectedModalProduct] = useState(null);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [validationError, setValidationError] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("ALL"); // "ALL" | "LOCAL" | "EXTERNAL"
+  const [sellerFilter, setSellerFilter] = useState("ALL"); // "ALL" | brand string
 
   const categories = Object.keys(productData);
 
@@ -33,6 +37,11 @@ const StepSelectProducts = ({
     }
   }, [categories, activeCategory, setActiveCategory]);
 
+  // Reset seller filter when category changes
+  useEffect(() => {
+    setSellerFilter("ALL");
+  }, [activeCategory]);
+
   const formatCurrency = (val) => {
     return new Intl.NumberFormat(i18n.language, {
       style: "currency",
@@ -41,6 +50,26 @@ const StepSelectProducts = ({
     }).format(val || 0);
   };
   const currentCategoryProducts = productData[activeCategory] || [];
+
+  // Available sellers/brands for the active category
+  const availableSellers = currentCategoryProducts.reduce((acc, p) => {
+    const parsed = parseProductDetails(p, activeCategory);
+    if (parsed.brand && !acc.includes(parsed.brand)) {
+      acc.push(parsed.brand);
+    }
+    return acc;
+  }, []);
+
+  const localCount = currentCategoryProducts.filter((p) => parseProductDetails(p, activeCategory).isInternal).length;
+  const externalCount = currentCategoryProducts.length - localCount;
+
+  const filteredProducts = currentCategoryProducts.filter((p) => {
+    const parsed = parseProductDetails(p, activeCategory);
+    if (sourceFilter === "LOCAL" && !parsed.isInternal) return false;
+    if (sourceFilter === "EXTERNAL" && parsed.isInternal) return false;
+    if (sellerFilter !== "ALL" && parsed.brand !== sellerFilter) return false;
+    return true;
+  });
   const requiredCountForCategory = categoryCounts[activeCategory] ?? 0;
   const isOptionalActiveCategory = requiredCountForCategory === 0;
 
@@ -236,9 +265,91 @@ const StepSelectProducts = ({
         </div>
       </div>
 
+      {/* Filter Toolbar (Marketplace & Seller Filter) */}
+      <div className="mb-6 p-4 rounded-2xl neomorph-raised bg-background flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-outline-variant/20">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5 mr-1">
+            <Icon name="filter_list" size={16} className="text-primary" />
+            Filter Source:
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setSourceFilter("ALL")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              sourceFilter === "ALL"
+                ? "bg-primary text-white shadow-md"
+                : "bg-background text-on-surface-variant neomorph-raised hover:text-on-surface"
+            }`}
+          >
+            All Items ({currentCategoryProducts.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSourceFilter("LOCAL")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+              sourceFilter === "LOCAL"
+                ? "bg-emerald-600 text-white shadow-md"
+                : "bg-background text-on-surface-variant neomorph-raised hover:text-emerald-600"
+            }`}
+          >
+            <Icon name="store" size={14} />
+            SmartSpace Sellers ({localCount})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSourceFilter("EXTERNAL")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+              sourceFilter === "EXTERNAL"
+                ? "bg-amber-600 text-white shadow-md"
+                : "bg-background text-on-surface-variant neomorph-raised hover:text-amber-600"
+            }`}
+          >
+            <Icon name="public" size={14} />
+            External Retailers ({externalCount})
+          </button>
+        </div>
+
+        {/* Specific Seller / Brand Dropdown */}
+        {availableSellers.length > 0 && (
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <span className="text-xs font-bold text-on-surface-variant whitespace-nowrap">
+              Store / Seller:
+            </span>
+            <select
+              value={sellerFilter}
+              onChange={(e) => setSellerFilter(e.target.value)}
+              className="p-2 rounded-xl neomorph-raised bg-background text-xs font-bold text-on-surface border border-outline-variant focus:outline-none focus:border-primary shrink-0"
+            >
+              <option value="ALL">All Stores & Brands</option>
+              {availableSellers.map((seller) => (
+                <option key={seller} value={seller}>
+                  {seller}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
       {/* Active Category Product Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-grow mb-8">
-        {currentCategoryProducts.map((product, idx) => {
+      {filteredProducts.length === 0 ? (
+        <div className="neomorph-inset rounded-2xl p-10 text-center my-6 flex flex-col items-center justify-center">
+          <Icon name="filter_alt_off" size={40} className="text-on-surface-variant/40 mb-2" />
+          <h4 className="font-headline font-bold text-on-surface text-base">No products match your filter</h4>
+          <p className="text-xs text-on-surface-variant mt-1 mb-4">Try clearing your source or seller filters to see available options.</p>
+          <button
+            onClick={() => { setSourceFilter("ALL"); setSellerFilter("ALL"); }}
+            className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md"
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-grow mb-8">
+          {filteredProducts.map((product, idx) => {
           const parsed = parseProductDetails(product, activeCategory);
           const productId = parsed.id;
           const selectedQty = addedProducts.filter((id) => id === productId).length;
@@ -368,6 +479,7 @@ const StepSelectProducts = ({
           );
         })}
       </div>
+      )}
 
       {/* Bottom Navigation */}
       <div className="flex justify-between items-center mt-auto pt-6 border-t border-outline-variant/20">

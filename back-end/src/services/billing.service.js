@@ -103,8 +103,23 @@ const handleWebhookEvent = async (event) => {
     case 'checkout.session.completed': {
       const session = event.data.object;
       const stripeSessionId = session.id;
-      const userId = session.metadata.userId;
-      const creditsAdded = parseInt(session.metadata.creditsAdded, 10);
+
+      // Check if this checkout session is for a furniture order
+      if (session.metadata?.type === 'furniture_order') {
+        const orderIds = (session.metadata.orderIds || '').split(',').filter(Boolean);
+        if (orderIds.length > 0) {
+          const BuyRequest = require('../models/buyRequest.model');
+          await BuyRequest.updateMany(
+            { _id: { $in: orderIds } },
+            { $set: { status: 'PENDING' } }
+          );
+          console.log(`Webhook: Confirmed payment for furniture orders ${orderIds.join(', ')}`);
+        }
+        return;
+      }
+
+      const userId = session.metadata?.userId;
+      const creditsAdded = parseInt(session.metadata?.creditsAdded, 10);
 
       // Idempotency: check if already processed
       const payment = await PaymentHistory.findOne({ stripeSessionId });
@@ -124,11 +139,12 @@ const handleWebhookEvent = async (event) => {
       await payment.save();
 
       // Atomically increment user credits
-      await User.findByIdAndUpdate(userId, {
-        $inc: { credits: creditsAdded }
-      });
-
-      console.log(`Webhook: Added ${creditsAdded} credits to user ${userId}`);
+      if (userId && !isNaN(creditsAdded)) {
+        await User.findByIdAndUpdate(userId, {
+          $inc: { credits: creditsAdded }
+        });
+        console.log(`Webhook: Added ${creditsAdded} credits to user ${userId}`);
+      }
       break;
     }
 
@@ -136,7 +152,7 @@ const handleWebhookEvent = async (event) => {
       const session = event.data.object;
       const stripeSessionId = session.id;
 
-      // Hard-delete the abandoned payment record
+      // Hard-delete the abandoned payment record if present
       await PaymentHistory.deleteOne({ stripeSessionId });
       console.log(`Webhook: Deleted expired session record ${stripeSessionId}`);
       break;

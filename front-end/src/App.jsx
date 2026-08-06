@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import AuthLayout from "./Layouts/AuthLayout";
 import DashboardLayout from "./Layouts/DashboardLayout";
@@ -15,6 +16,8 @@ import MyRooms from "./Pages/Dashboard/MyRooms";
 import Profile from "./Pages/Dashboard/Profile";
 import RoomGeneration from "./Pages/Dashboard/RoomGeneration";
 import PaymentSuccess from "./Pages/Dashboard/PaymentSuccess";
+import Cart from "./Pages/Dashboard/Cart";
+import MyOrders from "./Pages/Dashboard/MyOrders";
 import NotFound from "./Pages/NotFound";
 import LandingPage from "./Pages/LandingPage/LandingPage";
 import ContactUs from "./Pages/ContactUs/contactUs";
@@ -36,34 +39,37 @@ import SellerEarnings from "./Pages/Seller/SellerEarnings";
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route element={<AuthLayout />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/activate-seller" element={<ActivateSeller />} />
-          </Route>
-          <Route
-            element={
-              <ProtectedRoute>
-                <DashboardLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/home" element={<Dashboard />} />
-            <Route path="/apartments/:apartmentId" element={<ApartmentRooms />} />
-            <Route path="/apartments/:apartmentId/rooms/:roomId" element={<RoomDetail />} />
-            <Route path="/room-generation" element={<RoomGeneration />} />
-            <Route path="/projects" element={<Dashboard />} />
-            <Route path="/apartments" element={<Dashboard />} />
-            <Route path="/rooms" element={<MyRooms />} />
-            <Route path="/credits" element={<Credits />} />
-            <Route path="/billing" element={<Credits />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-          </Route>
+      <CartProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/activate-seller" element={<ActivateSeller />} />
+            </Route>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/home" element={<Dashboard />} />
+              <Route path="/apartments/:apartmentId" element={<ApartmentRooms />} />
+              <Route path="/apartments/:apartmentId/rooms/:roomId" element={<RoomDetail />} />
+              <Route path="/room-generation" element={<RoomGeneration />} />
+              <Route path="/projects" element={<Dashboard />} />
+              <Route path="/apartments" element={<Dashboard />} />
+              <Route path="/rooms" element={<MyRooms />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/orders" element={<MyOrders />} />
+              <Route path="/credits" element={<Credits />} />
+              <Route path="/billing" element={<Credits />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+            </Route>
           <Route
             path="/admin"
             element={
@@ -98,6 +104,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   );
 }

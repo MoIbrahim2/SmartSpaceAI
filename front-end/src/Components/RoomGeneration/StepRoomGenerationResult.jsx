@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 import { API_HOST } from "../../api";
-import { parseProductDetails } from "../../utils/productUtils";
+import { parseProductDetails, getExternalStoreUrl } from "../../utils/productUtils";
+import { useCart } from "../../context/CartContext";
 
 const RESOLUTION_OPTIONS = [
   { id: "720p", label: "720p (HD)", desc: "Fast generation" },
@@ -22,8 +23,10 @@ const StepRoomGenerationResult = ({
   setResolution,
 }) => {
   const { t } = useTranslation();
-  const [showProductSummary, setShowProductSummary] = useState(false);
-  
+  const { addToCart, setIsDrawerOpen } = useCart();
+  const [showProductSummary, setShowProductSummary] = useState(true);
+  const [addedNotice, setAddedNotice] = useState("");
+
   const safeResString = typeof resolution === "string" 
     ? resolution 
     : (resolution && typeof resolution === "object" && resolution.resolution ? resolution.resolution : "1080p");
@@ -51,8 +54,24 @@ const StepRoomGenerationResult = ({
 
   const displayRes = (typeof selectedRes === "string" ? selectedRes : "1080p").toUpperCase();
 
+  const handleAddToCart = (prod) => {
+    addToCart(prod);
+    setIsDrawerOpen(true);
+    const parsed = parseProductDetails(prod, prod.category);
+    setAddedNotice(`Added "${parsed.title}" to cart!`);
+    setTimeout(() => setAddedNotice(""), 3000);
+  };
+
   return (
     <div className="bg-background rounded-[2rem] p-6 lg:p-10 neomorph-raised flex-grow flex flex-col relative">
+      {/* Toast Notification */}
+      {addedNotice && (
+        <div className="fixed top-20 right-6 z-50 px-4 py-3 rounded-2xl bg-emerald-600 text-white font-semibold text-sm shadow-2xl flex items-center gap-2 animate-bounce">
+          <Icon name="check_circle" size={20} />
+          <span>{addedNotice}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
@@ -69,36 +88,67 @@ const StepRoomGenerationResult = ({
           className="px-4 py-2 rounded-xl text-xs font-semibold text-primary bg-background neomorph-raised hover:text-primary-variant transition-all flex items-center gap-2"
         >
           <Icon name={showProductSummary ? "expand_less" : "chair"} size={16} />
-          {showProductSummary ? "Hide Selected Products" : `View Products (${selectedProducts.length})`}
+          {showProductSummary ? "Hide Selected Products" : `View Selected Products (${selectedProducts.length})`}
         </button>
       </div>
 
-      {/* Selected Products Breakdown Bar (Collapsible) */}
+      {/* Selected Products Breakdown Bar (Visible by default) */}
       {showProductSummary && selectedProducts.length > 0 && (
-        <div className="mb-6 p-4 rounded-2xl neomorph-inset bg-surface-bright/20 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 animate-fade-in">
+        <div className="mb-6 p-4 rounded-2xl neomorph-inset bg-surface-bright/20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
           {selectedProducts.map((p, idx) => {
             const parsed = parseProductDetails(p, p.category);
             const img = parsed.img;
             const title = parsed.title;
+            const externalUrl = getExternalStoreUrl(p);
+
             return (
-              <div key={idx} className="flex items-center gap-3 p-2 rounded-xl bg-background neomorph-raised">
-                <img
-                  src={getImageUrl(img)}
-                  alt={title}
-                  className="w-12 h-12 rounded-lg object-cover"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = parsed.fallbackImg;
-                  }}
-                />
-                <div className="overflow-hidden">
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">
-                    {p.category || "Item"}
-                  </span>
-                  <span className="text-xs font-semibold text-on-surface line-clamp-1">
-                    {title}
-                  </span>
+              <div key={idx} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-background neomorph-raised border border-outline-variant/20">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <img
+                    src={getImageUrl(img)}
+                    alt={title}
+                    className="w-14 h-14 rounded-lg object-cover shrink-0"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = parsed.fallbackImg;
+                    }}
+                  />
+                  <div className="overflow-hidden">
+                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">
+                      {p.category || "Item"}
+                    </span>
+                    <span className="text-xs font-bold text-on-surface line-clamp-1">
+                      {title}
+                    </span>
+                    <span className="text-xs font-black text-primary block mt-0.5">
+                      {parsed.price} EGP
+                    </span>
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                  {externalUrl ? (
+                    <a
+                      href={externalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md"
+                      title="Open product page on retailer store (Amazon, Noon, etc.)"
+                    >
+                      <Icon name="open_in_new" size={15} />
+                      <span>Buy Store</span>
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => handleAddToCart(p)}
+                      className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+                      title="Add to SmartSpace Cart"
+                    >
+                      <Icon name="add_shopping_cart" size={15} />
+                      <span>Add Cart</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

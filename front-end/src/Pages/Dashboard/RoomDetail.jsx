@@ -3,11 +3,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getRoomById, getRoomGenerationsHistory, API_HOST } from "../../api";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
+import ProductDetailModal from "../../Components/RoomGeneration/ProductDetailModal";
+import BeforeAfterSlider from "../../Components/BeforeAfterSlider";
+import { parseProductDetails, getProductId, getExternalStoreUrl } from "../../utils/productUtils";
+import { useCart } from "../../context/CartContext";
 
 const RoomDetail = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { apartmentId, roomId } = useParams();
   const navigate = useNavigate();
+  const { addToCart, setIsDrawerOpen } = useCart();
 
   const [room, setRoom] = useState(null);
   const [generations, setGenerations] = useState([]);
@@ -15,6 +20,7 @@ const RoomDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [selectedModalProduct, setSelectedModalProduct] = useState(null);
 
   const getImageUrl = (url) => {
     if (!url) return null;
@@ -83,6 +89,13 @@ const RoomDetail = () => {
   const isImageGenerated = selectedGeneration?.isGenerated || !!selectedGeneration?.generatedImage?.url;
   const activeImage = getImageUrl(selectedGeneration?.generatedImage?.url) ||
     "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1200&auto=format&fit=crop";
+
+  const originalImage = getImageUrl(
+    selectedGeneration?.roomLayoutData?.room_image_path ||
+    selectedGeneration?.roomLayoutData?.imagePath ||
+    room?.roomLayout?.room_image_path ||
+    room?.roomLayout?.imagePath
+  );
 
   const selectedProductsList = selectedGeneration?.selectedProducts || [];
   const prefStyle = selectedGeneration?.extractedPreferences?.style || "Modern Scandinavian";
@@ -211,17 +224,11 @@ const RoomDetail = () => {
               <div className="neomorph-raised rounded-[2rem] p-4 lg:p-6 overflow-hidden relative group">
                 <div className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden neomorph-inset bg-black/5">
                   {isImageGenerated ? (
-                    <>
-                      <img
-                        src={activeImage}
-                        alt="Rendered Room Design"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <div className="absolute top-4 left-4 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2">
-                        <Icon name="auto_awesome" size={16} className="text-amber-400" />
-                        <span>AI Rendered Composite ({(typeof selectedGeneration?.resolution === 'string' ? selectedGeneration.resolution : (selectedGeneration?.resolution?.resolution || "1080P")).toUpperCase()})</span>
-                      </div>
-                    </>
+                    <BeforeAfterSlider
+                      beforeImage={originalImage}
+                      afterImage={activeImage}
+                      title={room?.name || "Room Design"}
+                    />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-surface-bright/20">
                       <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 mb-3">
@@ -275,45 +282,83 @@ const RoomDetail = () => {
                     No individual products selected for this generation.
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-3 max-h-[480px] overflow-y-auto pr-1">
+                  <div className="flex flex-col gap-3 max-h-[550px] overflow-y-auto pr-1">
                     {selectedProductsList.map((item, idx) => {
                       const pData = item.productData || item;
-                      const title = pData.title || pData.name || `Item ${idx + 1}`;
-                      const price = pData.price || item.price || 0;
-                      const img = pData.primaryImage || pData.image || pData.imageUrl || pData.img || (pData.images && pData.images.length > 0 ? (pData.images[0].url || pData.images[0]) : null) || "/placeholder.jpg";
+                      const parsed = parseProductDetails(pData, item.category);
+                      const title = parsed.title;
+                      const price = parsed.price;
+                      const img = parsed.img;
                       const isGold = item.isRecommended;
+                      const externalUrl = getExternalStoreUrl(pData);
 
                       return (
                         <div
                           key={idx}
-                          className={`p-3 rounded-2xl bg-background neomorph-raised flex items-center gap-3 transition-all ${
+                          className={`p-3.5 rounded-2xl bg-background neomorph-raised flex flex-col gap-2 transition-all ${
                             isGold ? "border border-amber-400/40" : ""
                           }`}
                         >
-                          <img
-                            src={getImageUrl(img)}
-                            alt={title}
-                            className="w-14 h-14 rounded-xl object-cover"
-                            onError={(e) => {
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src = "/placeholder.jpg";
-                            }}
-                          />
-                          <div className="flex-grow overflow-hidden">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                                {item.category || "Furniture"}
-                              </span>
-                              {isGold && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-400/20 text-amber-600">
-                                  Top Pick
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={getImageUrl(img)}
+                              alt={title}
+                              className="w-14 h-14 rounded-xl object-cover shrink-0 neomorph-inset"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = parsed.fallbackImg;
+                              }}
+                            />
+                            <div className="flex-grow overflow-hidden">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                                  {item.category || "Furniture"}
                                 </span>
-                              )}
+                                {isGold && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-400/20 text-amber-600">
+                                    Top Pick
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="text-xs font-bold text-on-surface line-clamp-1">{title}</h4>
+                              <p className="text-xs font-black text-primary mt-0.5">
+                                {typeof price === "number" ? `${price.toLocaleString()} EGP` : price}
+                              </p>
                             </div>
-                            <h4 className="text-xs font-bold text-on-surface line-clamp-1">{title}</h4>
-                            <p className="text-xs font-semibold text-primary mt-0.5">
-                              {typeof price === "number" ? `${price.toLocaleString()} EGP` : price}
-                            </p>
+                          </div>
+
+                          {/* Action Bar */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/10">
+                            <button
+                              onClick={() => setSelectedModalProduct({ ...pData, category: item.category, isRecommended: isGold })}
+                              className="flex-1 py-1.5 px-2 rounded-lg bg-background text-[11px] font-bold text-on-surface-variant hover:text-primary neomorph-raised flex items-center justify-center gap-1 transition-all"
+                            >
+                              <Icon name="visibility" size={14} />
+                              Details
+                            </button>
+
+                            {externalUrl ? (
+                              <a
+                                href={externalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 py-1.5 px-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-md"
+                              >
+                                <Icon name="open_in_new" size={13} />
+                                Buy Store
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  addToCart(pData);
+                                  setIsDrawerOpen(true);
+                                }}
+                                className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-md active:scale-95"
+                              >
+                                <Icon name="add_shopping_cart" size={13} />
+                                Add Cart
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -393,6 +438,14 @@ const RoomDetail = () => {
             </div>
           </div>
         )}
+
+        {/* Product Detail Modal */}
+        <ProductDetailModal
+          product={selectedModalProduct}
+          isOpen={!!selectedModalProduct}
+          onClose={() => setSelectedModalProduct(null)}
+          formatCurrency={(val) => `${val?.toLocaleString()} EGP`}
+        />
       </main>
     </div>
   );
