@@ -134,6 +134,7 @@ const formatTierProduct = (product, resolvedQuantity) => {
     primaryImage: primaryImageUrl,
     images: product.images || (primaryImageUrl ? [{ url: primaryImageUrl, isPrimary: true }] : []),
     productUrl: product.source?.productUrl || product.productUrl || null,
+    source: product.source || null,
     score: product.score,
     scoreBreakdown: product.scoreBreakdown,
   };

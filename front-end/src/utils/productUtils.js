@@ -132,8 +132,12 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
   const fallbackImg = getUniqueFallbackImage(product, activeCategory);
   const img = getProductImage(product, activeCategory);
 
+  const externalUrl = getExternalStoreUrl(product);
   const storeUrl =
+    externalUrl ||
     pData.source?.productUrl ||
+    pData.productUrl ||
+    product.productUrl ||
     pData.storeUrl ||
     pData.url ||
     "#";
@@ -150,7 +154,8 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
   const material = (classification.materials && classification.materials[0]) || pData.material || "Wood & Fabric";
   const color = (classification.colors && classification.colors[0]) || pData.color || "Neutral";
 
-  const isInternal = !!(pData.sellerId || product.sellerId || (pData._id && !pData.source?.productUrl));
+  // An internal product is one without an external store URL that belongs to a registered seller
+  const isInternal = !externalUrl && !!(pData.sellerId || product.sellerId);
 
   return {
     id,
@@ -171,11 +176,41 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
 };
 
 /**
- * Get external retail store URL for live-scraped products (Amazon, Noon, etc.)
+ * Helper to clean product name for store search queries.
+ * Removes size brackets like (180x77 cm), "Edition", SKU codes, etc.
+ */
+export const cleanSearchQuery = (name = "") => {
+  if (!name) return "";
+  return name
+    .replace(/\s*-\s*[A-Za-z0-9\s]+Edition\s*\([^)]*\)/gi, "")
+    .replace(/\s*\([^)]*cm\)/gi, "")
+    .replace(/\s*\([^)]*mm\)/gi, "")
+    .replace(/\|\s*[^|]+$/g, "")
+    .replace(/العلامة التجارية:\s*/gi, "")
+    .trim();
+};
+
+/**
+ * Get external retail store URL for live-scraped or DB catalog products.
+ * If raw productUrl is synthetic/broken/dummy (e.g. sofa-aug-sofa-0002, /p/..., DUMMY_...),
+ * generates a working store search URL for the retailer (IKEA, Amazon, Noon, Jumia, Homzmart, Kabbani, etc.)
  */
 export const getExternalStoreUrl = (product) => {
   if (!product) return null;
   const pData = product.productData || product;
+
+  const marketplace = (
+    pData.source?.marketplace ||
+    product.source?.marketplace ||
+    ""
+  ).toLowerCase();
+
+  const brand = (
+    pData.basic?.brand ||
+    pData.brand ||
+    product.brand ||
+    ""
+  ).toLowerCase();
 
   const candidates = [
     product.productUrl,
@@ -188,13 +223,76 @@ export const getExternalStoreUrl = (product) => {
     pData.url,
   ];
 
+  let rawUrl = null;
   for (const u of candidates) {
     if (u && typeof u === "string" && u.trim() !== "" && u.trim() !== "#") {
-      return u.trim();
+      rawUrl = u.trim();
+      break;
     }
   }
 
-  return null;
+  // If this is an internal SmartSpace seller product with no external retail marketplace, return null so it uses internal cart
+  const hasSellerId = !!(pData.sellerId || product.sellerId);
+  const isSmartSpaceBrand = brand.includes("smartspace") || marketplace.includes("smartspace") || (!marketplace && !brand);
+
+  if (hasSellerId && isSmartSpaceBrand && (!rawUrl || rawUrl.includes("smartspace.ai") || rawUrl.includes("DUMMY_"))) {
+    return null;
+  }
+
+  const title = pData.basic?.name || pData.name || pData.title || product.name || product.title || "";
+  const query = cleanSearchQuery(title);
+
+  // Check if rawUrl is synthetic/dummy/broken
+  const isSynthetic =
+    !rawUrl ||
+    rawUrl.includes("smartspace.ai") ||
+    rawUrl.includes("DUMMY_") ||
+    /\/p\/[a-z0-9-]{8,}$/i.test(rawUrl) ||
+    rawUrl.includes("sofa-aug-sofa") ||
+    rawUrl.includes("coffee-table-aug") ||
+    rawUrl.includes("example.com");
+
+  // Genuine non-synthetic URL (e.g. real Amazon /dp/..., real Noon URL)
+  if (rawUrl && !isSynthetic) {
+    return rawUrl;
+  }
+
+  // Construct direct search URL for retailer store if query exists
+  if (query) {
+    const encodedQuery = encodeURIComponent(query);
+
+    if (marketplace.includes("ikea") || brand.includes("ikea")) {
+      return `https://www.ikea.com/eg/en/search/?q=${encodedQuery}`;
+    }
+    if (marketplace.includes("amazon") || brand.includes("amazon")) {
+      return `https://www.amazon.eg/s?k=${encodedQuery}`;
+    }
+    if (marketplace.includes("noon") || brand.includes("noon")) {
+      return `https://www.noon.com/egypt-en/search/?q=${encodedQuery}`;
+    }
+    if (marketplace.includes("jumia") || brand.includes("jumia")) {
+      return `https://www.jumia.com.eg/catalog/?q=${encodedQuery}`;
+    }
+    if (marketplace.includes("homzmart") || brand.includes("homzmart")) {
+      return `https://homzmart.com/en/search?q=${encodedQuery}`;
+    }
+    if (marketplace.includes("kabbani") || brand.includes("kabbani")) {
+      return `https://www.kabbani.com/search?q=${encodedQuery}`;
+    }
+    if (marketplace.includes("hub") || brand.includes("hub")) {
+      return `https://www.hubfurniture.com/search?q=${encodedQuery}`;
+    }
+    if (marketplace.includes("inhouse") || brand.includes("inhouse")) {
+      return `https://www.inhouse.com/search?q=${encodedQuery}`;
+    }
+
+    const storeName = pData.basic?.brand || pData.brand || pData.source?.marketplace || "";
+    if (storeName && !storeName.toLowerCase().includes("smartspace")) {
+      return `https://www.google.com/search?q=${encodeURIComponent(query + " " + storeName)}`;
+    }
+  }
+
+  return rawUrl && !isSynthetic ? rawUrl : null;
 };
 
 /**
@@ -203,7 +301,7 @@ export const getExternalStoreUrl = (product) => {
 export const isInternalProduct = (product) => {
   if (!product) return false;
   const externalUrl = getExternalStoreUrl(product);
-  if (externalUrl) return false; // Scraped products have external URL, not internal cart
+  if (externalUrl) return false; // External products have external URL, not internal cart
   const pData = product.productData || product;
-  return !!(pData.sellerId || product.sellerId || pData._id || product._id || product.productId);
+  return !!(pData.sellerId || product.sellerId);
 };
