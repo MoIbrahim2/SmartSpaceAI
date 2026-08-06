@@ -4,10 +4,31 @@ const authController = require('../controllers/auth.controller');
 const validate = require('../middlewares/validation.middleware');
 const protect = require('../middlewares/auth.middleware');
 const { authLimiter } = require('../middlewares/rateLimiter.middleware');
-const { signupSchema, signinSchema, activateSellerSchema, resendSellerCodeSchema } = require('../validators/auth.validator');
+const {
+  signupSchema,
+  signinSchema,
+  activateSellerSchema,
+  resendSellerCodeSchema,
+  verifyEmailSchema,
+  resendCodeSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema
+} = require('../validators/auth.validator');
 
 // POST /api/auth/signup
 router.post('/signup', authLimiter, validate(signupSchema), authController.signup);
+
+// POST /api/auth/verify-email
+router.post('/verify-email', validate(verifyEmailSchema), authController.verifyEmail);
+
+// POST /api/auth/resend-verification-code
+router.post('/resend-verification-code', validate(resendCodeSchema), authController.resendUserVerificationCode);
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
+
+// POST /api/auth/reset-password
+router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
 
 // POST /api/auth/signin
 router.post('/signin', authLimiter, validate(signinSchema), authController.signin);

@@ -79,15 +79,17 @@ export function AuthProvider({ children }) {
     const { data } = await signupApi(formData);
     if (data.success && data.data) {
       const { accessToken, user: userData } = data.data;
-      localStorage.setItem("accessToken", accessToken);
-      if (userData) {
-        localStorage.setItem("user", JSON.stringify(userData));
-        setUser(userData);
+      if (accessToken) {
+        localStorage.setItem("accessToken", accessToken);
+        if (userData) {
+          localStorage.setItem("user", JSON.stringify(userData));
+          setUser(userData);
+        }
       }
       return data.data;
     }
     throw new Error(data.message || "Registration failed");
-  }, []);
+  }, [setUser]);
 
   const logout = useCallback(async () => {
     try {

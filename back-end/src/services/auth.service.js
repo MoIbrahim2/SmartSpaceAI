@@ -4,6 +4,7 @@ const HTTP_STATUS = require('../constants/statusCodes');
 const ROLES = require('../constants/roles');
 const emailService = require('./email.service');
 const crypto = require('crypto');
+const { generateOtp, verifyOtp } = require('../helpers/otp.helper');
 const {
   generateAccessToken,
   generateRefreshToken,
@@ -35,9 +36,9 @@ const compareHash = (storedHash, incomingHash) => {
 };
 
 /**
- * Register a new user in the database
+ * Register a new user in the database with PENDING_ACTIVATION and send OTP email
  * @param {Object} userData - User sign up details
- * @returns {Promise<Object>} The registered User instance
+ * @returns {Promise<Object>} The registered User instance and status
  */
 const signUp = async (userData) => {
   const { firstName, lastName, email, dateOfBirth, password } = userData;
@@ -51,8 +52,14 @@ const signUp = async (userData) => {
     throw new ApiError(HTTP_STATUS.CONFLICT, 'auth.email_exists');
   }
 
-  // Create new user (password is automatically hashed by pre-save hook)
+  // Generate 6-digit OTP using helper
+  const { rawCode, hashedCode, expiresAt } = generateOtp(15);
+
+  // Create new user in PENDING_ACTIVATION state
   const newUser = await User.create({
+    status: 'PENDING_ACTIVATION',
+    verificationCode: hashedCode,
+    verificationCodeExpiresAt: expiresAt,
     profile: {
       firstName,
       lastName,
@@ -67,20 +74,173 @@ const signUp = async (userData) => {
     }
   });
 
-  // Issue tokens immediately so the client is authenticated after signup
-  const accessToken = generateAccessToken(newUser._id);
-  const refreshToken = generateRefreshToken(newUser._id);
-
-  // Hash the refresh token before storing it in the database
-  newUser.authentication.refreshToken = hashToken(refreshToken);
-  newUser.authentication.lastLogin = new Date();
-  await newUser.save();
+  // Send email verification code
+  await emailService.sendUserVerificationEmail({
+    email: normalizedEmail,
+    firstName,
+    verificationCode: rawCode
+  });
 
   return {
     user: newUser,
+    requiresVerification: true
+  };
+};
+
+/**
+ * Verify user email address with 6-digit OTP code and issue tokens
+ * @param {Object} data - { email, verificationCode }
+ * @returns {Promise<Object>} User instance, accessToken, refreshToken
+ */
+const verifyEmailOtp = async (data) => {
+  const { email, verificationCode } = data;
+  if (!email || !verificationCode) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'fields.required');
+  }
+
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({
+    'authentication.email': normalizedEmail
+  }).select('+verificationCode');
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+
+  if (user.status === 'ACTIVE' && user.authentication.emailVerified) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.already_activated');
+  }
+
+  const result = verifyOtp(verificationCode, user.verificationCode, user.verificationCodeExpiresAt);
+  if (!result.isValid) {
+    const errorKey = result.reason === 'code_expired' ? 'auth.code_expired' : 'auth.invalid_code';
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, errorKey);
+  }
+
+  // Mark user as ACTIVE and verified
+  user.status = 'ACTIVE';
+  user.authentication.emailVerified = true;
+  user.activatedAt = new Date();
+  user.verificationCode = undefined;
+  user.verificationCodeExpiresAt = undefined;
+
+  // Issue tokens
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  user.authentication.refreshToken = hashToken(refreshToken);
+  user.authentication.lastLogin = new Date();
+  await user.save();
+
+  return {
+    user: user.toObject(),
     accessToken,
     refreshToken
   };
+};
+
+/**
+ * Resend a 6-digit OTP code for regular user email verification
+ * @param {Object} data - { email }
+ */
+const resendUserVerificationCode = async (data) => {
+  const { email } = data;
+  if (!email) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'fields.email');
+  }
+
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ 'authentication.email': normalizedEmail }).select('+verificationCode');
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+
+  if (user.status === 'ACTIVE' && user.authentication.emailVerified) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.already_activated');
+  }
+
+  const { rawCode, hashedCode, expiresAt } = generateOtp(15);
+  user.verificationCode = hashedCode;
+  user.verificationCodeExpiresAt = expiresAt;
+  await user.save();
+
+  await emailService.sendUserVerificationEmail({
+    email: normalizedEmail,
+    firstName: user.profile?.firstName || 'User',
+    verificationCode: rawCode
+  });
+
+  return { email: normalizedEmail };
+};
+
+/**
+ * Initiate Forgot Password flow by sending a 6-digit OTP
+ * @param {Object} data - { email }
+ */
+const forgotPassword = async (data) => {
+  const { email } = data;
+  if (!email) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'fields.email');
+  }
+
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({ 'authentication.email': normalizedEmail }).select('+verificationCode');
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+
+  const { rawCode, hashedCode, expiresAt } = generateOtp(15);
+  user.verificationCode = hashedCode;
+  user.verificationCodeExpiresAt = expiresAt;
+  await user.save();
+
+  await emailService.sendPasswordResetEmail({
+    email: normalizedEmail,
+    firstName: user.profile?.firstName || 'User',
+    verificationCode: rawCode
+  });
+
+  return { email: normalizedEmail };
+};
+
+/**
+ * Reset password using 6-digit OTP code
+ * @param {Object} data - { email, verificationCode, password, confirmPassword }
+ */
+const resetPassword = async (data) => {
+  const { email, verificationCode, password, confirmPassword } = data;
+  if (!email || !verificationCode || !password) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'fields.required');
+  }
+
+  if (password !== confirmPassword) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.password_mismatch');
+  }
+
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({
+    'authentication.email': normalizedEmail
+  }).select('+verificationCode +authentication.passwordHash');
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+
+  const result = verifyOtp(verificationCode, user.verificationCode, user.verificationCodeExpiresAt);
+  if (!result.isValid) {
+    const errorKey = result.reason === 'code_expired' ? 'auth.code_expired' : 'auth.invalid_code';
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, errorKey);
+  }
+
+  // Update password (pre-save hook hashes it)
+  user.authentication.passwordHash = password;
+  user.verificationCode = undefined;
+  user.verificationCodeExpiresAt = undefined;
+  await user.save();
+
+  return { email: normalizedEmail };
 };
 
 /**
@@ -162,15 +322,10 @@ const activateSeller = async (activationData) => {
     throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden');
   }
 
-  // Verify code expiration
-  if (!user.verificationCodeExpiresAt || user.verificationCodeExpiresAt < new Date()) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.code_expired');
-  }
-
-  // Hash incoming code and compare
-  const incomingHash = crypto.createHash('sha256').update(verificationCode.trim()).digest('hex');
-  if (!user.verificationCode || user.verificationCode !== incomingHash) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.invalid_code');
+  const result = verifyOtp(verificationCode, user.verificationCode, user.verificationCodeExpiresAt);
+  if (!result.isValid) {
+    const errorKey = result.reason === 'code_expired' ? 'auth.code_expired' : 'auth.invalid_code';
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, errorKey);
   }
 
   // Activate account
@@ -213,12 +368,9 @@ const resendSellerCode = async (data) => {
     throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.forbidden');
   }
 
-  // Generate new code
-  const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const hashedCode = crypto.createHash('sha256').update(rawCode).digest('hex');
-
+  const { rawCode, hashedCode, expiresAt } = generateOtp(15);
   user.verificationCode = hashedCode;
-  user.verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  user.verificationCodeExpiresAt = expiresAt;
   await user.save();
 
   // Send new email
@@ -292,5 +444,10 @@ module.exports = {
   logout,
   refresh,
   activateSeller,
-  resendSellerCode
+  resendSellerCode,
+  verifyEmailOtp,
+  resendUserVerificationCode,
+  forgotPassword,
+  resetPassword
 };
+

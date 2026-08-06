@@ -99,20 +99,42 @@ const Profile = () => {
             <div className="flex flex-col gap-2 rounded-3xl bg-surface-bright p-6 neo-shadow">
               <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 font-bold text-primary neo-inset">
                 <Icon name="person" />
-                <span>{t("dashboard.profile")}</span>
+                <span>{t("dashboard.profile", "Profile")}</span>
               </button>
+              <Link
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-on-surface-variant transition-all hover:text-primary neo-button"
+                to="/change-password"
+              >
+                <Icon name="lock" />
+                <span>{t("auth.changePassword", "Change Password")}</span>
+              </Link>
               <Link
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-on-surface-variant transition-all hover:text-primary neo-button"
                 to="/credits"
               >
                 <Icon name="payments" />
-                <span>{t("dashboard.billing")}</span>
+                <span>{t("dashboard.billing", "Billing")}</span>
               </Link>
             </div>
           </aside>
 
-          <section className="flex-grow">
+          <section className="flex-grow space-y-10">
+            {/* Profile Info Form */}
             <div className="rounded-3xl bg-surface-bright p-8 neo-shadow md:p-12">
+              <div className="mb-8 flex items-center justify-between">
+                <h2 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2">
+                  <Icon name="person" size={24} className="text-primary" />
+                  <span>{t("dashboard.personalInfo", "Personal Information")}</span>
+                </h2>
+                <Link
+                  to="/change-password"
+                  className="flex items-center gap-2 rounded-xl bg-surface-bright px-4 py-2 text-xs font-bold text-primary neo-shadow neo-button"
+                >
+                  <Icon name="lock" size={16} />
+                  <span>{t("auth.changePassword", "Change Password")}</span>
+                </Link>
+              </div>
+
               {error && (
                 <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
                   {error}
@@ -196,7 +218,7 @@ const Profile = () => {
                 <div className="flex flex-col gap-2">
                   <label className="px-1 text-sm font-semibold text-on-surface-variant" htmlFor="email">{t("auth.emailAddress")}</label>
                   <input
-                    className="w-full rounded-2xl border-none bg-surface-bright px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="w-full rounded-2xl border-none bg-surface-bright px-6 py-4 text-on-surface placeholder-on-surface-variant/40 focus:ring-2 focus:ring-primary/20 neo-inset opacity-70 cursor-not-allowed"
                     id="email"
                     type="email"
                     value={form.email}
@@ -221,7 +243,7 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-8">
+                <div className="flex items-center justify-between pt-4">
                   <button
                     type="button"
                     onClick={() => window.location.reload()}

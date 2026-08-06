@@ -8,12 +8,15 @@ import AdminLayout from "./Layouts/AdminLayout";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Registar";
 import ActivateSeller from "./Pages/Auth/ActivateSeller";
+import VerifyEmail from "./Pages/Auth/VerifyEmail";
+import ForgotPassword from "./Pages/Auth/ForgotPassword";
 import Credits from "./Pages/Dashboard/Credits";
 import Dashboard from "./Pages/Dashboard/Dashboard";
 import ApartmentRooms from "./Pages/Dashboard/ApartmentRooms";
 import RoomDetail from "./Pages/Dashboard/RoomDetail";
 import MyRooms from "./Pages/Dashboard/MyRooms";
 import Profile from "./Pages/Dashboard/Profile";
+import ChangePasswordPage from "./Pages/Auth/ChangePasswordPage";
 import RoomGeneration from "./Pages/Dashboard/RoomGeneration";
 import PaymentSuccess from "./Pages/Dashboard/PaymentSuccess";
 import Cart from "./Pages/Dashboard/Cart";
@@ -47,6 +50,8 @@ function App() {
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/activate-seller" element={<ActivateSeller />} />
             </Route>
             <Route
@@ -68,46 +73,47 @@ function App() {
               <Route path="/credits" element={<Credits />} />
               <Route path="/billing" element={<Credits />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/change-password" element={<ChangePasswordPage />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
             </Route>
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute allowedRoles={["ADMIN"]}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="sellers" element={<SellerManagement />} />
-            <Route path="commissions" element={<CommissionReports />} />
-            <Route path="moderation" element={<ModerationQueue />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
-          <Route
-            path="/seller"
-            element={
-              <ProtectedRoute allowedRoles={["SELLER", "ADMIN"]}>
-                <SellerLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<SellerDashboard />} />
-            <Route path="dashboard" element={<SellerDashboard />} />
-            <Route path="products" element={<SellerProducts />} />
-            <Route path="products/create" element={<SellerProductForm />} />
-            <Route path="products/:id/edit" element={<SellerProductForm />} />
-            <Route path="orders" element={<SellerOrders />} />
-            <Route path="earnings" element={<SellerEarnings />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="sellers" element={<SellerManagement />} />
+              <Route path="commissions" element={<CommissionReports />} />
+              <Route path="moderation" element={<ModerationQueue />} />
+              <Route path="orders" element={<Orders />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+            <Route
+              path="/seller"
+              element={
+                <ProtectedRoute allowedRoles={["SELLER", "ADMIN"]}>
+                  <SellerLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<SellerDashboard />} />
+              <Route path="dashboard" element={<SellerDashboard />} />
+              <Route path="products" element={<SellerProducts />} />
+              <Route path="products/create" element={<SellerProductForm />} />
+              <Route path="products/:id/edit" element={<SellerProductForm />} />
+              <Route path="orders" element={<SellerOrders />} />
+              <Route path="earnings" element={<SellerEarnings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </CartProvider>
     </AuthProvider>
   );
 }
 
 export default App;
-

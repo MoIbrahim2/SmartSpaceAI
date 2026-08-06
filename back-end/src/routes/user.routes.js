@@ -4,7 +4,7 @@ const userController = require('../controllers/user.controller');
 const protect = require('../middlewares/auth.middleware');
 const { uploadProfileImage } = require('../middlewares/upload.middleware');
 const validate = require('../middlewares/validation.middleware');
-const { updateProfileSchema } = require('../validators/user.validator');
+const { updateProfileSchema, changePasswordSchema } = require('../validators/user.validator');
 
 // All user routes are protected
 router.use(protect);
@@ -16,4 +16,8 @@ router.get('/profile', userController.getProfile);
 // Note: uploadProfileImage must run before Joi validation so that Multer parses req.body
 router.patch('/profile', uploadProfileImage, validate(updateProfileSchema), userController.updateProfile);
 
+// PATCH /api/users/change-password
+router.patch('/change-password', validate(changePasswordSchema), userController.changePassword);
+
 module.exports = router;
+

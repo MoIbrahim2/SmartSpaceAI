@@ -55,11 +55,17 @@ const Login = () => {
       const targetPath = location.state?.from?.pathname || getRoleDefaultPath(targetUser);
       navigate(targetPath, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || err.message || t("auth.loginFailed"));
+      const msg = err.response?.data?.message || err.message || t("auth.loginFailed");
+      setError(msg);
+      if (msg === "auth.pending_activation") {
+        setIsPendingActivation(true);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const [isPendingActivation, setIsPendingActivation] = useState(false);
 
   return (
     <div className="min-h-screen overflow-x-hidden text-on-surface selection:bg-primary selection:text-white">
@@ -94,8 +100,17 @@ const Login = () => {
               </p>
             </header>
             {error && (
-              <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
-                {error}
+              <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error flex flex-col gap-2">
+                <span>{error === "auth.pending_activation" ? "Your account is pending email verification." : error}</span>
+                {isPendingActivation && (
+                  <Link
+                    to={`/verify-email?email=${encodeURIComponent(email)}`}
+                    className="inline-flex items-center gap-1 font-bold text-primary hover:underline text-xs"
+                  >
+                    <span>Verify your email code now</span>
+                    <Icon name="arrow_forward" size={14} />
+                  </Link>
+                )}
               </div>
             )}
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -120,7 +135,7 @@ const Login = () => {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between px-2">
                   <label className="text-sm font-semibold text-on-surface-variant" htmlFor="login-password">{t("auth.password")}</label>
-                  <Link className="text-xs font-bold text-primary hover:underline" to="/login">
+                  <Link className="text-xs font-bold text-primary hover:underline" to={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}>
                     {t("auth.passwordForgot") || "Forgot?"}
                   </Link>
                 </div>

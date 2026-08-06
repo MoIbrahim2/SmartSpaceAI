@@ -28,3 +28,21 @@ export const activateSeller = (data) =>
 export const resendSellerCode = (email) =>
   api.post("/auth/resend-seller-code", { email });
 
+export const verifyEmail = (email, verificationCode) =>
+  api.post("/auth/verify-email", { email, verificationCode });
+
+export const resendVerificationCode = (email) =>
+  api.post("/auth/resend-verification-code", { email });
+
+export const forgotPassword = (email) =>
+  api.post("/auth/forgot-password", { email });
+
+export const resetPassword = (data) =>
+  api.post("/auth/reset-password", {
+    email: data.email,
+    verificationCode: data.verificationCode,
+    password: data.password,
+    confirmPassword: data.confirmPassword,
+  });
+
+
