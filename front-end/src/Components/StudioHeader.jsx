@@ -140,6 +140,14 @@ const StudioHeader = () => {
                     <Icon name="settings" size={20} />
                     {t("common.settings")}
                   </Link>
+                  <Link
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-on-surface transition-all hover:text-primary hover:neomorph-inset"
+                    to="/change-password"
+                  >
+                    <Icon name="lock" size={20} />
+                    {t("auth.changePassword", "Change Password")}
+                  </Link>
                   <button
                     onClick={() => { handleLogout(); setMenuOpen(false); }}
                     className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-error transition-all hover:neomorph-inset"

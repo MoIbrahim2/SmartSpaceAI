@@ -4,6 +4,7 @@ const User = require('../../models/user.model');
 const Product = require('../../models/product.model');
 const Order = require('../../models/order.model');
 const emailService = require('../email.service');
+const { generateOtp } = require('../../helpers/otp.helper');
 const ApiError = require('../../errors/ApiError');
 const HTTP_STATUS = require('../../constants/statusCodes');
 const ROLES = require('../../constants/roles');
@@ -41,14 +42,8 @@ const createSeller = async (sellerData) => {
     throw new ApiError(HTTP_STATUS.CONFLICT, 'An account with this email address is already registered.');
   }
 
-  // Generate 6-digit verification code OTP
-  const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-  // Hash code with SHA-256
-  const hashedCode = crypto.createHash('sha256').update(rawCode).digest('hex');
-
-  // Set 15-minute expiration
-  const verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  // Generate 6-digit verification code OTP using shared helper
+  const { rawCode, hashedCode, expiresAt: verificationCodeExpiresAt } = generateOtp(15);
 
   // Unset/placeholder password string for pending account
   const placeholderPassword = `UNACTIVATED_${crypto.randomBytes(16).toString('hex')}`;
@@ -228,12 +223,11 @@ const resendSellerVerificationCode = async (sellerId) => {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.already_activated');
   }
 
-  // Generate new 6-digit verification code OTP
-  const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
-  const hashedCode = crypto.createHash('sha256').update(rawCode).digest('hex');
+  // Generate new 6-digit verification code OTP using shared helper
+  const { rawCode, hashedCode, expiresAt } = generateOtp(15);
 
   seller.verificationCode = hashedCode;
-  seller.verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  seller.verificationCodeExpiresAt = expiresAt;
   await seller.save();
 
   // Send invitation email with new verification code

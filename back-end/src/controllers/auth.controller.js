@@ -38,15 +38,51 @@ const getCookieOptions = () => {
  * Handle user registration
  */
 const signup = asyncHandler(async (req, res) => {
-  const { user, accessToken, refreshToken } = await authService.signUp(req.body);
+  const result = await authService.signUp(req.body);
+
+  return sendSuccess(res, 'auth.verification_sent', {
+    user: result.user,
+    requiresVerification: true
+  }, HTTP_STATUS.CREATED);
+});
+
+/**
+ * Handle user email OTP verification
+ */
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { user, accessToken, refreshToken } = await authService.verifyEmailOtp(req.body);
 
   // Set the refresh token inside an HttpOnly Cookie
   res.cookie('refreshToken', refreshToken, getCookieOptions());
 
-  return sendSuccess(res, 'auth.signup_success', {
+  return sendSuccess(res, 'auth.verification_success', {
     user,
     accessToken
-  }, HTTP_STATUS.CREATED);
+  }, HTTP_STATUS.OK);
+});
+
+/**
+ * Handle resending user verification OTP
+ */
+const resendUserVerificationCode = asyncHandler(async (req, res) => {
+  const result = await authService.resendUserVerificationCode(req.body);
+  return sendSuccess(res, 'auth.code_resent', result, HTTP_STATUS.OK);
+});
+
+/**
+ * Handle forgot password request
+ */
+const forgotPassword = asyncHandler(async (req, res) => {
+  const result = await authService.forgotPassword(req.body);
+  return sendSuccess(res, 'auth.forgot_password_sent', result, HTTP_STATUS.OK);
+});
+
+/**
+ * Handle password reset
+ */
+const resetPassword = asyncHandler(async (req, res) => {
+  const result = await authService.resetPassword(req.body);
+  return sendSuccess(res, 'auth.password_reset_success', result, HTTP_STATUS.OK);
 });
 
 /**
@@ -125,5 +161,10 @@ module.exports = {
   logout,
   refresh,
   activateSeller,
-  resendSellerCode
+  resendSellerCode,
+  verifyEmail,
+  resendUserVerificationCode,
+  forgotPassword,
+  resetPassword
 };
+

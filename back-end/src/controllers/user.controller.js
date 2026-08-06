@@ -23,7 +23,17 @@ const updateProfile = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'user.profile_updated', { user: updatedProfile }, HTTP_STATUS.OK);
 });
 
+/**
+ * Change password of current authenticated user
+ */
+const changePassword = asyncHandler(async (req, res) => {
+  await userService.changePassword(req.user._id, req.body);
+  return sendSuccess(res, 'user.password_changed', {}, HTTP_STATUS.OK);
+});
+
 module.exports = {
   getProfile,
-  updateProfile
+  updateProfile,
+  changePassword
 };
+

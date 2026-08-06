@@ -7,12 +7,15 @@ import AdminLayout from "./Layouts/AdminLayout";
 import Login from "./Pages/Auth/Login";
 import Register from "./Pages/Auth/Registar";
 import ActivateSeller from "./Pages/Auth/ActivateSeller";
+import VerifyEmail from "./Pages/Auth/VerifyEmail";
+import ForgotPassword from "./Pages/Auth/ForgotPassword";
 import Credits from "./Pages/Dashboard/Credits";
 import Dashboard from "./Pages/Dashboard/Dashboard";
 import ApartmentRooms from "./Pages/Dashboard/ApartmentRooms";
 import RoomDetail from "./Pages/Dashboard/RoomDetail";
 import MyRooms from "./Pages/Dashboard/MyRooms";
 import Profile from "./Pages/Dashboard/Profile";
+import ChangePasswordPage from "./Pages/Auth/ChangePasswordPage";
 import RoomGeneration from "./Pages/Dashboard/RoomGeneration";
 import PaymentSuccess from "./Pages/Dashboard/PaymentSuccess";
 import NotFound from "./Pages/NotFound";
@@ -43,6 +46,8 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/activate-seller" element={<ActivateSeller />} />
           </Route>
           <Route
@@ -62,6 +67,7 @@ function App() {
             <Route path="/credits" element={<Credits />} />
             <Route path="/billing" element={<Credits />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/change-password" element={<ChangePasswordPage />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
           </Route>
           <Route

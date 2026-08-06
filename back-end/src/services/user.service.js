@@ -57,14 +57,46 @@ const updateProfile = async (userId, updateFields, file) => {
   // Update text fields
   if (updateFields.firstName !== undefined) user.profile.firstName = updateFields.firstName;
   if (updateFields.lastName !== undefined) user.profile.lastName = updateFields.lastName;
-  if (updateFields.dateOfBirth !== undefined) user.profile.dateOfBirth = updateFields.dateOfBirth;
+  if (updateFields.dateOfBirth !== undefined) {
+    user.profile.dateOfBirth = updateFields.dateOfBirth ? updateFields.dateOfBirth : undefined;
+  }
 
   // Save changes (triggers validators and returns updated user)
   const updatedUser = await user.save();
   return updatedUser;
 };
 
+/**
+  * Change password for logged in user
+  * @param {string} userId
+  * @param {Object} passwordData - { currentPassword, newPassword, confirmPassword }
+  */
+const changePassword = async (userId, passwordData) => {
+  const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+  if (newPassword !== confirmPassword) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.password_mismatch');
+  }
+
+  const user = await User.findById(userId).select('+authentication.passwordHash');
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.invalid_current_password');
+  }
+
+  user.authentication.passwordHash = newPassword;
+  await user.save();
+
+  return { success: true };
+};
+
 module.exports = {
   getProfile,
-  updateProfile
+  updateProfile,
+  changePassword
 };
+

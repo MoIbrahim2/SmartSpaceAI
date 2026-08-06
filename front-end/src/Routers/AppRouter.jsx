@@ -5,12 +5,16 @@ import AdminLayout from "../Layouts/AdminLayout";
 import SellerLayout from "../Layouts/SellerLayout";
 import Login from "../Pages/Auth/Login";
 import Register from "../Pages/Auth/Registar";
+import VerifyEmail from "../Pages/Auth/VerifyEmail";
+import ForgotPassword from "../Pages/Auth/ForgotPassword";
+import ActivateSeller from "../Pages/Auth/ActivateSeller";
 import Credits from "../Pages/Dashboard/Credits";
 import Dashboard from "../Pages/Dashboard/Dashboard";
 import ApartmentRooms from "../Pages/Dashboard/ApartmentRooms";
 import RoomDetail from "../Pages/Dashboard/RoomDetail";
 import MyRooms from "../Pages/Dashboard/MyRooms";
 import Profile from "../Pages/Dashboard/Profile";
+import ChangePasswordPage from "../Pages/Auth/ChangePasswordPage";
 import RoomGeneration from "../Pages/Dashboard/RoomGeneration";
 import PaymentSuccess from "../Pages/Dashboard/PaymentSuccess";
 import NotFound from "../Pages/NotFound";
@@ -45,6 +49,9 @@ const router = createBrowserRouter([
     children: [
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
+      { path: "/verify-email", element: <VerifyEmail /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
+      { path: "/activate-seller", element: <ActivateSeller /> },
     ],
   },
   {
@@ -64,6 +71,7 @@ const router = createBrowserRouter([
       { path: "/credits", element: <Credits /> },
       { path: "/billing", element: <Credits /> },
       { path: "/profile", element: <Profile /> },
+      { path: "/change-password", element: <ChangePasswordPage /> },
       { path: "/payment-success", element: <PaymentSuccess /> },
     ],
   },

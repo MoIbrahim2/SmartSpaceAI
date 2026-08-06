@@ -60,7 +60,7 @@ const Register = () => {
     setLoading(true);
     try {
       await signup(form);
-      navigate("/home", { replace: true });
+      navigate(`/verify-email?email=${encodeURIComponent(form.email)}`, { replace: true });
     } catch (err) {
       const errors = err.response?.data?.errors;
       const message = err.response?.data?.message;

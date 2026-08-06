@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext";
 import Icon from "../../Components/Icon";
 import "./LandingPage.css";
 
@@ -33,6 +34,15 @@ const toolsData = {
 
 const LandingPage = () => {
   const { t, i18n } = useTranslation();
+  const { user, logout } = useAuth();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  const getDashboardPath = (u) => {
+    const role = (u?.role || "USER").toUpperCase();
+    if (role === "ADMIN") return "/admin";
+    if (role === "SELLER") return "/seller";
+    return "/home";
+  };
 
   // Theme Toggle
   const [theme, setTheme] = useState(() => {
@@ -509,11 +519,160 @@ const LandingPage = () => {
                 <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={22} />
               </button>
             </div>
-            <Link to="/login" className="btn btn-login">
-              {t("common.logIn")}
-            </Link>
+            {user ? (
+              <div className="profile-dropdown-container" style={{ position: "relative", display: "inline-block" }}>
+                <button
+                  onClick={() => setProfileMenuOpen((prev) => !prev)}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    background: "var(--primary-color, #4F46E5)",
+                    color: "#fff",
+                    fontWeight: "bold",
+                    border: "2px solid #4F46E5",
+                    overflow: "hidden",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                  aria-label="User Profile Menu"
+                >
+                  {user.profileImage ? (
+                    <img
+                      src={user.profileImage}
+                      alt="Profile"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: "14px" }}>
+                      {`${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || user.email?.[0]?.toUpperCase() || "U"}
+                    </span>
+                  )}
+                </button>
+
+                {profileMenuOpen && (
+                  <div
+                    className="profile-dropdown-menu shadow-2xl"
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      right: i18n.language.startsWith("ar") ? "auto" : "0",
+                      left: i18n.language.startsWith("ar") ? "0" : "auto",
+                      marginTop: "10px",
+                      width: "210px",
+                      backgroundColor: "var(--bg-surface, #ffffff)",
+                      color: "var(--text-primary, #0f172a)",
+                      borderRadius: "16px",
+                      padding: "12px",
+                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                      border: "1px solid rgba(148, 163, 184, 0.2)",
+                      zIndex: 1000,
+                    }}
+                    onMouseLeave={() => setProfileMenuOpen(false)}
+                  >
+                    <div style={{ padding: "8px 12px", marginBottom: "8px", borderBottom: "1px solid rgba(148, 163, 184, 0.2)" }}>
+                      <div style={{ fontWeight: "700", fontSize: "14px" }}>
+                        {user.firstName ? `${user.firstName} ${user.lastName || ""}` : "User Account"}
+                      </div>
+                      <div style={{ fontSize: "12px", opacity: 0.75, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {user.email}
+                      </div>
+                    </div>
+
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileMenuOpen(false)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "10px 12px",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "inherit",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Icon name="person" size={18} />
+                      <span>My Profile</span>
+                    </Link>
+
+                    <Link
+                      to={getDashboardPath(user)}
+                      onClick={() => setProfileMenuOpen(false)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "10px 12px",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "inherit",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Icon name="dashboard" size={18} />
+                      <span>Dashboard</span>
+                    </Link>
+
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileMenuOpen(false)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "10px 12px",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "inherit",
+                        textDecoration: "none",
+                      }}
+                    >
+                      <Icon name="settings" size={18} />
+                      <span>Settings</span>
+                    </Link>
+
+                    <button
+                      onClick={async () => {
+                        setProfileMenuOpen(false);
+                        await logout();
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        width: "100%",
+                        padding: "10px 12px",
+                        borderRadius: "10px",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        color: "#ef4444",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        marginTop: "4px",
+                      }}
+                    >
+                      <Icon name="logout" size={18} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="btn btn-login">
+                {t("common.logIn")}
+              </Link>
+            )}
             <Link
-              to="/register"
+              to={user ? getDashboardPath(user) : "/register"}
               className="btn btn-accent btn-design magnetic-btn shine-effect"
               onMouseMove={handleMagneticMouseMove}
               onMouseLeave={handleMagneticMouseLeave}
@@ -573,12 +732,12 @@ const LandingPage = () => {
             <p className="lead">{t("landing.heroLead")}</p>
             <div className="hero-actions">
               <Link
-                to="/register"
+                to={user ? getDashboardPath(user) : "/register"}
                 className="btn btn-accent btn-try magnetic-btn shine-effect"
                 onMouseMove={handleMagneticMouseMove}
                 onMouseLeave={handleMagneticMouseLeave}
               >
-                {t("landing.tryItFree")}
+                {user ? t("common.dashboard", "Dashboard") : t("landing.tryItFree")}
               </Link>
             </div>
           </div>
