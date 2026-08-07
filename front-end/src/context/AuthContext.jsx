@@ -91,6 +91,17 @@ export function AuthProvider({ children }) {
     throw new Error(data.message || "Registration failed");
   }, [setUser]);
 
+  const handleOAuthSuccess = useCallback(async (token) => {
+    localStorage.setItem("accessToken", token);
+    const { data } = await getProfile();
+    if (data.success && data.data) {
+      const updatedUser = data.data.user || data.data;
+      setUser(updatedUser);
+      return updatedUser;
+    }
+    throw new Error("Failed to fetch user profile after OAuth login");
+  }, [setUser]);
+
   const logout = useCallback(async () => {
     try {
       await logoutApi();
@@ -100,10 +111,10 @@ export function AuthProvider({ children }) {
       localStorage.removeItem("user");
       setUser(null);
     }
-  }, []);
+  }, [setUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signin, signup, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, signin, signup, logout, setUser, handleOAuthSuccess }}>
       {children}
     </AuthContext.Provider>
   );

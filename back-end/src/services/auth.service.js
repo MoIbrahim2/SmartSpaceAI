@@ -10,6 +10,11 @@ const {
   generateRefreshToken,
   verifyRefreshToken
 } = require('../helpers/token');
+const {
+  getGoogleAuthUrl: getGoogleUrlHelper,
+  getGoogleTokens,
+  getGoogleUserProfile
+} = require('../helpers/googleOAuth.helper');
 
 /**
  * Utility to hash a token using SHA-256
@@ -438,6 +443,107 @@ const refresh = async (token) => {
   }
 };
 
+/**
+ * Generate Google OAuth consent screen URL
+ * @returns {string} authorization URL
+ */
+const getGoogleAuthUrl = () => {
+  return getGoogleUrlHelper();
+};
+
+/**
+ * Process Google OAuth callback: exchange code, retrieve profile, find/create user, issue tokens
+ * @param {string} code - Google authorization code
+ * @returns {Promise<Object>} User instance, accessToken, refreshToken
+ */
+const googleCallback = async (code) => {
+  if (!code) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'fields.required');
+  }
+
+  // 1. Exchange authorization code for Google tokens
+  const tokens = await getGoogleTokens(code);
+
+  // 2. Retrieve user profile from Google
+  const profile = await getGoogleUserProfile(tokens.access_token);
+
+  // 3. Extract and validate required profile fields
+  const { email, email_verified, sub, given_name, family_name, name, picture } = profile;
+
+  if (!email) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.google_email_missing');
+  }
+
+  if (email_verified === false) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'auth.email_not_verified');
+  }
+
+  const normalizedEmail = email.toLowerCase();
+
+  // 4. Find existing user or create a new user
+  let user = await User.findOne({ 'authentication.email': normalizedEmail });
+
+  if (user) {
+    // Check if account is suspended
+    if (user.status === 'SUSPENDED') {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.suspended');
+    }
+
+    // If account was pending activation, mark as ACTIVE & verified via Google
+    if (user.status === 'PENDING_ACTIVATION') {
+      user.status = 'ACTIVE';
+      user.authentication.emailVerified = true;
+      user.activatedAt = new Date();
+      user.verificationCode = undefined;
+      user.verificationCodeExpiresAt = undefined;
+    }
+
+    // Link providerId if not already stored
+    if (!user.authentication.providerId && sub) {
+      user.authentication.providerId = sub;
+    }
+
+    // Set avatar if missing
+    if (!user.profile?.avatar && picture) {
+      user.profile.avatar = picture;
+    }
+  } else {
+    // Create new user using Google profile information
+    const firstName = given_name || (name ? name.split(' ')[0] : 'Google');
+    const lastName = family_name || (name ? name.split(' ').slice(1).join(' ') : 'User') || 'User';
+
+    user = new User({
+      status: 'ACTIVE',
+      activatedAt: new Date(),
+      profile: {
+        firstName,
+        lastName,
+        avatar: picture || ''
+      },
+      authentication: {
+        email: normalizedEmail,
+        provider: 'google',
+        providerId: sub,
+        emailVerified: true
+      }
+    });
+  }
+
+  // 5. Generate authentication tokens
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  user.authentication.refreshToken = hashToken(refreshToken);
+  user.authentication.lastLogin = new Date();
+  await user.save();
+
+  return {
+    user: user.toObject(),
+    accessToken,
+    refreshToken
+  };
+};
+
 module.exports = {
   signUp,
   signIn,
@@ -448,6 +554,8 @@ module.exports = {
   verifyEmailOtp,
   resendUserVerificationCode,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  getGoogleAuthUrl,
+  googleCallback
 };
 

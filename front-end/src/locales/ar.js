@@ -224,7 +224,6 @@ const ar = {
     signingIn: "جاري تسجيل الدخول...",
     orContinueWith: "أو تابع باستخدام",
     google: "جوجل",
-    apple: "آبل",
     newToSmartSpace: "جديد في سمارت سبيس؟",
     createAccount: "إنشاء حساب جديد",
     joinVisionaries: "انضم إلى مجتمع المبتكرين اليوم.",

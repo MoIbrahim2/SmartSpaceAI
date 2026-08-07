@@ -224,7 +224,6 @@ const en = {
     signingIn: "Signing in...",
     orContinueWith: "Or continue with",
     google: "Google",
-    apple: "Apple",
     newToSmartSpace: "New to SmartSpace?",
     createAccount: "Create Account",
     joinVisionaries: "Join our community of visionaries today.",

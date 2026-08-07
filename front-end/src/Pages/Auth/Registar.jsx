@@ -5,11 +5,16 @@ import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
+import { BASE_URL } from "../../api";
 
 const Register = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { signup, user, loading: authLoading } = useAuth();
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${BASE_URL}/auth/google`;
+  };
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -274,18 +279,18 @@ const Register = () => {
             <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
           </div>
 
-          <div className="mt-8 grid w-full max-w-md grid-cols-2 gap-6">
-            <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
+          <div className="mt-8 flex w-full max-w-md justify-center">
+            <button
+              className="group flex h-12 w-full items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active"
+              type="button"
+              onClick={handleGoogleLogin}
+            >
               <img
                 alt="Google"
-                className="h-5 w-5"
+                className="h-5 w-5 transition-all group-hover:scale-110"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0iZ08QqXPT_57FQNabTR52r9m5yVAETYLB0RtwDtn6V6O1HcmkLmfwO33RTfR-ww1icUtLBpIUp6o-E1JHGGxVKtEmLgIwq18Zj27ymfSVyR9O85cCyGEwARHECx0x75vRCW59e0Pw3JpQwxKgLJ9ti5Vi2Rg6bIZbtQBLg6Atifa25EcViRpkabbM-6dFmhapwDhA1it1g_4Lyjz0hjZkniz8xj1cE-PWyenL_vWOzZPZirWRy9y"
               />
               <span className="text-sm font-semibold text-on-surface">{t("auth.google")}</span>
-            </button>
-            <button className="flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
-              <Icon name="apps" className="text-on-surface" />
-              <span className="text-sm font-semibold text-on-surface">{t("auth.apple")}</span>
             </button>
           </div>
         </section>

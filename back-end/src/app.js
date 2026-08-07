@@ -56,6 +56,17 @@ app.use(compression());
 // Serve uploads folder statically so profile images can be retrieved
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Fallback OAuth redirects for callbacks without /api prefix
+app.get('/auth/google/callback', (req, res) => {
+  const queryString = new URLSearchParams(req.query).toString();
+  return res.redirect(`/api/auth/google/callback${queryString ? `?${queryString}` : ''}`);
+});
+
+app.get('/auth/google', (req, res) => {
+  const queryString = new URLSearchParams(req.query).toString();
+  return res.redirect(`/api/auth/google${queryString ? `?${queryString}` : ''}`);
+});
+
 // Register main API routes
 app.use('/api', routes);
 

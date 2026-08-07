@@ -39,6 +39,12 @@ router.post('/activate-seller', authLimiter, validate(activateSellerSchema), aut
 // POST /api/auth/resend-seller-code
 router.post('/resend-seller-code', authLimiter, validate(resendSellerCodeSchema), authController.resendSellerCode);
 
+// GET /api/auth/google
+router.get('/google', authController.redirectToGoogle);
+
+// GET /api/auth/google/callback
+router.get('/google/callback', authController.googleCallback);
+
 // POST /api/auth/logout
 router.post('/logout', protect, authController.logout);
 

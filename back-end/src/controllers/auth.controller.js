@@ -155,6 +155,43 @@ const resendSellerCode = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'auth.code_resent', result, HTTP_STATUS.OK);
 });
 
+/**
+ * Redirect user to Google OAuth consent screen
+ */
+const redirectToGoogle = asyncHandler(async (req, res) => {
+  const url = authService.getGoogleAuthUrl();
+  return res.redirect(url);
+});
+
+/**
+ * Handle Google OAuth callback from Google consent screen
+ */
+const googleCallback = asyncHandler(async (req, res) => {
+  const { code, error } = req.query;
+
+  if (error) {
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(error)}`);
+  }
+
+  const { user, accessToken, refreshToken } = await authService.googleCallback(code);
+
+  // Set the refresh token in HttpOnly Cookie
+  res.cookie('refreshToken', refreshToken, getCookieOptions());
+
+  // Check if client expects JSON response or HTML redirect
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    return sendSuccess(res, 'auth.signin_success', {
+      user,
+      accessToken
+    }, HTTP_STATUS.OK);
+  }
+
+  // Redirect to frontend application with accessToken
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  return res.redirect(`${clientUrl}/login?token=${encodeURIComponent(accessToken)}`);
+});
+
 module.exports = {
   signup,
   signin,
@@ -165,6 +202,8 @@ module.exports = {
   verifyEmail,
   resendUserVerificationCode,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  redirectToGoogle,
+  googleCallback
 };
 

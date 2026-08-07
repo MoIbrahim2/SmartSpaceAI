@@ -5,12 +5,13 @@ import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
+import { BASE_URL } from "../../api";
 
 const Login = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { signin, user, loading: authLoading } = useAuth();
+  const { signin, user, loading: authLoading, handleOAuthSuccess } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [email, setEmail] = useState("");
@@ -40,6 +41,34 @@ const Login = () => {
       if (wasDark) document.documentElement.classList.add("dark");
     };
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tokenParam = params.get("token");
+    const errorParam = params.get("error");
+
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    } else if (tokenParam) {
+      setLoading(true);
+      handleOAuthSuccess(tokenParam)
+        .then((targetUser) => {
+          const targetPath = location.state?.from?.pathname || getRoleDefaultPath(targetUser);
+          navigate(targetPath, { replace: true });
+        })
+        .catch((err) => {
+          console.error("Google login failed:", err);
+          setError("Google login failed. Please try again.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [location.search, handleOAuthSuccess, navigate, location.state]);
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${BASE_URL}/auth/google`;
+  };
 
   if (!authLoading && user) {
     return <Navigate to={redirectPath} replace />;
@@ -196,18 +225,18 @@ const Login = () => {
               <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
             </div>
 
-            <div className="mt-8 grid w-full max-w-md grid-cols-2 gap-6">
-              <button className="group flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
+            <div className="mt-8 flex w-full max-w-md justify-center">
+              <button
+                className="group flex h-12 w-full items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active"
+                type="button"
+                onClick={handleGoogleLogin}
+              >
                 <img
                   alt="Google"
-                  className="size-5 grayscale transition-all group-hover:grayscale-0"
+                  className="size-5 transition-all group-hover:scale-110"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1WHxP0IAmCNaoD_IGsba1bIXc0RaxQiF4cLTRC0OG21TTxTF4eGE_HARWI0oQHTnaE6W4A-vMoy35pKciHtWx8yaxdwD2UBkCfI3B_0XdRza7nwkmfacFmfXrEDX7eZl1ifM70OQOV9JihyK1Usm7c2_OYqkY2JMgPgkZl5pDT6yJQJqH-jL19Wqn_y6ph5LUSpuppDHVUV1cIVhBOplULNcDMJT7SzCTYn_zA3J-P2pkLhtuhUic"
                 />
                 <span className="text-sm font-semibold text-on-surface">{t("auth.google")}</span>
-              </button>
-              <button className="group flex h-12 items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active" type="button">
-                <Icon name="laptop_mac" className="text-on-surface grayscale transition-all group-hover:grayscale-0" />
-                <span className="text-sm font-semibold text-on-surface">{t("auth.apple")}</span>
               </button>
             </div>
 
