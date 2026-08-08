@@ -94,9 +94,70 @@ const changePassword = async (userId, passwordData) => {
   return { success: true };
 };
 
+/**
+ * Get the current credit balance for a user
+ * @param {string} userId
+ * @returns {Promise<number>} Credit balance
+ */
+const getCredits = async (userId) => {
+  const user = await User.findById(userId).select('credits');
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+  }
+  return user.credits;
+};
+
+/**
+ * Resolution-based credit cost map
+ */
+const RESOLUTION_CREDIT_COSTS = {
+  '720p':  9,
+  '1080p': 12,
+  '1440p': 17,
+  '4k':    26,
+};
+
+/**
+ * Atomically deduct credits for a given resolution.
+ * Returns the updated user or throws if insufficient balance.
+ * @param {string} userId
+ * @param {string} resolutionKey - e.g. '720p', '1080p', '1440p', '4k'
+ * @returns {Promise<{ user: Object, creditsDeducted: number }>}
+ */
+const deductCredits = async (userId, resolutionKey) => {
+  const cost = RESOLUTION_CREDIT_COSTS[resolutionKey];
+  if (!cost) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Invalid resolution key: ${resolutionKey}`);
+  }
+
+  // Atomic decrement with a guard: credits must be >= cost
+  const user = await User.findOneAndUpdate(
+    { _id: userId, credits: { $gte: cost } },
+    { $inc: { credits: -cost } },
+    { new: true }
+  );
+
+  if (!user) {
+    // Either user not found or insufficient credits
+    const existingUser = await User.findById(userId).select('credits');
+    if (!existingUser) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'user.not_found');
+    }
+    throw new ApiError(
+      HTTP_STATUS.PAYMENT_REQUIRED || 402,
+      `Insufficient credits. You need ${cost} credits for ${resolutionKey} generation but only have ${existingUser.credits}.`
+    );
+  }
+
+  return { user, creditsDeducted: cost };
+};
+
 module.exports = {
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
+  getCredits,
+  deductCredits,
+  RESOLUTION_CREDIT_COSTS
 };
 

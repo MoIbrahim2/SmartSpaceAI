@@ -14,6 +14,7 @@ import {
   validateSpatial
 } from "../../api";
 import { getProductId } from "../../utils/productUtils";
+import { useAuth } from "../../context/AuthContext";
 
 // Import step sub-components
 import Stepper from "../../Components/RoomGeneration/Stepper";
@@ -36,6 +37,13 @@ const RoomGeneration = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user, refreshCredits } = useAuth();
+  const [userCredits, setUserCredits] = useState(user?.credits ?? 0);
+
+  // Keep userCredits in sync with auth context
+  useEffect(() => {
+    setUserCredits(user?.credits ?? 0);
+  }, [user?.credits]);
 
   const urlRoomId = searchParams.get("roomId") || "";
 
@@ -683,9 +691,35 @@ const RoomGeneration = () => {
       const { data } = await generateRoomImage(generationId, { resolution: resToUse });
       if (data.success && data.data.generation?.generatedImage) {
         setGeneratedImageResult(data.data.generation.generatedImage);
+        if (data.data.generation.roomId?.widenedImageUrl) {
+          setRoomData((prev) => ({
+            ...prev,
+            widenedImageUrl: data.data.generation.roomId.widenedImageUrl,
+          }));
+        }
+      }
+      // Update credits from response or refresh from server
+      if (data.data?.remainingCredits !== undefined) {
+        setUserCredits(data.data.remainingCredits);
+      }
+      // Always refresh credits from server to stay in sync
+      const freshCredits = await refreshCredits();
+      if (freshCredits !== null) {
+        setUserCredits(freshCredits);
       }
     } catch (err) {
       console.error("Image generation API error:", err);
+      // If it was a credit error (402), show in the error state
+      if (err.response?.status === 402) {
+        setError(err.response?.data?.message || "Insufficient credits. Please top up to continue.");
+      } else {
+        setError(err.response?.data?.message || "Image generation failed. Please try again.");
+      }
+      // Refresh credits even on error (they may have been deducted on a different path)
+      const freshCredits = await refreshCredits();
+      if (freshCredits !== null) {
+        setUserCredits(freshCredits);
+      }
     } finally {
       setIsGeneratingImage(false);
     }
@@ -961,6 +995,8 @@ const RoomGeneration = () => {
                 onFinish={handleFinishRoomGeneration}
                 resolution={resolution}
                 setResolution={setResolution}
+                userCredits={userCredits}
+                roomData={roomData}
               />
             )}
           </section>

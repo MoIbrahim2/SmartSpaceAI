@@ -32,7 +32,7 @@ export default {
         "inverse-on-surface": "#0a0908",
         "surface-dim": "#e7e5e4",
         "secondary-fixed": "#e7e5e4",
-        "primary": "#8c6239",
+        "primary": "#d97706",
         "on-tertiary": "#ffffff",
         "on-secondary": "#ffffff",
         "on-primary-container": "#38200c",

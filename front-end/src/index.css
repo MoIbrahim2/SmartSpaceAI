@@ -133,19 +133,19 @@ html.dark .text-outline {
 }
 
 html.dark .border-primary {
-  border-color: #8c6239 !important;
+  border-color: #d97706 !important;
 }
 
 html.dark .text-primary {
-  color: #cda37f !important;
+  color: #fbbf24 !important;
 }
 
 html.dark .bg-primary {
-  background-color: #8c6239 !important;
+  background-color: #d97706 !important;
 }
 
 html.dark .hover\:bg-on-primary-fixed-variant:hover {
-  background-color: #704d2b !important;
+  background-color: #b45309 !important;
 }
 
 /* Neomorphic Dark Mode Shadows */

@@ -610,7 +610,7 @@ You are a deterministic, ultra-high-precision Architectural Virtual Staging & ${
 
 [1. BASE ROOM ARCHITECTURE & LAYOUT (<|image_1|>)]
 ${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
-- WIDE-ANGLE & FULL ROOM CAMERA ANGLE: Expand the camera perspective to a wide-angle architectural corner lens shot (18mm-24mm FOV from an elevated room corner). Even if <|image_1|> is cropped, tightly framed, or partial, WIDEN the room layout angle to display the full, uncropped room space from corner to corner so all placed furniture items (bed, wardrobe, nightstands, etc.) are completely visible in the scene.
+- MANDATORY 16:9 WIDESCREEN LANDSCAPE PERSPECTIVE: Target room image (<|image_1|>) is a wide-angle, wide-perspective architectural shot. You MUST generate the output in a 16:9 landscape aspect ratio format. Preserve the complete wide view of <|image_1|> showing both left and right walls, window, back wall, door frame, floor, and ceiling. DO NOT crop, narrow, zoom in, or reduce the scene into a portrait or square box.
 - STRUCTURAL IMMUTABILITY: The room geometry is locked. You are FORBIDDEN from altering, moving, or modifying the back walls, side walls, floor material, floor texture, ceiling lines, doors, window frames, built-in fixtures, or baseboards.
 - LIGHTING & PERSPECTIVE LOCK: Match the camera Field of View (FOV), vanishing points, horizon line, and room scale perfectly. Analyze natural daylight (windows) and artificial light (ceiling) in <|image_1|>. All placed furniture must cast physically accurate contact shadows and directional shadows matching this exact lighting environment. 
 ${isEnhance ? '- EXISTING FURNITURE & RESTYLING DIRECTIVE: <|image_1|> contains an existing furnished room layout. RETAIN existing furniture items visible in <|image_1|> EXCEPT for items explicitly replaced, removed, or added by the new product inventory below. Perform smooth inpainting and seamless visual integration for new items.' : '- NO ARCHITECTURAL BLEEDING: The room\'s floor texture or wall colors MUST NOT bleed onto the furniture.'}
@@ -672,7 +672,8 @@ ${spatialDirectives ? spatialDirectives : '- Arrange products logically with cle
             },
             parameters: {
               n: 1,
-              watermark: false
+              watermark: false,
+              size: '1280*720'
             }
           })
         });
@@ -985,7 +986,8 @@ STRICT MANDATORY CONSTRAINTS:
           },
           parameters: {
             n: 1,
-            watermark: false
+            watermark: false,
+            size: '1280*720'
           }
         })
       });

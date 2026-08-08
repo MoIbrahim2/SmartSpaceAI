@@ -12,6 +12,9 @@ router.use(protect);
 // GET /api/users/profile
 router.get('/profile', userController.getProfile);
 
+// GET /api/users/credits
+router.get('/credits', userController.getCredits);
+
 // PATCH /api/users/profile
 // Note: uploadProfileImage must run before Joi validation so that Multer parses req.body
 router.patch('/profile', uploadProfileImage, validate(updateProfileSchema), userController.updateProfile);

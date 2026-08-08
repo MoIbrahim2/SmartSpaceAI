@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { signin as signinApi, signup as signupApi, logout as logoutApi, getProfile, API_HOST } from "../api";
+import { signin as signinApi, signup as signupApi, logout as logoutApi, getProfile, getCredits as getCreditsApi, API_HOST } from "../api";
 
 const AuthContext = createContext(null);
 
@@ -12,6 +12,7 @@ const normalizeUser = (userData) => {
     lastName: userData.profile?.lastName || userData.lastName || "",
     dateOfBirth: userData.profile?.dateOfBirth || userData.dateOfBirth || "",
     email: userData.authentication?.email || userData.email || "",
+    credits: userData.credits ?? 0,
     profileImage: userData.profile?.avatar
       ? (userData.profile.avatar.startsWith("http") ? userData.profile.avatar : `${API_HOST}/${userData.profile.avatar}`)
       : userData.profileImage || "",
@@ -36,6 +37,28 @@ export function AuthProvider({ children }) {
       }
       return normalized;
     });
+  }, []);
+
+  /**
+   * Refresh the user's credit balance from the server
+   * and update local state + localStorage.
+   */
+  const refreshCredits = useCallback(async () => {
+    try {
+      const { data } = await getCreditsApi();
+      if (data.success && data.data?.credits !== undefined) {
+        setUserState((prev) => {
+          if (!prev) return prev;
+          const updated = { ...prev, credits: data.data.credits };
+          localStorage.setItem("user", JSON.stringify(updated));
+          return updated;
+        });
+        return data.data.credits;
+      }
+    } catch (err) {
+      console.error("Failed to refresh credits:", err);
+    }
+    return null;
   }, []);
 
   useEffect(() => {
@@ -114,7 +137,7 @@ export function AuthProvider({ children }) {
   }, [setUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signin, signup, logout, setUser, handleOAuthSuccess }}>
+    <AuthContext.Provider value={{ user, loading, signin, signup, logout, setUser, handleOAuthSuccess, refreshCredits }}>
       {children}
     </AuthContext.Provider>
   );

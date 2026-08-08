@@ -648,11 +648,12 @@ const generateRoomImage = async (userId, generationId) => {
 
     // Link this generation as the selected active generation on the Room model
     if (generation.roomId) {
-      await Room.findByIdAndUpdate(generation.roomId._id, {
+      await Room.findByIdAndUpdate(generation.roomId._id || generation.roomId, {
         selectedGenerationId: generation._id,
       });
     }
 
+    await generation.populate('roomId');
     return generation;
   } catch (err) {
     generation.status = 'FAILED';
@@ -700,11 +701,20 @@ const saveResolution = async (userId, generationId, payload) => {
   }
 
   if (payload.resolution) {
-    generation.resolution = {
-      width: Number(payload.resolution.width) || 1280,
-      height: Number(payload.resolution.height) || 720,
-      label: payload.resolution.label || 'Standard (720p)'
-    };
+    if (typeof payload.resolution === 'string') {
+      const resKey = payload.resolution.toLowerCase();
+      let width = 1920, height = 1080, label = '1080p (FHD)';
+      if (resKey.includes('720')) { width = 1280; height = 720; label = '720p (HD)'; }
+      else if (resKey.includes('1440') || resKey.includes('2k') || resKey.includes('qhd')) { width = 2560; height = 1440; label = '1440p (QHD)'; }
+      else if (resKey.includes('4k') || resKey.includes('2160') || resKey.includes('uhd')) { width = 3840; height = 2160; label = '4K (Ultra HD)'; }
+      generation.resolution = { width, height, label };
+    } else {
+      generation.resolution = {
+        width: Number(payload.resolution.width) || 1280,
+        height: Number(payload.resolution.height) || 720,
+        label: payload.resolution.label || '1080p (FHD)'
+      };
+    }
   }
   await generation.save();
   return generation;

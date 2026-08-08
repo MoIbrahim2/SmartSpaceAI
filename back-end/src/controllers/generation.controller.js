@@ -85,15 +85,57 @@ const saveResolution = asyncHandler(async (req, res) => {
 });
 
 /**
- * Trigger AI image generation for a generation (accepts resolution in body)
+ * Trigger AI image generation for a generation (accepts resolution in body).
+ * Deducts credits based on the selected resolution before generating.
  */
 const generateRoomImage = asyncHandler(async (req, res) => {
+  const userService = require('../services/user.service');
+
   // Save resolution to generation before generating if provided
   if (req.body.resolution) {
     await generationService.saveResolution(req.user._id, req.params.id, req.body);
   }
-  const generation = await generationService.generateRoomImage(req.user._id, req.params.id);
-  return sendSuccess(res, 'generation.image_generated', { generation }, HTTP_STATUS.OK);
+
+  // Determine the resolution key for credit deduction
+  const generation = await Generation.findById(req.params.id);
+  if (!generation) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+
+  // Resolve resolution key from the stored resolution label or the request body
+  let resolutionKey = '1080p'; // default
+  if (req.body.resolution) {
+    const resStr = typeof req.body.resolution === 'string'
+      ? req.body.resolution
+      : req.body.resolution.resolution || req.body.resolution.label || '';
+    const normalized = resStr.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (normalized.includes('720')) resolutionKey = '720p';
+    else if (normalized.includes('1080')) resolutionKey = '1080p';
+    else if (normalized.includes('1440') || normalized.includes('2k') || normalized.includes('qhd')) resolutionKey = '1440p';
+    else if (normalized.includes('4k') || normalized.includes('2160') || normalized.includes('uhd')) resolutionKey = '4k';
+  } else if (generation.resolution?.label) {
+    const label = generation.resolution.label.toLowerCase();
+    if (label.includes('720')) resolutionKey = '720p';
+    else if (label.includes('1440') || label.includes('qhd') || label.includes('2k')) resolutionKey = '1440p';
+    else if (label.includes('4k') || label.includes('uhd')) resolutionKey = '4k';
+    else resolutionKey = '1080p';
+  }
+
+  // Deduct credits BEFORE triggering the expensive AI generation
+  const { user: updatedUser, creditsDeducted } = await userService.deductCredits(req.user._id, resolutionKey);
+
+  // Record credits used on the generation document
+  generation.creditsUsed = creditsDeducted;
+  await generation.save();
+
+  // Now run the actual generation
+  const result = await generationService.generateRoomImage(req.user._id, req.params.id);
+
+  return sendSuccess(res, 'generation.image_generated', {
+    generation: result,
+    creditsDeducted,
+    remainingCredits: updatedUser.credits
+  }, HTTP_STATUS.OK);
 });
 
 /**
