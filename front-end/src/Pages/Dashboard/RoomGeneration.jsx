@@ -795,14 +795,14 @@ const RoomGeneration = () => {
               </div>
             </div>
             <h3 className="font-headline text-xl font-bold text-on-surface">
-              Calculating 2D Room Floorplan & Clearances...
+              {t("dashboard.calculatingFloorplanTitle", "Calculating 2D Room Floorplan & Clearances...")}
             </h3>
             <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm">
-              SmartSpaceAI is evaluating furniture dimensions, walkway clearances, and ergonomic spacing rules to ensure everything fits perfectly in your room.
+              {t("dashboard.calculatingFloorplanDesc", "SmartSpaceAI is evaluating furniture dimensions, walkway clearances, and ergonomic spacing rules to ensure everything fits perfectly in your room.")}
             </p>
             <div className="flex items-center gap-2 text-xs text-amber-500 font-semibold">
               <Icon name="architecture" size={16} />
-              <span>Spatial Analysis Engine Active</span>
+              <span>{t("dashboard.spatialEngineActive", "Spatial Analysis Engine Active")}</span>
             </div>
           </div>
         </div>
@@ -819,10 +819,10 @@ const RoomGeneration = () => {
               </div>
               <div>
                 <h3 className="font-headline text-xl font-bold text-on-surface">
-                  Spatial Layout Conflict
+                  {t("dashboard.spatialConflictTitle", "Spatial Layout Conflict")}
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-0.5">
-                  Some selected products cannot fit within your room dimensions.
+                  {t("dashboard.spatialConflictDesc", "Some selected products cannot fit within your room dimensions.")}
                 </p>
               </div>
             </div>
@@ -842,6 +842,11 @@ const RoomGeneration = () => {
                   DOOR_IMPACT: "text-orange-500 bg-orange-500/10",
                   WINDOW_BLOCKAGE: "text-blue-500 bg-blue-500/10"
                 };
+                const translatedType = violation.type === "DIMENSION_OVERFLOW" ? t("dashboard.violationDimensionOverflow", "Dimension Overflow")
+                                     : violation.type === "WALKWAY_BLOCKAGE" ? t("dashboard.violationWalkwayBlockage", "Walkway Blockage")
+                                     : violation.type === "DOOR_IMPACT" ? t("dashboard.violationDoorImpact", "Door Impact")
+                                     : violation.type === "WINDOW_BLOCKAGE" ? t("dashboard.violationWindowBlockage", "Window Blockage")
+                                     : (violation.type || "").replace(/_/g, " ");
 
                 return (
                   <div key={idx} className="p-4 rounded-xl neomorph-inset border border-red-500/20">
@@ -851,7 +856,7 @@ const RoomGeneration = () => {
                       </div>
                       <div>
                         <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-                          {(violation.type || "").replace(/_/g, " ")}
+                          {translatedType}
                         </span>
                         <p className="text-sm text-on-surface mt-1 leading-relaxed">
                           {violation.description}
@@ -868,10 +873,10 @@ const RoomGeneration = () => {
               <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
                 <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <Icon name="lightbulb" size={14} />
-                  Suggested Removals
+                  {t("dashboard.suggestedRemovals", "Suggested Removals")}
                 </h4>
                 <p className="text-xs text-on-surface-variant mb-3">
-                  Remove the following items to make the layout fit:
+                  {t("dashboard.suggestedRemovalsDesc", "Remove the following items to make the layout fit:")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {spatialResult.suggestedRemovals.map((productId) => {
@@ -887,7 +892,7 @@ const RoomGeneration = () => {
                         className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 text-xs font-bold hover:bg-red-500/20 transition-all flex items-center gap-1.5 active:scale-95"
                       >
                         <Icon name="remove_circle" size={14} />
-                        Remove "{title}"
+                        {t("dashboard.removeProductAction", { title, defaultValue: `Remove "${title}"` })}
                       </button>
                     );
                   })}
@@ -905,7 +910,7 @@ const RoomGeneration = () => {
                 className="w-full sm:w-auto px-6 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-variant transition-all flex items-center justify-center gap-2 shadow-md active:scale-95"
               >
                 <Icon name="edit" size={16} />
-                Adjust Products to Fix Layout
+                {t("dashboard.adjustProductsToFix", "Adjust Products to Fix Layout")}
               </button>
             </div>
           </div>
