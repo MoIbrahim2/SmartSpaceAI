@@ -55,7 +55,7 @@ export default function ProductDetailsDrawer({ product, isOpen, onClose, onAppro
         {/* AI Metrics Card */}
         <div className="rounded-2xl bg-surface p-5 border border-outline/10 neomorph-raised space-y-3">
           <h5 className="font-bold text-xs uppercase tracking-wider text-on-surface-variant border-b border-outline/10 pb-2">
-            AI Classification Analysis
+            AI Audit & Classification
           </h5>
           <div className="flex items-center justify-between text-xs py-1">
             <span className="text-on-surface-variant flex items-center gap-1.5 font-semibold">
@@ -63,14 +63,31 @@ export default function ProductDetailsDrawer({ product, isOpen, onClose, onAppro
             </span>
             <span className="font-extrabold text-emerald-600">{product.aiConfidence}</span>
           </div>
-          <div className="flex items-center justify-between text-xs py-1">
-            <span className="text-on-surface-variant font-semibold">Quality Index:</span>
-            <span className="font-extrabold text-on-surface">{product.qualityScore}</span>
-          </div>
+          {product.detectedObject && (
+            <div className="flex items-center justify-between text-xs py-1">
+              <span className="text-on-surface-variant font-semibold">Identified Object:</span>
+              <span className="font-extrabold text-on-surface bg-surface-container px-2 py-0.5 rounded-md">
+                {product.detectedObject}
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between text-xs py-1">
             <span className="text-on-surface-variant font-semibold">Seller Origin:</span>
             <span className="font-bold text-on-surface">{product.sellerName}</span>
           </div>
+          {Array.isArray(product.issues) && product.issues.length > 0 && (
+            <div className="pt-2 border-t border-outline/10 space-y-1.5">
+              <span className="text-xs font-bold text-amber-600 dark:text-amber-400">Validation Notes / Flagged Issues:</span>
+              <ul className="space-y-1 text-xs text-on-surface-variant">
+                {product.issues.map((iss, i) => (
+                  <li key={i} className="flex items-start gap-1">
+                    <span className="font-bold text-primary">•</span>
+                    <span>{iss}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Product Attributes */}

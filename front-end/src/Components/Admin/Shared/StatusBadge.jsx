@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   CheckCircle2,
   Clock,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 export default function StatusBadge({ status }) {
+  const { t } = useTranslation();
   if (!status) return null;
 
   const upperStatus = String(status).toUpperCase().trim();
@@ -62,7 +64,8 @@ export default function StatusBadge({ status }) {
       break;
   }
 
-  const label = formatStatusLabel(status);
+  const fallbackLabel = formatStatusLabel(status);
+  const label = t(`status.${upperStatus}`, { defaultValue: fallbackLabel });
 
   return (
     <span

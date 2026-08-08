@@ -44,9 +44,11 @@ const getModerationItems = async (query = {}) => {
     sellerName: prod.basic?.brand || 'External Scraped Seller',
     category: prod.classification?.canonicalCategory || 'General',
     price: `$${prod.pricing?.currentPrice || 0}`,
-    aiConfidence: prod.processing?.categoryConfidence
-      ? `${Math.round(prod.processing.categoryConfidence * 100)}%`
-      : '92%',
+    aiConfidence: typeof prod.processing?.confidence === 'number'
+      ? `${Math.round(prod.processing.confidence * 100)}%`
+      : (prod.processing?.categoryConfidence
+        ? `${Math.round(prod.processing.categoryConfidence * 100)}%`
+        : 'N/A'),
     qualityScore: prod.processing?.qualityScore
       ? `${prod.processing.qualityScore}`
       : 'A',
@@ -54,6 +56,8 @@ const getModerationItems = async (query = {}) => {
       ? new Date(prod.source.scrapedAt).toISOString().split('T')[0]
       : new Date().toISOString().split('T')[0],
     status: prod.processing?.status || 'Pending Review',
+    detectedObject: prod.processing?.detectedObject || null,
+    issues: prod.processing?.issues || [],
     images: (prod.images || []).map((img) => img.url),
     imageUrl: prod.images?.[0]?.url || 'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?w=300&auto=format&fit=crop&q=80',
     description: prod.basic?.description || 'No detailed description provided.',

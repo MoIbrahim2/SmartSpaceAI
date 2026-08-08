@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { DollarSign, ShoppingBag, ShieldAlert, Package, CheckCircle, HelpCircle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import StatCard from "../../Components/Admin/Shared/StatCard";
 import DataTable from "../../Components/Admin/Shared/DataTable";
@@ -10,6 +11,7 @@ import { useToast } from "../../Components/Admin/Shared/ToastContext";
 
 export default function SellerDashboard() {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalSales: 0,
@@ -81,23 +83,23 @@ export default function SellerDashboard() {
 
       } catch (error) {
         console.error("Error fetching seller dashboard data:", error);
-        showToast("Failed to load dashboard statistics", "error");
+        showToast(t("seller.dashboard.loadError"), "error");
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [showToast]);
+  }, [showToast, t]);
 
   const columns = [
     {
-      label: "Order ID",
+      label: t("seller.orders.colOrderId"),
       key: "_id",
       render: (row) => <span className="font-bold text-on-surface">{row._id}</span>,
     },
     {
-      label: "Customer",
+      label: t("seller.orders.colCustomer"),
       key: "customer",
       render: (row) => (
         <div>
@@ -107,7 +109,7 @@ export default function SellerDashboard() {
       ),
     },
     {
-      label: "Items",
+      label: t("seller.orders.colItemsBreakdown"),
       key: "items",
       render: (row) => (
         <span className="text-sm font-semibold">
@@ -116,16 +118,16 @@ export default function SellerDashboard() {
       ),
     },
     {
-      label: "Total Amount",
+      label: t("seller.orders.colTotalAmount"),
       key: "totalAmount",
       render: (row) => (
         <span className="font-bold text-primary">
-          {row.totalAmount?.toLocaleString()} EGP
+          {row.totalAmount?.toLocaleString()} {t("seller.dashboard.egp")}
         </span>
       ),
     },
     {
-      label: "Status",
+      label: t("seller.orders.colFulfillmentStatus"),
       key: "status",
       render: (row) => <StatusBadge status={row.status} />,
     },
@@ -144,37 +146,37 @@ export default function SellerDashboard() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Seller Dashboard"
-        description="Manage your custom catalog, monitor incoming client buy-requests, and check earnings ledger."
+        title={t("seller.dashboard.title")}
+        description={t("seller.dashboard.description")}
       />
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
-          title="Gross Sales"
-          value={`${stats.totalSales.toLocaleString()} EGP`}
+          title={t("seller.dashboard.grossSales")}
+          value={`${stats.totalSales.toLocaleString()} ${t("seller.dashboard.egp")}`}
           change="+18.4%"
           isPositive={true}
           icon={DollarSign}
         />
         <StatCard
-          title="Buy Requests"
+          title={t("seller.dashboard.buyRequests")}
           value={stats.totalOrders}
           change="+12.5%"
           isPositive={true}
           icon={ShoppingBag}
         />
         <StatCard
-          title="Active Products"
+          title={t("seller.dashboard.activeProducts")}
           value={stats.activeProducts}
           change="+4"
           isPositive={true}
           icon={Package}
         />
         <StatCard
-          title="Needs Attention"
+          title={t("seller.dashboard.needsAttention")}
           value={stats.pendingValidation}
-          change="AI Validation Active"
+          change={t("seller.dashboard.aiValidationActive")}
           isPositive={true}
           icon={ShieldAlert}
         />
@@ -185,8 +187,8 @@ export default function SellerDashboard() {
         <div className="lg:col-span-2 rounded-2xl bg-surface p-5 border border-outline/10 neomorph-raised space-y-4">
           <div className="flex items-center justify-between border-b border-outline/10 pb-3">
             <div>
-              <h3 className="font-bold text-base text-on-surface">Store Sales Trend</h3>
-              <p className="text-xs text-on-surface-variant">Monthly sales performance including platform transactions</p>
+              <h3 className="font-bold text-base text-on-surface">{t("seller.dashboard.storeSalesTrend")}</h3>
+              <p className="text-xs text-on-surface-variant">{t("seller.dashboard.storeSalesDesc")}</p>
             </div>
             <DollarSign className="size-5 text-primary" />
           </div>
@@ -195,6 +197,8 @@ export default function SellerDashboard() {
             <div className="absolute inset-0 flex items-end justify-between gap-2 px-2 pb-6">
               {chartData.map((item, idx) => {
                 const heightPercent = Math.round((item.revenue / maxRevenue) * 100);
+                const monthKey = item.month?.split(" ")[0];
+                const translatedMonth = monthKey ? t(`seller.dashboard.months.${monthKey}`, monthKey) : item.month;
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
                     <div className="relative w-full flex justify-center items-end h-full">
@@ -203,11 +207,11 @@ export default function SellerDashboard() {
                         className="w-full max-w-[32px] rounded-t-lg bg-primary/80 group-hover:bg-primary transition-all neo-shadow"
                       >
                         <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] font-bold px-2 py-1 rounded shadow-md pointer-events-none transition-all z-20 whitespace-nowrap">
-                          {item.revenue.toLocaleString()} EGP
+                          {item.revenue.toLocaleString()} {t("seller.dashboard.egp")}
                         </div>
                       </div>
                     </div>
-                    <span className="text-[11px] font-bold text-on-surface-variant">{item.month}</span>
+                    <span className="text-[11px] font-bold text-on-surface-variant">{translatedMonth}</span>
                   </div>
                 );
               })}
@@ -219,8 +223,8 @@ export default function SellerDashboard() {
         <div className="rounded-2xl bg-surface p-5 border border-outline/10 neomorph-raised space-y-4">
           <div className="flex items-center justify-between border-b border-outline/10 pb-3">
             <div>
-              <h3 className="font-bold text-base text-on-surface">AI Validation Alerts</h3>
-              <p className="text-xs text-on-surface-variant">Requires manual updates or review</p>
+              <h3 className="font-bold text-base text-on-surface">{t("seller.dashboard.aiValidationAlerts")}</h3>
+              <p className="text-xs text-on-surface-variant">{t("seller.dashboard.aiValidationAlertsDesc")}</p>
             </div>
             <ShieldAlert className="size-5 text-error animate-pulse" />
           </div>
@@ -229,8 +233,8 @@ export default function SellerDashboard() {
             {validationAlerts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-6 text-center text-on-surface-variant">
                 <CheckCircle className="size-8 text-green-500 mb-2" />
-                <p className="text-sm font-semibold text-on-surface">All Products Verified</p>
-                <p className="text-xs text-on-surface-variant">Your listings comply with SmartSpace design systems.</p>
+                <p className="text-sm font-semibold text-on-surface">{t("seller.dashboard.allProductsVerified")}</p>
+                <p className="text-xs text-on-surface-variant">{t("seller.dashboard.allProductsVerifiedDesc")}</p>
               </div>
             ) : (
               validationAlerts.map((alert) => (
@@ -251,17 +255,28 @@ export default function SellerDashboard() {
                   </div>
                   <div className="flex-1 space-y-1">
                     <p className="font-bold text-on-surface">{alert.basic?.name}</p>
-                    <p className="text-on-surface-variant leading-relaxed text-[11px]">
-                      {alert.processing?.status === "REJECTED"
-                        ? alert.processing?.issues?.[0] || "Declined during automated structural check."
-                        : "Flagged for manual alignment review by admin."}
-                    </p>
+                    <div className="text-on-surface-variant leading-relaxed text-[11px]">
+                      {Array.isArray(alert.processing?.issues) && alert.processing.issues.length > 0 ? (
+                        <ul className="space-y-1">
+                          {alert.processing.issues.map((iss, i) => (
+                            <li key={i} className="flex items-start gap-1">
+                              <span className="font-bold text-primary">•</span>
+                              <span className="break-words">{iss}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : alert.processing?.status === "REJECTED" ? (
+                        <span>{t("seller.dashboard.declinedAutomated")}</span>
+                      ) : (
+                        <span>{t("seller.dashboard.flaggedManual")}</span>
+                      )}
+                    </div>
                     <div className="pt-1">
                       <Link
                         to={`/seller/products/${alert._id}/edit`}
                         className="text-primary hover:underline font-bold inline-flex items-center gap-1 text-[11px]"
                       >
-                        Update Listing <ArrowRight className="size-3" />
+                        {t("seller.dashboard.updateListing")} <ArrowRight className="size-3 rtl:rotate-180" />
                       </Link>
                     </div>
                   </div>
@@ -276,14 +291,14 @@ export default function SellerDashboard() {
       <div className="rounded-2xl bg-surface p-5 border border-outline/10 neomorph-raised space-y-4">
         <div className="flex items-center justify-between border-b border-outline/10 pb-3">
           <div>
-            <h3 className="font-bold text-base text-on-surface">Recent Buy Requests</h3>
-            <p className="text-xs text-on-surface-variant">Incoming purchaser requests waiting for processing</p>
+            <h3 className="font-bold text-base text-on-surface">{t("seller.dashboard.recentBuyRequests")}</h3>
+            <p className="text-xs text-on-surface-variant">{t("seller.dashboard.recentBuyRequestsDesc")}</p>
           </div>
           <Link
             to="/seller/orders"
             className="text-primary hover:underline font-bold text-sm inline-flex items-center gap-1"
           >
-            View All Requests <ArrowRight className="size-4" />
+            {t("seller.dashboard.viewAllRequests")} <ArrowRight className="size-4 rtl:rotate-180" />
           </Link>
         </div>
         <DataTable columns={columns} data={recentOrders} />
