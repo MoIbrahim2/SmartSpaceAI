@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { User, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SectionHeader from "../Shared/SectionHeader";
 import { useToast } from "../Shared/ToastContext";
 import { useAuth } from "../../../context/AuthContext";
 import { editProfile } from "../../../api/UserApi";
 
 export default function AdminProfileSection() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const { user, setUser } = useAuth();
 
@@ -40,7 +42,7 @@ export default function AdminProfileSection() {
       if (res?.data?.data?.user || res?.data?.data) {
         setUser(res.data.data.user || res.data.data);
       }
-      showToast("Admin profile updated successfully!", "success");
+      showToast(t("admin.settings.profileUpdatedToast"), "success");
     } catch (err) {
       showToast(err.response?.data?.message || err.message || "Failed to update profile", "error");
     } finally {
@@ -52,7 +54,7 @@ export default function AdminProfileSection() {
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl bg-surface p-6 border border-outline/10 neomorph-raised space-y-4">
-      <SectionHeader title="Admin Profile & Identity" subtitle="Manage primary system administrator details" icon={User} />
+      <SectionHeader title={t("admin.settings.profileTitle")} subtitle={t("admin.settings.profileSubtitle")} icon={User} />
 
       <div className="flex items-center gap-4 py-2">
         <div className="size-16 rounded-full bg-primary text-white flex items-center justify-center font-extrabold text-xl neo-shadow">
@@ -71,7 +73,7 @@ export default function AdminProfileSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-            First Name
+            {t("admin.settings.firstName")}
           </label>
           <input
             type="text"
@@ -82,7 +84,7 @@ export default function AdminProfileSection() {
         </div>
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-            Last Name
+            {t("admin.settings.lastName")}
           </label>
           <input
             type="text"
@@ -95,7 +97,7 @@ export default function AdminProfileSection() {
 
       <div>
         <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-          Email Address
+          {t("admin.settings.emailAddress")}
         </label>
         <input
           type="email"
@@ -112,7 +114,7 @@ export default function AdminProfileSection() {
           className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all disabled:opacity-50"
         >
           <Save className="size-4" />
-          <span>{saving ? "Saving..." : "Save Profile"}</span>
+          <span>{saving ? t("admin.settings.savingProfile") : t("admin.settings.saveProfile")}</span>
         </button>
       </div>
     </form>

@@ -1,43 +1,47 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Modal from "../Shared/Modal";
 
-const presetReasons = [
-  "Inaccurate AI category match",
-  "Low resolution or invalid product image",
-  "Incorrect pricing or currency format",
-  "Prohibited or unsupported furniture item",
-  "Missing material & dimension specifications",
-];
-
 export default function RejectReasonModal({ isOpen, onClose, onConfirm }) {
-  const [reason, setReason] = useState(presetReasons[0]);
+  const { t } = useTranslation();
+
+  const presets = [
+    { key: "reason1", label: t("admin.moderation.reason1") },
+    { key: "reason2", label: t("admin.moderation.reason2") },
+    { key: "reason3", label: t("admin.moderation.reason3") },
+    { key: "reason4", label: t("admin.moderation.reason4") },
+    { key: "reason5", label: t("admin.moderation.reason5") },
+  ];
+
+  const [reason, setReason] = useState("reason1");
   const [customReason, setCustomReason] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const finalReason = reason === "Other" ? customReason : reason;
+    const selectedPreset = presets.find((p) => p.key === reason);
+    const finalReason = reason === "Other" ? customReason : selectedPreset ? selectedPreset.label : reason;
     onConfirm(finalReason);
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Select Rejection Reason">
+    <Modal isOpen={isOpen} onClose={onClose} title={t("admin.moderation.rejectModalTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          {presetReasons.map((r) => (
+          {presets.map((p) => (
             <label
-              key={r}
+              key={p.key}
               className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-outline/10 hover:border-primary/40 cursor-pointer transition-all text-xs font-semibold text-on-surface"
             >
               <input
                 type="radio"
                 name="rejectReason"
-                value={r}
-                checked={reason === r}
-                onChange={() => setReason(r)}
+                value={p.key}
+                checked={reason === p.key}
+                onChange={() => setReason(p.key)}
                 className="accent-primary size-4"
               />
-              <span>{r}</span>
+              <span>{p.label}</span>
             </label>
           ))}
           <label className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-outline/10 hover:border-primary/40 cursor-pointer transition-all text-xs font-semibold text-on-surface">
@@ -49,7 +53,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm }) {
               onChange={() => setReason("Other")}
               className="accent-primary size-4"
             />
-            <span>Other Reason (Custom)</span>
+            <span>{t("admin.moderation.reasonOther")}</span>
           </label>
         </div>
 
@@ -57,7 +61,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm }) {
           <textarea
             required
             rows={3}
-            placeholder="Type custom rejection feedback for the seller..."
+            placeholder={t("admin.moderation.customPlaceholder")}
             value={customReason}
             onChange={(e) => setCustomReason(e.target.value)}
             className="w-full rounded-xl bg-surface px-4 py-2.5 text-xs text-on-surface outline-none focus:ring-2 focus:ring-primary/40 border border-outline/20"
@@ -70,13 +74,13 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm }) {
             onClick={onClose}
             className="rounded-xl px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface border border-outline/20"
           >
-            Cancel
+            {t("admin.shared.cancel")}
           </button>
           <button
             type="submit"
             className="rounded-xl bg-error px-5 py-2 text-sm font-semibold text-white neo-shadow hover:bg-error/90 transition-all"
           >
-            Reject Product
+            {t("admin.moderation.rejectBtn")}
           </button>
         </div>
       </form>

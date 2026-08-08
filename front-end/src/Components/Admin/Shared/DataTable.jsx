@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Pagination from "./Pagination";
 
 export default function DataTable({ columns, data, keyField = "id", pageSize = 5 }) {
+  const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
@@ -31,7 +33,7 @@ export default function DataTable({ columns, data, keyField = "id", pageSize = 5
   return (
     <div className="rounded-2xl bg-surface border border-outline/10 neomorph-raised overflow-hidden">
       <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-        <table className="w-full text-left text-sm text-on-surface border-collapse">
+        <table className="w-full text-left rtl:text-right text-sm text-on-surface border-collapse">
           <thead className="sticky top-0 z-10 bg-surface-bright text-xs font-bold uppercase tracking-wider text-on-surface-variant border-b border-outline/10 shadow-xs">
             <tr>
               {columns.map((col, idx) => (
@@ -64,7 +66,7 @@ export default function DataTable({ columns, data, keyField = "id", pageSize = 5
             {paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-8 text-center text-on-surface-variant">
-                  No records available.
+                  {t("admin.shared.noRecords")}
                 </td>
               </tr>
             ) : (

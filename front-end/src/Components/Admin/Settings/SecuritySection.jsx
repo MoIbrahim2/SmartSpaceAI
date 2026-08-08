@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { KeyRound, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SectionHeader from "../Shared/SectionHeader";
 import { useToast } from "../Shared/ToastContext";
 
 export default function SecuritySection() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [passwords, setPasswords] = useState({
     current: "",
@@ -14,21 +16,21 @@ export default function SecuritySection() {
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
     if (passwords.newPass !== passwords.confirmPass) {
-      showToast("New passwords do not match!", "error");
+      showToast(t("admin.settings.passMismatchToast"), "error");
       return;
     }
-    showToast("Password updated successfully!", "success");
+    showToast(t("admin.settings.passUpdatedToast"), "success");
     setPasswords({ current: "", newPass: "", confirmPass: "" });
   };
 
   return (
     <form onSubmit={handlePasswordSubmit} className="rounded-2xl bg-surface p-6 border border-outline/10 neomorph-raised space-y-4">
-      <SectionHeader title="Security & Authentication" subtitle="Update account password and security settings" icon={KeyRound} />
+      <SectionHeader title={t("admin.settings.secTitle")} subtitle={t("admin.settings.secSubtitle")} icon={KeyRound} />
 
       <div className="space-y-3">
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-            Current Password
+            {t("admin.settings.currentPass")}
           </label>
           <input
             required
@@ -43,7 +45,7 @@ export default function SecuritySection() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-              New Password
+              {t("admin.settings.newPass")}
             </label>
             <input
               required
@@ -56,7 +58,7 @@ export default function SecuritySection() {
           </div>
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-              Confirm New Password
+              {t("admin.settings.confirmPass")}
             </label>
             <input
               required
@@ -76,7 +78,7 @@ export default function SecuritySection() {
           className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all"
         >
           <ShieldCheck className="size-4" />
-          <span>Update Password</span>
+          <span>{t("admin.settings.updatePassBtn")}</span>
         </button>
       </div>
     </form>

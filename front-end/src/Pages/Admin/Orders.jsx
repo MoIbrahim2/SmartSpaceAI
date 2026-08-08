@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ShoppingBag, Eye, RefreshCw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import DataTable from "../../Components/Admin/Shared/DataTable";
 import StatusBadge from "../../Components/Admin/Shared/StatusBadge";
@@ -13,6 +14,7 @@ import { useToast } from "../../Components/Admin/Shared/ToastContext";
 import { getOrders, updateOrderStatus } from "../../api/AdminApi";
 
 export default function Orders() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +69,7 @@ export default function Orders() {
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus);
-      showToast(`Order status updated to '${newStatus}'!`, "success");
+      showToast(t("admin.orders.toastStatusUpdated", { status: newStatus }), "success");
       fetchOrdersList();
     } catch (err) {
       showToast(err.response?.data?.message || err.message || "Failed to update order status", "error");
@@ -76,12 +78,12 @@ export default function Orders() {
 
   const columns = [
     {
-      label: "Order ID",
+      label: t("admin.orders.colOrderId"),
       key: "id",
       render: (row) => <span className="font-mono font-bold text-primary">{row.id}</span>,
     },
     {
-      label: "Customer",
+      label: t("admin.orders.colCustomer"),
       key: "customerName",
       render: (row) => (
         <div>
@@ -90,27 +92,27 @@ export default function Orders() {
         </div>
       ),
     },
-    { label: "Seller", key: "sellerName" },
-    { label: "Items", key: "itemsCount" },
+    { label: t("admin.orders.colSeller"), key: "sellerName" },
+    { label: t("admin.orders.colItems"), key: "itemsCount" },
     {
-      label: "Total Amount",
+      label: t("admin.orders.colTotalAmount"),
       key: "totalAmount",
       render: (row) => <span className="font-extrabold text-on-surface">{row.totalAmount}</span>,
     },
     {
-      label: "Status",
+      label: t("admin.orders.colStatus"),
       key: "status",
       render: (row) => <StatusBadge status={row.status} />,
     },
     {
-      label: "Actions",
+      label: t("admin.orders.colActions"),
       key: "actions",
       sortable: false,
       render: (row) => (
         <ActionDropdown
           actions={[
             {
-              label: "View Order Details",
+              label: t("admin.orders.actViewDetails"),
               icon: Eye,
               onClick: () => {
                 setActiveOrder(row);
@@ -118,7 +120,7 @@ export default function Orders() {
               },
             },
             {
-              label: "Advance Fulfillment",
+              label: t("admin.orders.actAdvanceFulfillment"),
               icon: RefreshCw,
               onClick: () => handleUpdateStatus(row._id || row.id, "Shipped"),
             },
@@ -129,28 +131,28 @@ export default function Orders() {
   ];
 
   if (loading && orders.length === 0) {
-    return <LoadingState message="Loading orders..." />;
+    return <LoadingState message={t("admin.orders.loading")} />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Marketplace Orders & Buy Requests"
-        description="Track customer orders, seller fulfillments, item breakdowns, and shipping timelines."
+        title={t("admin.orders.title")}
+        description={t("admin.orders.description")}
       />
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline/10 neomorph-raised">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search ID, customer, or store..." />
+        <SearchInput value={search} onChange={setSearch} placeholder={t("admin.orders.searchPlaceholder")} />
         <FilterDropdown
           value={status}
           onChange={setStatus}
-          label="Status"
+          label={t("admin.orders.statusFilter")}
           options={["All", "Pending", "Processing", "Shipped", "Completed", "Cancelled"]}
         />
       </div>
 
       {orders.length === 0 ? (
-        <EmptyState title="No orders found" description="Try clearing filters or search terms." icon={ShoppingBag} />
+        <EmptyState title={t("admin.orders.noOrdersTitle")} description={t("admin.orders.noOrdersDesc")} icon={ShoppingBag} />
       ) : (
         <DataTable columns={columns} data={orders} />
       )}

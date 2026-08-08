@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Search, Bell, Sun, Moon, Menu, LogOut, Settings as SettingsIcon, User } from "lucide-react";
+import { Search, Bell, Sun, Moon, Menu, LogOut, Settings as SettingsIcon, Globe } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Header({ onMenuToggle }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const [theme, setTheme] = useState(() => {
@@ -30,10 +32,18 @@ export default function Header({ onMenuToggle }) {
     });
   };
 
+  const toggleLanguage = () => {
+    const currentLang = i18n.language || "en";
+    const nextLang = currentLang.startsWith("ar") ? "en" : "ar";
+    i18n.changeLanguage(nextLang);
+  };
+
   const handleLogout = async () => {
     if (logout) await logout();
     navigate("/login");
   };
+
+  const isArabic = i18n.language?.startsWith("ar");
 
   return (
     <header className="sticky top-0 z-30 mb-6 bg-surface-bright px-6 py-4 neo-shadow">
@@ -49,17 +59,27 @@ export default function Header({ onMenuToggle }) {
           </button>
 
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-on-surface-variant" />
+            <Search className="absolute left-3.5 rtl:right-3.5 rtl:left-auto top-1/2 -translate-y-1/2 size-4 text-on-surface-variant" />
             <input
               type="text"
-              placeholder="Search sellers, orders, products..."
-              className="w-full rounded-xl bg-surface pl-10 pr-4 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all border border-outline/20"
+              placeholder={t("admin.header.searchPlaceholder")}
+              className="w-full rounded-xl bg-surface pl-10 pr-4 rtl:pr-10 rtl:pl-4 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all border border-outline/20"
             />
           </div>
         </div>
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-bright text-on-surface-variant hover:text-primary font-medium text-xs transition-all neo-shadow neo-button"
+            aria-label="Toggle Language"
+          >
+            <Globe className="size-4" />
+            <span>{isArabic ? "English" : "العربية"}</span>
+          </button>
+
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -75,7 +95,7 @@ export default function Header({ onMenuToggle }) {
             aria-label="Notifications"
           >
             <Bell className="size-5" />
-            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-error ring-2 ring-surface-bright" />
+            <span className="absolute top-1.5 right-1.5 rtl:left-1.5 rtl:right-auto size-2 rounded-full bg-error ring-2 ring-surface-bright" />
           </button>
 
           {/* Profile Dropdown */}
@@ -91,14 +111,14 @@ export default function Header({ onMenuToggle }) {
 
             {menuOpen && (
               <div
-                className="absolute right-0 mt-3 w-56 rounded-2xl bg-surface-bright p-3 neo-shadow border border-outline/20 z-50"
+                className="absolute right-0 rtl:left-0 rtl:right-auto mt-3 w-56 rounded-2xl bg-surface-bright p-3 neo-shadow border border-outline/20 z-50"
                 onMouseLeave={() => setMenuOpen(false)}
               >
                 <div className="px-3 py-2 border-b border-outline/10 mb-2">
                   <p className="font-semibold text-sm text-on-surface">
-                    {user?.firstName ? `${user.firstName} ${user.lastName}` : "Admin User"}
+                    {user?.firstName ? `${user.firstName} ${user.lastName}` : t("admin.header.adminUser")}
                   </p>
-                  <p className="text-xs text-on-surface-variant">System Administrator</p>
+                  <p className="text-xs text-on-surface-variant">{t("admin.header.systemAdmin")}</p>
                 </div>
                 <Link
                   to="/admin/settings"
@@ -106,14 +126,14 @@ export default function Header({ onMenuToggle }) {
                   className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-on-surface hover:text-primary hover:bg-surface rounded-xl transition-all"
                 >
                   <SettingsIcon className="size-4" />
-                  Admin Settings
+                  {t("admin.header.adminSettings")}
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-error hover:bg-error/10 rounded-xl transition-all mt-1"
                 >
                   <LogOut className="size-4" />
-                  Sign Out
+                  {t("admin.header.signOut")}
                 </button>
               </div>
             )}

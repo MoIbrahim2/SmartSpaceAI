@@ -1,5 +1,6 @@
 import Modal from "./Modal";
 import { AlertTriangle, Info, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function ConfirmDialog({
   isOpen,
@@ -7,9 +8,12 @@ export default function ConfirmDialog({
   onConfirm,
   title,
   message,
-  confirmText = "Confirm",
+  confirmText,
   variant = "primary",
 }) {
+  const { t } = useTranslation();
+  const effectiveConfirmText = confirmText || t("admin.shared.confirm");
+
   let btnClass = "bg-primary text-white hover:bg-primary/90";
   let IconComp = Info;
 
@@ -46,7 +50,7 @@ export default function ConfirmDialog({
             onClick={onClose}
             className="rounded-xl px-4 py-2 text-sm font-semibold text-on-surface-variant hover:text-on-surface hover:bg-surface border border-outline/20 transition-all"
           >
-            Cancel
+            {t("admin.shared.cancel")}
           </button>
           <button
             onClick={() => {
@@ -55,7 +59,7 @@ export default function ConfirmDialog({
             }}
             className={`rounded-xl px-5 py-2 text-sm font-semibold neo-shadow transition-all ${btnClass}`}
           >
-            {confirmText}
+            {effectiveConfirmText}
           </button>
         </div>
       </div>

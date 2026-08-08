@@ -26,7 +26,7 @@ export default function ActionDropdown({ actions = [] }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-44 rounded-xl bg-surface-bright p-1.5 shadow-xl border border-outline/20 z-30 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-44 rounded-xl bg-surface-bright p-1.5 shadow-xl border border-outline/20 z-30 animate-in fade-in zoom-in-95 duration-150">
           {actions.map((action, idx) => {
             const IconComp = action.icon;
             return (

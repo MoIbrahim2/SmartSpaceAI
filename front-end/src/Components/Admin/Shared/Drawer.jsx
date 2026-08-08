@@ -26,8 +26,8 @@ export default function Drawer({ isOpen, onClose, title, children }) {
         onClick={onClose}
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-lg bg-surface-bright p-6 shadow-2xl border-l border-outline/10 flex flex-col justify-between animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 rtl:left-0 rtl:right-auto max-w-full flex pl-10 rtl:pr-10 rtl:pl-0">
+        <div className="w-screen max-w-lg bg-surface-bright p-6 shadow-2xl border-l rtl:border-r rtl:border-l-0 border-outline/10 flex flex-col justify-between animate-in slide-in-from-right rtl:slide-in-from-left duration-300">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-outline/10 pb-4 mb-4">
             <h3 className="text-lg font-extrabold text-on-surface tracking-tight">{title}</h3>
