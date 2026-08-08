@@ -35,11 +35,11 @@ app.use('/api', generalLimiter);
 // Stripe webhook needs raw body for signature verification (must be before express.json)
 app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 
-// Parse JSON request bodies
-app.use(express.json({ limit: '10kb' }));
+// Parse JSON request bodies (increased limit to support room product selection payloads)
+app.use(express.json({ limit: '50mb' }));
 
 // Parse URL-encoded request bodies
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Sanitize user input (XSS prevention)
 app.use(xss());

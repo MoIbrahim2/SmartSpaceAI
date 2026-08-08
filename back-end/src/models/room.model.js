@@ -44,6 +44,10 @@ const roomSchema = new mongoose.Schema({
     fileName: { type: String, required: true },
     uploadedAt: { type: Date, default: Date.now }
   }],
+  widenedImageUrl: {
+    type: String,
+    default: null
+  },
   coverImageId: {
     type: mongoose.Schema.Types.ObjectId
   },

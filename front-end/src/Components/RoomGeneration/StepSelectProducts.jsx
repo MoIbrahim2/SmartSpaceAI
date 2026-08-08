@@ -100,10 +100,14 @@ const StepSelectProducts = ({
   };
 
   const handleNextStepClick = () => {
+    console.log("[StepSelectProducts] 'Generate Room Design' button clicked.");
+    console.log("[StepSelectProducts] Currently added product IDs:", addedProducts);
+
     const validation = validateCategorySelections();
     if (!validation.valid) {
+      console.warn("[StepSelectProducts] ⚠️ Category selection incomplete:", validation);
       setValidationError(
-        `Please select exactly ${validation.required} item(s) for ${validation.categoryName.replace("_", " ")} before proceeding (currently selected: ${validation.selected}).`
+        `Please select at least ${validation.required} item(s) for ${validation.categoryName.replace("_", " ")} before proceeding (currently selected: ${validation.selected}).`
       );
       setActiveCategory(validation.categoryName);
       return;
@@ -113,9 +117,16 @@ const StepSelectProducts = ({
 
     // Check budget limit
     if (currentSpent > baseBudget && baseBudget > 0) {
+      console.log("[StepSelectProducts] ⚠️ Budget exceeded. Opening budget warning modal.");
       setIsBudgetModalOpen(true);
     } else {
-      onProceedToStep4 ? onProceedToStep4() : setStep(4);
+      console.log("[StepSelectProducts] ✅ Validation passed. Calling onProceedToStep4()...");
+      if (onProceedToStep4) {
+        onProceedToStep4();
+      } else {
+        console.warn("[StepSelectProducts] onProceedToStep4 prop is missing! Falling back to setStep(4).");
+        setStep(4);
+      }
     }
   };
 

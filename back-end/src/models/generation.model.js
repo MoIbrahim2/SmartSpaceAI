@@ -114,6 +114,48 @@ const generationSchema = new mongoose.Schema({
     modelUsed: { type: String },
     generatedAt: { type: Date }
   },
+  spatialGuardrail: {
+    isApplicable: { type: Boolean, default: null },
+    productsHash: { type: String, default: null },
+    naturalLanguagePrompt: { type: String, default: '' },
+    layoutDiagram: {
+      roomDimensions: {
+        length: { type: Number },
+        width: { type: Number },
+        height: { type: Number },
+        unit: { type: String, default: 'cm' }
+      },
+      totalRoomArea: { type: Number },
+      totalFurnitureFootprint: { type: Number },
+      usableFloorPercentage: { type: Number },
+      allocations: [{
+        productId: { type: String },
+        productName: { type: String },
+        category: { type: String },
+        position: {
+          x: { type: Number },
+          y: { type: Number },
+          z: { type: Number }
+        },
+        dimensions: {
+          length: { type: Number },
+          width: { type: Number },
+          height: { type: Number }
+        },
+        rotation: { type: Number },
+        placedAgainstWall: { type: String, enum: ['NORTH', 'SOUTH', 'EAST', 'WEST', 'NONE'], default: 'NONE' },
+        cameraVisibility: { type: String, enum: ['FULL', 'PARTIAL', 'HIDDEN_BEHIND_CAMERA'], default: 'FULL' },
+        designRulesApplied: [{ type: String }]
+      }]
+    },
+    spatialViolations: [{
+      type: { type: String, enum: ['DIMENSION_OVERFLOW', 'WALKWAY_BLOCKAGE', 'DOOR_IMPACT', 'WINDOW_BLOCKAGE', 'DRAWER_CLEARANCE_BLOCKAGE'] },
+      description: { type: String },
+      conflictingProductIds: [{ type: String }]
+    }],
+    suggestedRemovals: [{ type: String }],
+    validatedAt: { type: Date }
+  },
   resolution: {
     width: { type: Number, default: 1280 },
     height: { type: Number, default: 720 },

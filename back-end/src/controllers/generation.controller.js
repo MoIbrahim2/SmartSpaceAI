@@ -1,7 +1,11 @@
 const generationService = require('../services/generation.service');
+const spatialGuardrailService = require('../services/spatialGuardrail.service');
+const Generation = require('../models/generation.model');
+const Room = require('../models/room.model');
 const { sendSuccess } = require('../utils/responseHelper');
 const HTTP_STATUS = require('../constants/statusCodes');
 const asyncHandler = require('../utils/asyncHandler');
+const ApiError = require('../errors/ApiError');
 
 /**
  * Create a new generation
@@ -100,6 +104,73 @@ const getLatestGenerationForRoom = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'generation.fetch_success', { generation }, HTTP_STATUS.OK);
 });
 
+/**
+ * Validate spatial applicability for a generation's selected products
+ */
+const validateSpatial = asyncHandler(async (req, res) => {
+  const { generationId, selectedProducts: bodySelectedProducts, roomLayoutData } = req.body;
+  console.log(`\n==================================================`);
+  console.log(`[SpatialGuardrail Controller] 🚀 POST /validate-spatial received`);
+  console.log(`[SpatialGuardrail Controller] Payload generationId: "${generationId}" | User: ${req.user?._id}`);
+
+  if (!generationId) {
+    console.warn(`[SpatialGuardrail Controller] ❌ Missing generationId in request body`);
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'generationId is required.');
+  }
+
+  let generation = await Generation.findById(generationId);
+  if (!generation) {
+    console.warn(`[SpatialGuardrail Controller] ❌ Generation record not found: ${generationId}`);
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+  if (generation.ownerId.toString() !== req.user._id.toString()) {
+    console.warn(`[SpatialGuardrail Controller] ❌ Forbidden: Owner ID mismatch`);
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+  }
+
+  // If selectedProducts payload was sent, persist it FIRST before running validation
+  if (Array.isArray(bodySelectedProducts) && bodySelectedProducts.length > 0) {
+    console.log(`[SpatialGuardrail Controller] Saving ${bodySelectedProducts.length} new selected products to DB before validation...`);
+    generation = await generationService.saveSelectedProducts(req.user._id, generationId, {
+      selectedProducts: bodySelectedProducts,
+      roomLayoutData
+    });
+  }
+
+  // Load the associated room if it exists
+  let room = null;
+  if (generation.roomId) {
+    room = await Room.findById(generation.roomId);
+  }
+
+  const selectedProducts = generation.selectedProducts || [];
+  console.log(`[SpatialGuardrail Controller] Found ${selectedProducts.length} selected products for generation ${generationId}`);
+  console.log(`[SpatialGuardrail Controller] Room layout: ${JSON.stringify(generation.roomLayoutData || room?.dimensions || {})}`);
+
+  if (selectedProducts.length === 0) {
+    console.warn(`[SpatialGuardrail Controller] ❌ No selected products found on generation document.`);
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No products selected. Cannot validate spatial layout.');
+  }
+
+  const startTime = Date.now();
+  const result = await spatialGuardrailService.validateSpatialApplicability(
+    generation,
+    room,
+    selectedProducts,
+    { force: true }
+  );
+  const durationMs = Date.now() - startTime;
+
+  console.log(`[SpatialGuardrail Controller] ✅ Spatial validation completed in ${durationMs}ms`);
+  console.log(`[SpatialGuardrail Controller] Result -> isApplicable: ${result?.isApplicable}, Violations: ${result?.spatialViolations?.length || 0}, Allocations: ${result?.layoutDiagram?.allocations?.length || 0}`);
+  console.log(`==================================================\n`);
+
+  return sendSuccess(res, 'generation.spatial_validated', {
+    spatialGuardrail: result,
+    generationId: generation._id
+  }, HTTP_STATUS.OK);
+});
+
 module.exports = {
   createGeneration,
   getGenerations,
@@ -111,5 +182,6 @@ module.exports = {
   saveUserPrompt,
   saveResolution,
   generateRoomImage,
-  getLatestGenerationForRoom
+  getLatestGenerationForRoom,
+  validateSpatial
 };

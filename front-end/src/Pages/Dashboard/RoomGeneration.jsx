@@ -10,7 +10,8 @@ import {
   saveSelectedProducts,
   generateRoomImage,
   getLatestGenerationForRoom,
-  saveResolution
+  saveResolution,
+  validateSpatial
 } from "../../api";
 import { getProductId } from "../../utils/productUtils";
 
@@ -56,6 +57,11 @@ const RoomGeneration = () => {
   const [validating, setValidating] = useState(false);
   const [validationStatus, setValidationStatus] = useState("none");
   const [savedLayout, setSavedLayout] = useState(null);
+
+  // Spatial Guardrail state
+  const [spatialValidating, setSpatialValidating] = useState(false);
+  const [spatialResult, setSpatialResult] = useState(null);
+  const [spatialViolationModalOpen, setSpatialViolationModalOpen] = useState(false);
 
   // Preference extraction state
   const [extracting, setExtracting] = useState(false);
@@ -132,6 +138,54 @@ const RoomGeneration = () => {
     };
 
     const loadExistingGeneration = async () => {
+      // 0. Hydrate immediately from localStorage if present
+      try {
+        const cached = localStorage.getItem(`smartspace_products_${urlRoomId}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed?.selectedProducts && parsed.selectedProducts.length > 0) {
+            const restoredProductIds = [];
+            const restoredProductData = {};
+            const restoredCounts = {};
+            parsed.selectedProducts.forEach((sp) => {
+              const cat = sp.category || "Furniture";
+              const pData = sp.productData || sp;
+              const pId = getProductId(pData) || String(sp.productId || pData._id || pData.id);
+              if (!restoredProductData[cat]) restoredProductData[cat] = [];
+              if (!restoredProductData[cat].some((item) => (getProductId(item) || String(item._id || item.id)) === pId)) {
+                restoredProductData[cat].push(pData);
+              }
+              const qty = sp.quantity || 1;
+              for (let i = 0; i < qty; i++) {
+                restoredProductIds.push(pId);
+              }
+              restoredCounts[cat] = (restoredCounts[cat] || 0) + qty;
+            });
+            setProductData((prev) => {
+              const merged = { ...prev };
+              Object.keys(restoredProductData).forEach((cat) => {
+                const existingList = merged[cat] || [];
+                const newList = [...existingList];
+                restoredProductData[cat].forEach((p) => {
+                  const pId = getProductId(p) || String(p._id || p.id);
+                  if (!newList.some((item) => (getProductId(item) || String(item._id || item.id)) === pId)) {
+                    newList.unshift(p);
+                  }
+                });
+                merged[cat] = newList;
+              });
+              return merged;
+            });
+            setCategoryCounts((prev) => ({ ...prev, ...restoredCounts }));
+            setAddedProducts(restoredProductIds);
+            const firstCat = Object.keys(restoredCounts)[0] || "sofa";
+            setActiveCategory(firstCat);
+          }
+        }
+      } catch (e) {
+        console.warn("Error hydrating products from local cache:", e);
+      }
+
       try {
         const { data } = await getLatestGenerationForRoom(urlRoomId);
         if (data.success && data.data.generation) {
@@ -159,10 +213,12 @@ const RoomGeneration = () => {
             gen.selectedProducts.forEach((sp) => {
               const cat = sp.category || "Furniture";
               const pData = sp.productData || sp;
-              const pId = getProductId(pData) || String(sp.productId);
+              const pId = String(sp.productId || getProductId(pData) || getProductId(sp));
 
               if (!restoredProductData[cat]) restoredProductData[cat] = [];
-              restoredProductData[cat].push(pData);
+              if (!restoredProductData[cat].some((item) => (getProductId(item) || String(item._id || item.id)) === pId)) {
+                restoredProductData[cat].push(pData);
+              }
 
               const qty = sp.quantity || 1;
               for (let i = 0; i < qty; i++) {
@@ -171,8 +227,22 @@ const RoomGeneration = () => {
               restoredCounts[cat] = (restoredCounts[cat] || 0) + qty;
             });
 
-            setProductData(restoredProductData);
-            setCategoryCounts(restoredCounts);
+            setProductData((prev) => {
+              const merged = { ...prev };
+              Object.keys(restoredProductData).forEach((cat) => {
+                const existingList = merged[cat] || [];
+                const newList = [...existingList];
+                restoredProductData[cat].forEach((p) => {
+                  const pId = getProductId(p) || String(p._id || p.id);
+                  if (!newList.some((item) => (getProductId(item) || String(item._id || item.id)) === pId)) {
+                    newList.unshift(p);
+                  }
+                });
+                merged[cat] = newList;
+              });
+              return merged;
+            });
+            setCategoryCounts((prev) => ({ ...prev, ...restoredCounts }));
             setAddedProducts(restoredProductIds);
             const firstCat = Object.keys(restoredCounts)[0] || "sofa";
             setActiveCategory(firstCat);
@@ -378,7 +448,7 @@ const RoomGeneration = () => {
 
           setProductData(newProductData);
           setCategoryCounts(counts);
-          setAddedProducts(goldenIds);
+          setAddedProducts((prev) => (prev && prev.length > 0 ? prev : goldenIds));
 
           const firstCat = Object.keys(counts).find((c) => counts[c] > 0) || recResult.categories[0]?.category || Object.keys(newProductData)[0] || "sofa";
           setActiveCategory(firstCat);
@@ -430,57 +500,173 @@ const RoomGeneration = () => {
   };
 
   /**
-   * Move from Step 3 to Step 4: Persist selected products to MongoDB
+   * Move from Step 3 to Step 4: Persist selected products, then run spatial validation
    */
   const handleProceedToStep4 = async () => {
+    console.log("[Spatial Guardrail UI] Step 3 Next clicked -> handleProceedToStep4 triggered.");
     if (!generationId) {
+      console.warn("[Spatial Guardrail UI] No generationId present. Skipping to Step 4 directly.");
       setStep(4);
       return;
     }
 
+    // Reset previous image render result so updated product selections (e.g. adding a Rug) generate fresh output
+    setGeneratedImageResult(null);
+
+    // Show spatial overlay immediately
+    console.log("[Spatial Guardrail UI] Setting spatialValidating = true overlay.");
+    setSpatialValidating(true);
+    setSpatialResult(null);
+
     try {
-      setLoading(true);
       // Format selected products list for API payload with quantities
-      const allProdsList = Object.values(productData).flat();
       const countsMap = {};
       addedProducts.forEach((id) => {
         countsMap[id] = (countsMap[id] || 0) + 1;
       });
 
+      const allKnownProducts = Object.values(productData).flat();
       const selectedProductObjects = [];
       const seenIds = new Set();
-      allProdsList.forEach((p) => {
-        const pId = getProductId(p);
-        if (countsMap[pId] && !seenIds.has(pId)) {
-          seenIds.add(pId);
-          selectedProductObjects.push({
-            category: p.category || p.categoryName || activeCategory || "Furniture",
-            productId: pId,
-            productData: p,
-            isRecommended: !!p.isRecommended,
-            price: p.pricing?.currentPrice || p.price || p.numericPrice || 0,
-            quantity: countsMap[pId],
-          });
+
+      addedProducts.forEach((pId) => {
+        if (!pId || seenIds.has(pId)) return;
+        seenIds.add(pId);
+
+        const foundProd = allKnownProducts.find((p) => getProductId(p) === pId);
+
+        let cat = "";
+        for (const [categoryKey, prodsList] of Object.entries(productData)) {
+          if ((prodsList || []).some((p) => getProductId(p) === pId)) {
+            cat = categoryKey;
+            break;
+          }
         }
+        if (!cat) {
+          cat = foundProd?.category || foundProd?.categoryName || foundProd?.classification?.canonicalCategory || "Furniture";
+        }
+        const formattedCat = cat ? cat.charAt(0).toUpperCase() + cat.slice(1) : "Furniture";
+        const price = foundProd?.pricing?.currentPrice || foundProd?.price || foundProd?.numericPrice || 0;
+
+        let safeProdData = null;
+        if (foundProd) {
+          try {
+            const rawObj = JSON.parse(JSON.stringify(foundProd));
+            safeProdData = {
+              _id: String(pId),
+              title: rawObj.basic?.name || rawObj.title || rawObj.name || "Furniture Item",
+              category: formattedCat,
+              brand: rawObj.basic?.brand || rawObj.brand || "Partner Store",
+              pricing: rawObj.pricing || { currentPrice: Number(price) || 0 },
+              price: Number(price) || 0,
+              dimensions: rawObj.dimensions || { width: 100, length: 100, height: 100 },
+              primaryImage: rawObj.primaryImage || rawObj.imageUrl || rawObj.img || "",
+              classification: rawObj.classification || {},
+              isRecommended: !!rawObj.isRecommended,
+            };
+          } catch (e) {
+            safeProdData = { _id: String(pId), title: foundProd.title || "Selected Item" };
+          }
+        } else {
+          safeProdData = { _id: String(pId), title: "Selected Furniture Item" };
+        }
+
+        selectedProductObjects.push({
+          category: formattedCat || "Furniture",
+          productId: String(pId),
+          productData: safeProdData,
+          isRecommended: !!foundProd?.isRecommended,
+          price: Number(price) || 0,
+          quantity: Number(countsMap[pId] || 1),
+        });
       });
 
+      const layoutPayload = {
+        length_cm: parseFloat(form.length),
+        width_cm: parseFloat(form.width),
+        height_cm: parseFloat(form.height),
+        budget_egp: parseFloat(form.budget),
+        room_image_path: savedLayout?.room_image_path || savedLayout?.imagePath,
+      };
+
+      console.log(`[Spatial Guardrail UI] 1. Saving ${selectedProductObjects.length} selected products to backend generation ${generationId}...`);
       await saveSelectedProducts(generationId, {
         selectedProducts: selectedProductObjects,
-        roomLayoutData: {
-          length_cm: parseFloat(form.length),
-          width_cm: parseFloat(form.width),
-          height_cm: parseFloat(form.height),
-          budget_egp: parseFloat(form.budget),
-          room_image_path: savedLayout?.room_image_path || savedLayout?.imagePath,
-        },
+        roomLayoutData: layoutPayload,
       });
 
-      setStep(4);
+      // ── Spatial Guardrail Validation ───────────────────────────────
+      try {
+        console.log(`[Spatial Guardrail UI] 2. Calling POST /validate-spatial with updated products...`);
+        const { data: spatialData } = await validateSpatial({
+          generationId,
+          selectedProducts: selectedProductObjects,
+          roomLayoutData: layoutPayload,
+        });
+        console.log("[Spatial Guardrail UI] Response received from /validate-spatial:", spatialData);
+
+        if (spatialData.success) {
+          const guardrail = spatialData.data.spatialGuardrail;
+          setSpatialResult(guardrail);
+
+          if (guardrail.isApplicable) {
+            console.log("[Spatial Guardrail UI] ✅ Spatial Layout is Applicable! Locking products in DB & Proceeding to Step 4.");
+            
+            // Persist approved products immediately
+            await saveSelectedProducts(generationId, {
+              selectedProducts: selectedProductObjects,
+              roomLayoutData: layoutPayload,
+            });
+
+            if (urlRoomId) {
+              try {
+                localStorage.setItem(`smartspace_products_${urlRoomId}`, JSON.stringify({
+                  selectedProducts: selectedProductObjects,
+                  timestamp: Date.now()
+                }));
+              } catch (e) {
+                console.warn("localStorage save failed:", e);
+              }
+            }
+
+            setSpatialValidating(false);
+            setStep(4);
+          } else {
+            console.warn("[Spatial Guardrail UI] ❌ Spatial Layout Violations Found! Opening Violation Modal.", guardrail.spatialViolations);
+            setSpatialValidating(false);
+            setSpatialViolationModalOpen(true);
+          }
+        } else {
+          console.error("[Spatial Guardrail UI] Spatial validation returned success = false:", spatialData);
+          setSpatialValidating(false);
+          setError("Spatial validation failed. Please try again.");
+        }
+      } catch (spatialErr) {
+        console.error("[Spatial Guardrail UI] Exception during spatial validation call:", spatialErr);
+        const errMsg = spatialErr.response?.data?.message || spatialErr.message || "";
+
+        if (spatialErr.response?.status === 422) {
+          console.warn("[Spatial Guardrail UI] Received 422 Unprocessable Entity for spatial violations.");
+          setSpatialResult({
+            isApplicable: false,
+            spatialViolations: [{ type: 'DIMENSION_OVERFLOW', description: errMsg, conflictingProductIds: [] }],
+            suggestedRemovals: []
+          });
+          setSpatialValidating(false);
+          setSpatialViolationModalOpen(true);
+        } else {
+          console.error("[Spatial Guardrail UI] Non-422 error encountered during spatial validation:", errMsg);
+          setSpatialValidating(false);
+          setError(`Spatial validation error: ${errMsg || "Failed to analyze room layout"}. Please try again.`);
+        }
+      }
+      // ── End Spatial Guardrail ──────────────────────────────────────
+
     } catch (err) {
-      console.error("Save selected products error:", err);
-      setStep(4);
-    } finally {
-      setLoading(false);
+      console.error("[Spatial Guardrail UI] Save selected products failed:", err);
+      const detail = err.response?.data?.message || err.message || "";
+      setSpatialValidating(false);
+      setError(`Failed to save selected products: ${detail}. Please try again.`);
     }
   };
 
@@ -563,6 +749,135 @@ const RoomGeneration = () => {
         />
       )}
 
+      {/* Spatial Guardrail Loading Overlay */}
+      {spatialValidating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="flex flex-col items-center gap-5 rounded-[2rem] bg-background p-10 neomorph-raised max-w-md w-[90%] mx-4 text-center">
+            <div className="relative w-20 h-20">
+              <div className="absolute inset-0 rounded-full border-4 border-amber-500/30 animate-ping"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-amber-500 border-t-transparent animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center text-amber-500">
+                <Icon name="grid_view" size={28} />
+              </div>
+            </div>
+            <h3 className="font-headline text-xl font-bold text-on-surface">
+              Calculating 2D Room Floorplan & Clearances...
+            </h3>
+            <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm">
+              SmartSpaceAI is evaluating furniture dimensions, walkway clearances, and ergonomic spacing rules to ensure everything fits perfectly in your room.
+            </p>
+            <div className="flex items-center gap-2 text-xs text-amber-500 font-semibold">
+              <Icon name="architecture" size={16} />
+              <span>Spatial Analysis Engine Active</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Spatial Violation Modal */}
+      {spatialViolationModalOpen && spatialResult && !spatialResult.isApplicable && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="rounded-[2rem] bg-background p-8 neomorph-raised max-w-lg w-[92%] mx-4 max-h-[85vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-full bg-red-500/15 text-red-500 flex items-center justify-center shrink-0">
+                <Icon name="warning" size={28} />
+              </div>
+              <div>
+                <h3 className="font-headline text-xl font-bold text-on-surface">
+                  Spatial Layout Conflict
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">
+                  Some selected products cannot fit within your room dimensions.
+                </p>
+              </div>
+            </div>
+
+            {/* Violations List */}
+            <div className="space-y-3 mb-6">
+              {(spatialResult.spatialViolations || []).map((violation, idx) => {
+                const typeIcons = {
+                  DIMENSION_OVERFLOW: "fullscreen_exit",
+                  WALKWAY_BLOCKAGE: "directions_walk",
+                  DOOR_IMPACT: "door_front",
+                  WINDOW_BLOCKAGE: "window"
+                };
+                const typeColors = {
+                  DIMENSION_OVERFLOW: "text-red-500 bg-red-500/10",
+                  WALKWAY_BLOCKAGE: "text-amber-500 bg-amber-500/10",
+                  DOOR_IMPACT: "text-orange-500 bg-orange-500/10",
+                  WINDOW_BLOCKAGE: "text-blue-500 bg-blue-500/10"
+                };
+
+                return (
+                  <div key={idx} className="p-4 rounded-xl neomorph-inset border border-red-500/20">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[violation.type] || "text-red-500 bg-red-500/10"}`}>
+                        <Icon name={typeIcons[violation.type] || "error"} size={18} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                          {(violation.type || "").replace(/_/g, " ")}
+                        </span>
+                        <p className="text-sm text-on-surface mt-1 leading-relaxed">
+                          {violation.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Suggested Removals */}
+            {spatialResult.suggestedRemovals && spatialResult.suggestedRemovals.length > 0 && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <Icon name="lightbulb" size={14} />
+                  Suggested Removals
+                </h4>
+                <p className="text-xs text-on-surface-variant mb-3">
+                  Remove the following items to make the layout fit:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {spatialResult.suggestedRemovals.map((productId) => {
+                    const product = allProductsList.find((p) => getProductId(p) === productId);
+                    const title = product?.basic?.name || product?.name || product?.title || productId;
+                    return (
+                      <button
+                        key={productId}
+                        onClick={() => {
+                          // Remove all instances of this product
+                          setAddedProducts((prev) => prev.filter((id) => id !== productId));
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 text-xs font-bold hover:bg-red-500/20 transition-all flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Icon name="remove_circle" size={14} />
+                        Remove "{title}"
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div className="flex justify-end items-center gap-3">
+              <button
+                onClick={() => {
+                  setSpatialViolationModalOpen(false);
+                  // Stay on Step 3 for user to adjust products
+                }}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-variant transition-all flex items-center justify-center gap-2 shadow-md active:scale-95"
+              >
+                <Icon name="edit" size={16} />
+                Adjust Products to Fix Layout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Success Toast */}
       {showSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
@@ -587,9 +902,10 @@ const RoomGeneration = () => {
           <Stepper currentStep={step} />
 
           <section className="flex-grow flex flex-col gap-6 w-full md:w-3/4 lg:w-4/5">
-            {error && (step === 1 || step === 2) && (
-              <div className="rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
-                {error}
+            {error && (
+              <div className="rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error flex items-center justify-between">
+                <span>{error}</span>
+                <button onClick={() => setError(null)} className="text-xs underline font-bold ml-4">Dismiss</button>
               </div>
             )}
 

@@ -34,6 +34,7 @@ router.get('/:id', generationController.getGenerationById);
 
 // Protected mutation routes
 router.post('/extract-preferences', protect, validate(extractPreferencesSchema), generationController.extractPreferences);
+router.post('/validate-spatial', protect, generationController.validateSpatial);
 router.get('/room/:roomId/latest', protect, generationController.getLatestGenerationForRoom);
 router.post('/:id/save-prompt', protect, generationController.saveUserPrompt);
 router.post('/:id/save-resolution', protect, generationController.saveResolution);

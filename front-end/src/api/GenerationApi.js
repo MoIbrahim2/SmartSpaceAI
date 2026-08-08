@@ -36,3 +36,6 @@ export const saveSelectedProducts = (id, data) =>
 
 export const generateRoomImage = (id, data = {}) =>
   api.post(`/generations/${id}/generate-image`, data);
+
+export const validateSpatial = (data) =>
+  api.post("/generations/validate-spatial", data);

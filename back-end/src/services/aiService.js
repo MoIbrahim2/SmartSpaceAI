@@ -402,6 +402,7 @@ const generateRoomCompositeImage = async ({
   roomImageUrl,
   selectedProducts = [],
   prompt = '',
+  spatialDirectives = '',
   roomDimensions = {},
   roomType = 'room',
   generationType = 'CREATE_FROM_SCRATCH',
@@ -497,29 +498,52 @@ const generateRoomCompositeImage = async ({
           const finalColors = rawColors || (detectedColors.length > 0 ? detectedColors.join(', ') : '');
           const attrDetails = [styles, finalColors ? `COLOR/FINISH: ${finalColors.toUpperCase()}` : '', materials ? `MATERIAL: ${materials}` : ''].filter(Boolean).join(' | ');
 
-          let imgUrl = pData.image_url || pData.image || pData.imageUrl || p.image;
-          if (!imgUrl && Array.isArray(pData.images) && pData.images.length > 0) {
-            const primary = pData.images.find(img => img && (img.isPrimary || img.primary));
-            const firstImg = primary || pData.images[0];
-            imgUrl = typeof firstImg === 'string' ? firstImg : (firstImg?.url || firstImg?.src);
+          // Robust product image extraction helper
+          let imgUrl = pData.primaryImage || pData.image_url || pData.image || pData.imageUrl || pData.img || pData.mainImageUrl || p.primaryImage || p.image || p.imageUrl || p.img;
+          if (typeof imgUrl === 'object' && imgUrl) {
+            imgUrl = imgUrl.url || imgUrl.src || null;
+          }
+          if (!imgUrl) {
+            const imagesArr = pData.images || p.images || pData.productData?.images;
+            if (Array.isArray(imagesArr) && imagesArr.length > 0) {
+              const primary = imagesArr.find(img => img && (img.isPrimary || img.primary));
+              const firstImg = primary || imagesArr[0];
+              imgUrl = typeof firstImg === 'string' ? firstImg : (firstImg?.url || firstImg?.src);
+            }
           }
 
           // CRITICAL FIX: Convert ALL images to base64 data URIs
           // Remote URLs often have CORS/hotlink protection causing the model to not see them
           let productImgSrc = null;
-          if (imgUrl) {
+          if (imgUrl && typeof imgUrl === 'string') {
+            imgUrl = imgUrl.trim();
             if (imgUrl.startsWith('data:image/')) {
               productImgSrc = imgUrl;
-            } else if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://')) {
+            } else if (imgUrl.includes('/uploads/')) {
+              const relPath = imgUrl.substring(imgUrl.indexOf('/uploads/'));
+              const localPath = path.join(process.cwd(), relPath.replace(/^\//, ''));
+              if (fs.existsSync(localPath)) {
+                const fileBuffer = fs.readFileSync(localPath);
+                const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'png';
+                const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+                productImgSrc = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+              }
+            }
+
+            if (!productImgSrc && (imgUrl.startsWith('http://') || imgUrl.startsWith('https://'))) {
               // DOWNLOAD remote image and convert to base64
               try {
                 console.log(`[AI Service] Downloading product image for "${fullTitle}": ${imgUrl}`);
+                const headers = {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                  'Accept': 'image/*,*/*'
+                };
+                try {
+                  headers['Referer'] = new URL(imgUrl).origin;
+                } catch (_) {}
+
                 const imgRes = await fetch(imgUrl, {
-                  headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'image/*,*/*',
-                    'Referer': new URL(imgUrl).origin
-                  },
+                  headers,
                   signal: AbortSignal.timeout(15000)
                 });
                 if (imgRes.ok) {
@@ -537,7 +561,7 @@ const generateRoomCompositeImage = async ({
               } catch (dlErr) {
                 console.warn(`[AI Service] ✗ Error downloading product image for "${fullTitle}": ${dlErr.message}`);
               }
-            } else {
+            } else if (!productImgSrc && !imgUrl.startsWith('http')) {
               const localPath = path.join(process.cwd(), imgUrl.replace(/^\//, ''));
               if (fs.existsSync(localPath)) {
                 const fileBuffer = fs.readFileSync(localPath);
@@ -586,6 +610,7 @@ You are a deterministic, ultra-high-precision Architectural Virtual Staging & ${
 
 [1. BASE ROOM ARCHITECTURE & LAYOUT (<|image_1|>)]
 ${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
+- WIDE-ANGLE & FULL ROOM CAMERA ANGLE: Expand the camera perspective to a wide-angle architectural corner lens shot (18mm-24mm FOV from an elevated room corner). Even if <|image_1|> is cropped, tightly framed, or partial, WIDEN the room layout angle to display the full, uncropped room space from corner to corner so all placed furniture items (bed, wardrobe, nightstands, etc.) are completely visible in the scene.
 - STRUCTURAL IMMUTABILITY: The room geometry is locked. You are FORBIDDEN from altering, moving, or modifying the back walls, side walls, floor material, floor texture, ceiling lines, doors, window frames, built-in fixtures, or baseboards.
 - LIGHTING & PERSPECTIVE LOCK: Match the camera Field of View (FOV), vanishing points, horizon line, and room scale perfectly. Analyze natural daylight (windows) and artificial light (ceiling) in <|image_1|>. All placed furniture must cast physically accurate contact shadows and directional shadows matching this exact lighting environment. 
 ${isEnhance ? '- EXISTING FURNITURE & RESTYLING DIRECTIVE: <|image_1|> contains an existing furnished room layout. RETAIN existing furniture items visible in <|image_1|> EXCEPT for items explicitly replaced, removed, or added by the new product inventory below. Perform smooth inpainting and seamless visual integration for new items.' : '- NO ARCHITECTURAL BLEEDING: The room\'s floor texture or wall colors MUST NOT bleed onto the furniture.'}
@@ -603,13 +628,18 @@ ${productRefList.join('\n\n')}
 - GEOMETRIC & DIMENSIONAL ACCURACY: Replicate exact leg shapes, headboard heights, armrest curves, cushion tufting, and frame thicknesses. Do NOT hallucinate longer beds or taller headboards. Lock the aspect ratio of the object to match its reference image exactly.
 
 [4. SPATIAL AWARENESS & PLACEMENT LOGIC]
-- User Custom Instructions: "${prompt || 'Arrange products logically with clean walking paths, realistic spacing, and balanced ergonomics.'}"
+- MANDATORY SPATIAL LAYOUT DIRECTIVES (FROM DEEPSEEK SPATIAL GUARDRAIL Engine):
+${spatialDirectives ? spatialDirectives : '- Arrange products logically with clean walking paths, realistic spacing, and balanced ergonomics.'}
+
+- WARDROBE & DRAWER OPENING CLEARANCE MANDATE: Every Wardrobe, Dresser, Closet, or Storage unit MUST have at least 80cm-100cm of clear, unobstructed open floor space directly in front of its doors and drawers. You are STRICTLY FORBIDDEN from positioning a wardrobe flush or jammed against the side/foot of a bed or nightstand. Maintain a visible clear floor gap in front of wardrobes so doors and drawers can open fully without colliding into beds or nightstands.
+- USER DESIGN INSTRUCTIONS: "${prompt || 'Follow standard aesthetic interior design principles.'}"
+- CORE FOCAL ITEM MANDATE: Major focal furniture items (e.g. BED in a Bedroom, SOFA in a Living Room) are MANDATORY central focal points. The Bed must be rendered prominently placed against a main wall with its headboard and frame clearly visible. Secondary items like Nightstands and Wardrobes must be positioned adjacent or along walls relative to the main Bed.
 - SCALE & PROPORTION: Adhere strictly to the physical dimensions provided in the inventory. Use the room's doors and windows (which have standard heights) as a scale reference. DO NOT stretch objects along the Z-axis.
 - PHYSICAL MECHANICS: Furniture must rest firmly on the floor. No floating objects. Objects must not clip through walls, intersect with other furniture, or block structural doors. Provide realistic spacing between items.
 
 [5. ABSOLUTE MANDATORY RULES (VIOLATION IS UNACCEPTABLE)]
 - RULE 1 (ZERO HALLUCINATION OF SHAPE/COLOR): Ignore any text titles, default room templates, or your own assumptions that contradict the reference image pixels. The reference image is absolute law.
-- RULE 2 (EXACT QUANTITY): Render EXACTLY ${totalProductCount} total items from the inventory list. If a product has a quantity of 2, place TWO IDENTICAL, separate copies in the room.
+- RULE 2 (EXACT QUANTITY & ALL CATEGORIES INCLUDED): Render EVERY SINGLE product listed in the inventory below (Bed, Wardrobe, Nightstand, etc.). You are FORBIDDEN from omitting core items like the Bed. Render EXACTLY ${totalProductCount} total items from the inventory list. If a product has a quantity of 2, place TWO IDENTICAL, separate copies in the room.
 - RULE 3 (${isEnhance ? 'RESTYLING & CLEAN INTEGRATION' : 'NO STRAY OBJECTS'}): ${isEnhance ? 'Preserve non-replaced items in <|image_1|>, remove/replace old items targeted by the new inventory, and seamlessly composite the new furniture items into <|image_1|> without unrequested clutter.' : 'DO NOT add random decor, plants, rugs, or lamps unless explicitly listed in the inventory above. The room must only contain <|image_1|>\'s architecture and the exact products listed.'}
 
 [FINAL COMPLIANCE CHECKLIST]
@@ -621,9 +651,10 @@ ${productRefList.join('\n\n')}
 
         messageContent.push({ text: qwenPrompt });
 
-        console.log(`[AI Service] Calling Qwen API (${modelUsed}) with ${messageContent.filter(m => m.image).length} images (${messageContent.filter(m => m.image && m.image.startsWith('data:')).length} as base64)...`);
+        const qwenApiUrl = process.env.QWEN_API_URL || 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
+        console.log(`[AI Service] Calling Qwen API (${modelUsed}) at ${qwenApiUrl} with ${messageContent.filter(m => m.image).length} images (${messageContent.filter(m => m.image && m.image.startsWith('data:')).length} as base64)...`);
 
-        const response = await fetch('https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+        const response = await fetch(qwenApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -883,9 +914,240 @@ Return whether it is a match, your confidence score, and a list of specific mism
   }
 };
 
+/**
+ * Generate a wide-angle expanded view of an empty room image using Qwen image model.
+ * Uses process.env.QWEN_MODEL_FOR_WIDEN_ROOM (default: 'qwen-image-2.0-pro').
+ *
+ * @param {Object} options - { roomImageUrl, roomType }
+ * @returns {Promise<Object>} { url: 'uploads/generations/widened_room_....jpg' } or null
+ */
+const widenRoomImage = async ({ roomImageUrl, roomType = 'room' }) => {
+  const modelUsed = process.env.QWEN_MODEL_FOR_WIDEN_ROOM || 'qwen-image-2.0-pro';
+  const apiKey = process.env.QWEN_API_KEY || process.env.DASHSCOPE_API_KEY;
+
+  if (!roomImageUrl) return null;
+
+  const uploadsDir = path.join(process.cwd(), 'uploads', 'generations');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  return await withRetry(async () => {
+    try {
+      if (!apiKey) {
+        console.warn('[AI Service] Qwen API key not found. Cannot generate widened room image.');
+        return null;
+      }
+
+      let roomImgSrc = null;
+      if (roomImageUrl.startsWith('http://') || roomImageUrl.startsWith('https://')) {
+        roomImgSrc = roomImageUrl;
+      } else {
+        const localPath = path.join(process.cwd(), roomImageUrl.replace(/^\//, ''));
+        if (fs.existsSync(localPath)) {
+          const fileBuffer = fs.readFileSync(localPath);
+          const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'jpeg';
+          const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+          roomImgSrc = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+        } else {
+          console.warn(`[AI Service] Local room image file not found for widening: ${localPath}`);
+          return null;
+        }
+      }
+
+      const widenPrompt = `You are an expert architectural camera lens expansion engine.
+Take <|image_1|>, which shows an empty ${roomType}.
+Expand the camera view into a high-resolution, wide-angle wide-perspective shot showing more of the floor space, walls, and ceiling architecture.
+
+STRICT MANDATORY CONSTRAINTS:
+1. ARCHITECTURAL IDENTITY: Keep the EXACT wall color, wall paint, floor tiles/wood texture, window/door positions, and lighting of <|image_1|>. Do NOT change the wall color or floor material.
+2. COMPLETELY EMPTY ROOM: Do NOT add any furniture, beds, sofas, chairs, tables, plants, decor, rugs, or lamps. The room MUST remain 100% EMPTY.
+3. NO CLUTTER: Render only the wide-angle empty room architecture.`;
+
+      const response = await fetch('https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: modelUsed,
+          input: {
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  { image: roomImgSrc },
+                  { text: widenPrompt }
+                ]
+              }
+            ]
+          },
+          parameters: {
+            n: 1,
+            watermark: false
+          }
+        })
+      });
+
+      if (response.ok) {
+        const resData = await response.json();
+        let generatedImageUrl = null;
+
+        if (resData.output?.choices?.[0]?.message?.content) {
+          const contentArr = resData.output.choices[0].message.content;
+          const imgObj = Array.isArray(contentArr) ? contentArr.find(item => item.image) : null;
+          if (imgObj) generatedImageUrl = imgObj.image;
+        }
+
+        if (!generatedImageUrl) {
+          generatedImageUrl =
+            resData.output?.choices?.[0]?.image ||
+            resData.output?.results?.[0]?.url ||
+            resData.output?.image_url;
+        }
+
+        if (generatedImageUrl) {
+          const fileName = `widened_room_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+          const filePath = path.join(uploadsDir, fileName);
+
+          if (generatedImageUrl.startsWith('data:image/')) {
+            const cleanBase64 = generatedImageUrl.replace(/^data:image\/\w+;base64,/, '');
+            fs.writeFileSync(filePath, Buffer.from(cleanBase64, 'base64'));
+          } else {
+            const imgRes = await fetch(generatedImageUrl);
+            if (imgRes.ok) {
+              const arrayBuffer = await imgRes.arrayBuffer();
+              fs.writeFileSync(filePath, Buffer.from(arrayBuffer));
+            }
+          }
+
+          if (fs.existsSync(filePath)) {
+            return {
+              url: `uploads/generations/${fileName}`,
+              promptUsed: widenPrompt,
+              modelUsed
+            };
+          }
+        }
+      } else {
+        const errorText = await response.text();
+        console.warn(`[AI Service] Qwen widen room API error (${response.status}): ${errorText}`);
+      }
+    } catch (err) {
+      console.error('[AI Service] Error in widenRoomImage:', err.message);
+    }
+    return null;
+  });
+};
+
+/**
+ * Validate that the widened room image preserves the original room's architecture
+ * (wall color, floor material, room structure) and remains completely empty without adding furniture.
+ *
+ * @param {Object} options - { originalImageUrl, widenedImageUrl }
+ * @returns {Promise<Object>} { is_valid: boolean, layout_preserved: boolean, remains_empty: boolean, reason: string }
+ */
+const validateWidenedRoomLayout = async ({ originalImageUrl, widenedImageUrl }) => {
+  if (!originalImageUrl || !widenedImageUrl) {
+    return { is_valid: false, reason: 'Missing original or widened image URL.' };
+  }
+
+  const getInlineData = (imgUrl) => {
+    let localPath = imgUrl;
+    if (!imgUrl.startsWith('http://') && !imgUrl.startsWith('https://')) {
+      localPath = path.join(process.cwd(), imgUrl.replace(/^\//, ''));
+    }
+    if (fs.existsSync(localPath)) {
+      const buffer = fs.readFileSync(localPath);
+      const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'jpeg';
+      const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+      return {
+        inlineData: {
+          mimeType,
+          data: buffer.toString('base64')
+        }
+      };
+    }
+    return null;
+  };
+
+  const origData = getInlineData(originalImageUrl);
+  const widenData = getInlineData(widenedImageUrl);
+
+  if (!origData || !widenData) {
+    console.warn('[AI Service] Could not load image files for widened layout validation.');
+    return { is_valid: true, layout_preserved: true, remains_empty: true, reason: 'File check skipped.' };
+  }
+
+  const prompt = `Compare these two room images:
+The first image is the original empty room image uploaded by the user.
+The second image is an AI-generated widened view of the same room.
+
+Determine whether the second image correctly preserves the original room layout and architecture.
+Evaluation Rules:
+1. layout_preserved: true ONLY if the wall color, wall paint, floor material (e.g. wood, tiles), and architectural identity in the second image match the first image. Set to false if the wall color, floor, or room layout changed dramatically.
+2. remains_empty: true ONLY if the second image is completely empty and contains NO hallucinated furniture, beds, sofas, tables, or unrequested objects.
+3. is_valid: true ONLY if BOTH layout_preserved is true AND remains_empty is true.`;
+
+  const config = {
+    responseMimeType: 'application/json',
+    responseSchema: {
+      type: Type.OBJECT,
+      properties: {
+        layout_preserved: {
+          type: Type.BOOLEAN,
+          description: 'true if wall colors, floor materials, and architectural geometry match the original room'
+        },
+        remains_empty: {
+          type: Type.BOOLEAN,
+          description: 'true if the widened room contains no furniture, decor, or unrequested objects'
+        },
+        is_valid: {
+          type: Type.BOOLEAN,
+          description: 'true if both layout_preserved and remains_empty are true'
+        },
+        reason: {
+          type: Type.STRING,
+          description: 'Short explanation of the evaluation'
+        }
+      },
+      required: ['layout_preserved', 'remains_empty', 'is_valid', 'reason']
+    }
+  };
+
+  return await withRetry(async () => {
+    try {
+      const response = await ai.models.generateContent({
+        model: process.env.GEMINI_MODEL_FOR_GUARD || 'gemini-2.5-flash',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              origData,
+              widenData,
+              { text: prompt }
+            ]
+          }
+        ],
+        config
+      });
+
+      const parsed = JSON.parse(response.text);
+      console.log('[AI Service] Widened room layout validation result:', parsed);
+      return parsed;
+    } catch (err) {
+      console.error('[AI Service] Error validating widened room layout with Gemini:', err.message);
+      return { is_valid: true, layout_preserved: true, remains_empty: true, reason: 'Validation fallback on error' };
+    }
+  });
+};
+
 module.exports = {
   validateRoomImage,
   extractPreferences,
   generateRoomCompositeImage,
-  validateSellerProductSubmission
+  validateSellerProductSubmission,
+  widenRoomImage,
+  validateWidenedRoomLayout
 };

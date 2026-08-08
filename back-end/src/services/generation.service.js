@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const promptBuilder = require('./promptBuilder.service');
 const aiService = require('./aiService');
+const spatialGuardrailService = require('./spatialGuardrail.service');
 
 /**
  * Create a new generation
@@ -411,15 +412,29 @@ const saveSelectedProducts = async (userId, generationId, payload) => {
 
   if (selectedProducts && Array.isArray(selectedProducts)) {
     generation.selectedProducts = selectedProducts.map((p, idx) => {
-      const pData = p.productData || p;
-      const category = p.category || pData.category || pData.categoryName || 'Furniture';
-      const productId = p.productId || pData._id || pData.id || String(idx);
-      const price = Number(p.price || pData.pricing?.currentPrice || pData.price || pData.numericPrice || 0);
-      const quantity = Number(p.quantity || 1);
-      const isRecommended = Boolean(p.isRecommended || pData.isRecommended);
+      let pData = p.productData || p;
+      if (pData && typeof pData === 'object') {
+        try {
+          pData = JSON.parse(JSON.stringify(pData._doc || pData));
+        } catch (e) {
+          pData = { _id: String(p.productId || idx), name: p.title || 'Furniture Item' };
+        }
+      }
+
+      let category = p.category || pData?.category || pData?.categoryName || 'Furniture';
+      if (!category || typeof category !== 'string' || !category.trim()) {
+        category = 'Furniture';
+      }
+
+      const rawId = p.productId || pData?._id || pData?.id || String(idx);
+      const productId = typeof rawId === 'object' ? String(rawId._id || rawId.id || idx) : String(rawId);
+
+      const price = Number(p.price || pData?.pricing?.currentPrice || pData?.price || pData?.numericPrice || 0) || 0;
+      const quantity = Number(p.quantity || 1) || 1;
+      const isRecommended = Boolean(p.isRecommended || pData?.isRecommended);
 
       return {
-        category,
+        category: category.trim(),
         productId,
         productData: pData,
         isRecommended,
@@ -487,16 +502,100 @@ const generateRoomImage = async (userId, generationId) => {
   try {
     const roomType = generation.roomId?.roomType || 'room';
 
-    // Retrieve room_image_path from generation.roomLayoutData or RoomLayout model
-    let roomImageUrl = generation.roomLayoutData?.room_image_path;
-    if (!roomImageUrl && generation.roomId) {
-      const layout = await RoomLayout.findOne({ roomId: generation.roomId._id });
-      if (layout?.room_image_path) {
-        roomImageUrl = layout.room_image_path;
+    // ── Spatial Guardrail Enforcement ──────────────────────────────────
+    // Before calling the image generation model, assert spatial validation
+    const selectedProducts = generation.selectedProducts || [];
+    if (selectedProducts.length > 0) {
+      const currentHash = spatialGuardrailService.computeProductsHash(
+        generation.roomId,
+        selectedProducts
+      );
+
+      // Verify spatial validation before image generation (uses cache if products hash matches)
+      let room = null;
+      if (generation.roomId) {
+        room = await Room.findById(generation.roomId._id || generation.roomId);
+      }
+      await spatialGuardrailService.validateSpatialApplicability(generation, room, selectedProducts);
+      await generation.save();
+
+      // Block rendering if spatial validation failed
+      if (generation.spatialGuardrail?.isApplicable === false) {
+        generation.status = 'FAILED';
+        await generation.save();
+        const violations = (generation.spatialGuardrail.spatialViolations || [])
+          .map(v => v.description)
+          .join('; ');
+        throw new ApiError(
+          HTTP_STATUS.UNPROCESSABLE_ENTITY,
+          `Spatial validation failed: ${violations || 'Selected products do not fit in the room.'}`
+        );
       }
     }
-    if (!roomImageUrl) {
-      roomImageUrl = generation.roomId?.sourceImages?.[0]?.url || '';
+    // ── End Spatial Guardrail ──────────────────────────────────────────
+
+    // Retrieve original room_image_path from generation.roomLayoutData or RoomLayout model
+    let originalRoomImageUrl = generation.roomLayoutData?.room_image_path;
+    if (!originalRoomImageUrl && generation.roomId) {
+      const layout = await RoomLayout.findOne({ roomId: generation.roomId._id || generation.roomId });
+      if (layout?.room_image_path) {
+        originalRoomImageUrl = layout.room_image_path;
+      }
+    }
+    if (!originalRoomImageUrl) {
+      originalRoomImageUrl = generation.roomId?.sourceImages?.[0]?.url || '';
+    }
+
+    // Check & trigger QWEN_MODEL_FOR_WIDEN_ROOM if widened room image is null
+    let roomImageUrl = originalRoomImageUrl;
+    if (generation.roomId) {
+      const roomIdToFind = generation.roomId._id || generation.roomId;
+      const roomDoc = await Room.findById(roomIdToFind);
+
+      if (roomDoc) {
+        if (roomDoc.widenedImageUrl) {
+          console.log(`[Generation Service] 🎯 Using stored widened room image: ${roomDoc.widenedImageUrl}`);
+          roomImageUrl = roomDoc.widenedImageUrl;
+        } else {
+          console.log('[Generation Service] ⚡ Widened room image is null. Invoking QWEN_MODEL_FOR_WIDEN_ROOM model...');
+          try {
+            const widenResult = await aiService.widenRoomImage({
+              roomImageUrl: originalRoomImageUrl,
+              roomType
+            });
+
+            if (widenResult?.url) {
+              // Verify that the original room layout/architecture was preserved without adding objects
+              const valResult = await aiService.validateWidenedRoomLayout({
+                originalImageUrl: originalRoomImageUrl,
+                widenedImageUrl: widenResult.url
+              });
+
+              if (valResult?.is_valid) {
+                console.log('[Generation Service] ✓ Widened room layout verified & preserved! Saving to Room record.');
+                roomImageUrl = widenResult.url;
+                roomDoc.widenedImageUrl = widenResult.url;
+                await roomDoc.save();
+              } else {
+                console.warn(`[Generation Service] ⚠️ Widened room layout changed or failed validation (${valResult?.reason || 'layout changed'}). Setting widenedImageUrl = null.`);
+                roomImageUrl = originalRoomImageUrl;
+                roomDoc.widenedImageUrl = null;
+                await roomDoc.save();
+              }
+            } else {
+              console.warn('[Generation Service] Widened room generation returned null. Fallback to original room image.');
+              roomImageUrl = originalRoomImageUrl;
+              roomDoc.widenedImageUrl = null;
+              await roomDoc.save();
+            }
+          } catch (widenErr) {
+            console.error('[Generation Service] Error in room widening workflow:', widenErr.message);
+            roomImageUrl = originalRoomImageUrl;
+            roomDoc.widenedImageUrl = null;
+            await roomDoc.save();
+          }
+        }
+      }
     }
     const roomDimensions = {
       length_cm: generation.roomLayoutData?.length_cm,
@@ -504,10 +603,20 @@ const generateRoomImage = async (userId, generationId) => {
       height_cm: generation.roomLayoutData?.height_cm,
     };
 
+    // Extract natural language spatial directives from DeepSeek spatial guardrail result
+    let spatialDirectives = '';
+    if (generation.spatialGuardrail) {
+      spatialDirectives = generation.spatialGuardrail.naturalLanguagePrompt || 
+        spatialGuardrailService.translateLayoutToPromptDirectives(generation.spatialGuardrail.layoutDiagram) || '';
+    }
+
+    const userPrompt = generation.userPrompt || generation.prompt || '';
+
     const imageResult = await aiService.generateRoomCompositeImage({
       roomImageUrl,
       selectedProducts: generation.selectedProducts || [],
-      prompt: generation.userPrompt || generation.prompt || '',
+      prompt: userPrompt,
+      spatialDirectives,
       roomDimensions,
       roomType,
       generationType: generation.generationType || 'CREATE_FROM_SCRATCH',

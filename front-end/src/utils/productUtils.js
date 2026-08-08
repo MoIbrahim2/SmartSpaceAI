@@ -63,22 +63,26 @@ export const getProductId = (product) => {
   if (!product) return "";
   const pData = product.productData || product;
 
-  // Walk through all possible ID fields
+  // Walk through all possible ID fields (prioritize actual product ID over array subdocument _id)
   const candidates = [
-    product._id,
-    product.id,
     product.productId,
+    pData.productId,
     pData._id,
     pData.id,
-    pData.productId,
     product.externalId,
     pData.externalId,
+    product.id,
+    product._id,
     product.sellerId,
     pData.sellerId,
   ];
 
   for (const c of candidates) {
-    if (c != null && String(c).trim() !== "") return String(c);
+    if (c != null && typeof c !== "object" && String(c).trim() !== "") return String(c);
+    if (c != null && typeof c === "object" && (c._id || c.id)) {
+      const sub = String(c._id || c.id).trim();
+      if (sub) return sub;
+    }
   }
 
   // Last resort: use the product name + price as a deterministic key
