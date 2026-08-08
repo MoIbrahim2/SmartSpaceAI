@@ -67,6 +67,8 @@ const createSellerProduct = async (sellerId, productData) => {
     sellerId,
     processing: {
       status: 'PENDING_AI_VALIDATION',
+      confidence: null,
+      detectedObject: null,
       issues: []
     }
   });
@@ -124,6 +126,8 @@ const updateSellerProduct = async (sellerId, productId, updateData) => {
   if (triggerValidation) {
     product.processing = {
       status: 'PENDING_AI_VALIDATION',
+      confidence: null,
+      detectedObject: null,
       issues: []
     };
   }

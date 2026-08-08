@@ -19,7 +19,7 @@ export default function ModerationQueue() {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All");
+  const [status, setStatus] = useState("ALL");
 
   const [activeProduct, setActiveProduct] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -155,6 +155,14 @@ export default function ModerationQueue() {
     return <LoadingState message="Loading moderation queue..." />;
   }
 
+  const statusOptions = [
+    { label: "All Statuses", value: "ALL" },
+    { label: "Manual Review Required", value: "MANUAL_REVIEW_REQUIRED" },
+    { label: "Pending AI Validation", value: "PENDING_AI_VALIDATION" },
+    { label: "Accepted", value: "ACCEPTED" },
+    { label: "Rejected", value: "REJECTED" },
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -164,7 +172,7 @@ export default function ModerationQueue() {
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline/10 neomorph-raised">
         <SearchInput value={search} onChange={setSearch} placeholder="Search product or seller..." />
-        <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Pending Review", "Flagged Issues"]} />
+        <FilterDropdown value={status} onChange={setStatus} label="Status" options={statusOptions} />
       </div>
 
       {queue.length === 0 ? (

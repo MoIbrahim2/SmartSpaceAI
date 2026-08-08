@@ -824,32 +824,61 @@ const validateSellerProductSubmission = async (productId) => {
     }
 
     // 3. Build evaluation prompt
-    const prompt = `Analyze this product image. You are an expert retail catalogue auditor.
-Determine if this image is a correct representation of the product metadata provided below.
-Name: ${product.basic?.name || 'N/A'}
+    const prompt = `You are an expert furniture catalog auditor for an AI-powered home decor and interior marketplace.
+Analyze the provided product image carefully and audit it against the seller's submitted product metadata below.
+
+--- SUBMITTED PRODUCT METADATA ---
+Product Name: ${product.basic?.name || 'N/A'}
 Brand: ${product.basic?.brand || 'N/A'}
 Description: ${product.basic?.description || 'N/A'}
-Category: ${product.classification?.canonicalCategory || 'N/A'}
-Materials: ${(product.classification?.materials || []).join(', ') || 'N/A'}
-Colors: ${(product.classification?.colors || []).join(', ') || 'N/A'}
+Selected Category: ${product.classification?.canonicalCategory || 'N/A'}
+Submitted Materials: ${(product.classification?.materials || []).join(', ') || 'N/A'}
+Submitted Colors: ${(product.classification?.colors || []).join(', ') || 'N/A'}
 Dimensions: ${product.dimensions?.length || '?'}cm (L) x ${product.dimensions?.width || '?'}cm (W) x ${product.dimensions?.height || '?'}cm (H)
 
-Perform the following verification checks:
-1. Verify if the primary visual item is indeed of category "${product.classification?.canonicalCategory || 'N/A'}".
-2. Check for material conflicts (e.g. description/metadata says 'Glass' or 'Wood' but visual shows plastic or fabric).
-3. Check for major color mismatches.
-4. Verify if the item proportions make sense relative to typical human scale.
+--- AUDIT & VALIDATION RULES ---
+1. VISUAL OBJECT IDENTIFICATION & FURNITURE AUDIT:
+   - Identify the primary object visually present in the image.
+   - Set "is_furniture" to TRUE ONLY if the object is a valid piece of furniture (e.g. Sofa, Chair, Table, Bed, Desk, Cabinet, Wardrobe, Nightstand, Bookshelf, TV Unit, Coffee Table, Dining Table, Dining Chair, Armchair, Ottoman, Bench, etc.).
+   - Set "is_furniture" to FALSE if the image contains: laptop, phone, computer, car, food, animal, person without furniture being the main product, landscape, random object, logo, screenshot, blank image, non-furniture object, or electronic gadget.
+   - Set "detected_object" to the primary visual object name identified (e.g., "Sofa", "Laptop", "Dining Table", "Phone", "Bed").
 
-Return whether it is a match, your confidence score, and a list of specific mismatches (in English) if any are found.`;
+2. CATEGORY MATCH CHECK:
+   - Compare the detected object against the seller's Selected Category ("${product.classification?.canonicalCategory || 'N/A'}").
+   - If the uploaded image contains non-furniture (e.g., Laptop), or a different furniture type (e.g. Selected Category is "Sofa" but image shows a Dining Table or Chair), set "is_match" to FALSE.
+   - NEVER trust seller metadata alone if it contradicts the visual content in the image!
+
+3. MATERIAL & COLOR VERIFICATION:
+   - Verify if the visual material matches the submitted materials (e.g. metadata says "Solid Oak" / "Wood" but visual shows upholstered fabric or plastic).
+   - Verify if visual colors match the submitted colors.
+
+4. PROPORTIONS CHECK:
+   - Verify if visual item proportions make sense relative to typical human scale.
+
+5. HUMAN REASONS (CRITICAL):
+   - Provide clear, polite, human-readable explanations in English in "human_reasons" suitable for directly showing the seller.
+   - Example 1 (Non-furniture): ["The uploaded image does not show a furniture product.", "The selected category is Sofa, but the image shows a laptop."]
+   - Example 2 (Category Mismatch): ["The uploaded product appears to be a dining table, not a sofa.", "The image does not match the selected product category."]
+   - Example 3 (Material Mismatch): ["The material appears to be upholstered fabric rather than solid oak."]
+
+Return a valid JSON object matching the requested schema strictly.`;
 
     const config = {
       responseMimeType: 'application/json',
       responseSchema: {
         type: Type.OBJECT,
         properties: {
+          is_furniture: {
+            type: Type.BOOLEAN,
+            description: 'true ONLY if the main object in the image is a valid piece of furniture.'
+          },
+          detected_object: {
+            type: Type.STRING,
+            description: 'Primary object identified visually in the image (e.g. Sofa, Laptop, Dining Table, Armchair).'
+          },
           is_match: {
             type: Type.BOOLEAN,
-            description: 'true ONLY if the image represents the product described by the metadata without major visual contradictions.'
+            description: 'true ONLY if the image represents the product described by the metadata without visual contradictions.'
           },
           confidence: {
             type: Type.NUMBER,
@@ -858,10 +887,15 @@ Return whether it is a match, your confidence score, and a list of specific mism
           mismatches: {
             type: Type.ARRAY,
             items: { type: Type.STRING },
-            description: 'List of specific discrepancy issues found, empty if is_match is true.'
+            description: 'List of specific technical discrepancy issues found.'
+          },
+          human_reasons: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: 'Clear, human-readable rejection or review reasons explaining to the seller why the product was rejected or flagged.'
           }
         },
-        required: ['is_match', 'confidence', 'mismatches']
+        required: ['is_furniture', 'detected_object', 'is_match', 'confidence', 'mismatches', 'human_reasons']
       }
     };
 
@@ -890,26 +924,61 @@ Return whether it is a match, your confidence score, and a list of specific mism
 
     console.log(`[AI Service] Validation result for product ${productId}:`, evaluation);
 
-    // 5. Update product status
-    if (evaluation.is_match && evaluation.confidence >= 0.85) {
-      product.processing.status = 'ACCEPTED';
-      product.processing.issues = [];
-    } else if (!evaluation.is_match) {
-      product.processing.status = 'REJECTED';
-      product.processing.issues = evaluation.mismatches.length > 0 ? evaluation.mismatches : ['Visual details do not match metadata attributes.'];
+    // 5. Backend Decision Logic
+    const isFurniture = evaluation.is_furniture === true;
+    const isMatch = evaluation.is_match === true;
+    const confidence = typeof evaluation.confidence === 'number' ? evaluation.confidence : 0;
+    const detectedObject = evaluation.detected_object || 'Unknown Object';
+
+    const reasons = (Array.isArray(evaluation.human_reasons) && evaluation.human_reasons.length > 0)
+      ? evaluation.human_reasons
+      : ((Array.isArray(evaluation.mismatches) && evaluation.mismatches.length > 0)
+        ? evaluation.mismatches
+        : []);
+
+    let status = 'MANUAL_REVIEW_REQUIRED';
+    let issues = [];
+
+    if (!isFurniture) {
+      status = 'REJECTED';
+      issues = reasons.length > 0 ? reasons : [
+        'The uploaded image does not show a furniture product.',
+        `The image contains a ${detectedObject} instead of a furniture product.`
+      ];
+    } else if (!isMatch) {
+      status = 'REJECTED';
+      issues = reasons.length > 0 ? reasons : [
+        `The uploaded product appears to be a ${detectedObject}, which does not match the selected category (${product.classification?.canonicalCategory || 'N/A'}).`
+      ];
+    } else if (confidence < 0.85) {
+      status = 'MANUAL_REVIEW_REQUIRED';
+      issues = reasons.length > 0 ? reasons : [
+        `AI confidence score (${(confidence * 100).toFixed(0)}%) is below the automated acceptance threshold.`
+      ];
     } else {
-      product.processing.status = 'MANUAL_REVIEW_REQUIRED';
-      product.processing.issues = evaluation.mismatches;
+      status = 'ACCEPTED';
+      issues = [];
     }
+
+    product.processing = {
+      status,
+      confidence,
+      detectedObject,
+      issues
+    };
 
     await product.save();
     return product;
 
   } catch (error) {
     console.error(`[AI Service] Error validating product ${productId}:`, error);
-    // On pipeline error, flag for manual review so it does not get stuck forever
-    product.processing.status = 'MANUAL_REVIEW_REQUIRED';
-    product.processing.issues = [`AI pipeline validation error: ${error.message}`];
+    // On pipeline/API/parsing error, flag for manual review with a human readable reason
+    product.processing = {
+      status: 'MANUAL_REVIEW_REQUIRED',
+      confidence: 0,
+      detectedObject: 'Error',
+      issues: ['Automatic AI validation could not be completed. Manual review is required.']
+    };
     await product.save();
     return product;
   }

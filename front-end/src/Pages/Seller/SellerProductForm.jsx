@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Save, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import { getSellerProduct, createSellerProduct, updateSellerProduct } from "../../api/SellerApi";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
@@ -9,6 +10,7 @@ export default function SellerProductForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const isEdit = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -64,19 +66,19 @@ export default function SellerProductForm() {
               imageUrl: prod.images?.[0]?.url || "",
             });
           } else {
-            showToast("Product not found", "error");
+            showToast(t("seller.productForm.notFound"), "error");
             navigate("/seller/products");
           }
         } catch (error) {
           console.error("Error loading product:", error);
-          showToast("Failed to load product details", "error");
+          showToast(t("seller.productForm.loadError"), "error");
         } finally {
           setLoading(false);
         }
       }
       loadProduct();
     }
-  }, [id, isEdit, navigate, showToast]);
+  }, [id, isEdit, navigate, showToast, t]);
 
   const handleTextChange = (e) => {
     const { name, value } = e.target;
@@ -107,15 +109,15 @@ export default function SellerProductForm() {
     
     // Simple validation (mirrors backend createProductSchema)
     if (!formData.name || !formData.price || !formData.imageUrl) {
-      showToast("Please fill in name, price, and image URL", "warning");
+      showToast(t("seller.productForm.fillRequiredWarning"), "warning");
       return;
     }
     if ((formData.description || "").trim().length < 10) {
-      showToast("Please provide a product description (at least 10 characters)", "warning");
+      showToast(t("seller.productForm.descLengthWarning"), "warning");
       return;
     }
     if (!formData.width || !formData.height || !formData.length) {
-      showToast("Please provide length, width, and height (cm)", "warning");
+      showToast(t("seller.productForm.dimensionsWarning"), "warning");
       return;
     }
 
@@ -157,15 +159,15 @@ export default function SellerProductForm() {
       setAiValidating(true);
       if (isEdit) {
         await updateSellerProduct(id, payload);
-        showToast("Product listing updated successfully", "success");
+        showToast(t("seller.productForm.updatedSuccess"), "success");
       } else {
         await createSellerProduct(payload);
-        showToast("New product created and queued for AI validation", "success");
+        showToast(t("seller.productForm.createdSuccess"), "success");
       }
       navigate("/seller/products");
     } catch (error) {
       console.error("Submit error:", error);
-      showToast("Error processing listing", "error");
+      showToast(t("seller.productForm.submitError"), "error");
     } finally {
       setAiValidating(false);
     }
@@ -191,25 +193,25 @@ export default function SellerProductForm() {
     <div className="space-y-8 relative">
       {/* Page Header */}
       <PageHeader
-        title={isEdit ? "Edit Product Listing" : "Add New Product"}
-        description={isEdit ? "Update your product specification." : "Add a new product to your inventory."}
+        title={isEdit ? t("seller.productForm.titleEdit") : t("seller.productForm.titleCreate")}
+        description={isEdit ? t("seller.productForm.descEdit") : t("seller.productForm.descCreate")}
       >
         <Link
           to="/seller/products"
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface border border-outline/20 font-bold text-sm transition-all"
         >
-          <ArrowLeft className="size-4" />
-          <span>Back to Catalog</span>
+          <ArrowLeft className="size-4 rtl:rotate-180" />
+          <span>{t("seller.productForm.backToCatalog")}</span>
         </Link>
       </PageHeader>
 
       {/* Progress Steps Header */}
       <div className="grid grid-cols-4 gap-2 bg-surface p-3 rounded-2xl border border-outline/10 neo-shadow">
         {[
-          { step: 1, label: "Basic Details" },
-          { step: 2, label: "Classification" },
-          { step: 3, label: "Pricing & Size" },
-          { step: 4, label: "Media Upload" },
+          { step: 1, label: t("seller.productForm.step1Title") },
+          { step: 2, label: t("seller.productForm.step2Title") },
+          { step: 3, label: t("seller.productForm.step3Title") },
+          { step: 4, label: t("seller.productForm.step4Title") },
         ].map((s) => (
           <div
             key={s.step}
@@ -233,28 +235,28 @@ export default function SellerProductForm() {
         {/* STEP 1: BASIC DETAILS */}
         {currentStep === 1 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">Step 1: Product Basics</h3>
+            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">{t("seller.productForm.step1Heading")}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Product Name *</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.productName")}</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleTextChange}
-                  placeholder="e.g. Velvet Armchair"
+                  placeholder={t("seller.productForm.productNamePlaceholder")}
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">SKU (Stock Keeping Unit)</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.skuLabel")}</label>
                 <input
                   type="text"
                   name="sku"
                   value={formData.sku}
                   onChange={handleTextChange}
-                  placeholder="e.g. SEL-ARM-012"
+                  placeholder={t("seller.productForm.skuPlaceholder")}
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                 />
               </div>
@@ -262,7 +264,7 @@ export default function SellerProductForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Brand Partner</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.brandPartner")}</label>
                 <input
                   type="text"
                   name="brand"
@@ -274,7 +276,7 @@ export default function SellerProductForm() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-bold text-on-surface-variant">Product Description *</label>
+              <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.descriptionLabel")}</label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -282,7 +284,7 @@ export default function SellerProductForm() {
                 rows={4}
                 required
                 minLength={10}
-                placeholder="Write a descriptive summary of this product including features and quality details..."
+                placeholder={t("seller.productForm.descriptionPlaceholder")}
                 className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
               />
             </div>
@@ -292,11 +294,11 @@ export default function SellerProductForm() {
         {/* STEP 2: CLASSIFICATION */}
         {currentStep === 2 && (
           <div className="space-y-6">
-            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">Step 2: Taxonomy & Tags</h3>
+            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">{t("seller.productForm.step2Heading")}</h3>
             
             {/* Category Select */}
             <div className="space-y-1.5">
-              <label className="text-sm font-bold text-on-surface-variant">Canonical Category *</label>
+              <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.canonicalCategory")}</label>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                 {categories.map((cat) => (
                   <button
@@ -309,7 +311,7 @@ export default function SellerProductForm() {
                         : "bg-background text-on-surface-variant border-outline/20 hover:text-primary hover:bg-surface"
                     }`}
                   >
-                    {cat}
+                    {t(`seller.categories.${cat}`, { defaultValue: cat })}
                   </button>
                 ))}
               </div>
@@ -317,7 +319,7 @@ export default function SellerProductForm() {
 
             {/* Room Types checkboxes */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-on-surface-variant block">Compatible Rooms *</label>
+              <label className="text-sm font-bold text-on-surface-variant block">{t("seller.productForm.compatibleRooms")}</label>
               <div className="flex flex-wrap gap-2">
                 {roomOptions.map((room) => {
                   const isChecked = formData.roomTypes.includes(room);
@@ -332,7 +334,7 @@ export default function SellerProductForm() {
                           : "bg-background text-on-surface-variant border-outline/20"
                       }`}
                     >
-                      {room.replace("_", " ")}
+                      {t(`seller.rooms.${room}`, { defaultValue: room.replace("_", " ") })}
                     </button>
                   );
                 })}
@@ -343,7 +345,7 @@ export default function SellerProductForm() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Styles */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface-variant block">Styles</label>
+                <label className="text-sm font-bold text-on-surface-variant block">{t("seller.productForm.styles")}</label>
                 <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
                   {styleOptions.map((st) => {
                     const isChecked = formData.styles.includes(st);
@@ -358,7 +360,7 @@ export default function SellerProductForm() {
                             : "bg-background text-on-surface-variant border-outline/10"
                         }`}
                       >
-                        {st}
+                        {t(`seller.styles.${st}`, { defaultValue: st })}
                       </button>
                     );
                   })}
@@ -367,7 +369,7 @@ export default function SellerProductForm() {
 
               {/* Colors */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface-variant block">Colors</label>
+                <label className="text-sm font-bold text-on-surface-variant block">{t("seller.productForm.colors")}</label>
                 <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
                   {colorOptions.map((cl) => {
                     const isChecked = formData.colors.includes(cl);
@@ -382,7 +384,7 @@ export default function SellerProductForm() {
                             : "bg-background text-on-surface-variant border-outline/10"
                         }`}
                       >
-                        {cl}
+                        {t(`seller.colors.${cl}`, { defaultValue: cl })}
                       </button>
                     );
                   })}
@@ -391,7 +393,7 @@ export default function SellerProductForm() {
 
               {/* Materials */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-on-surface-variant block">Materials</label>
+                <label className="text-sm font-bold text-on-surface-variant block">{t("seller.productForm.materials")}</label>
                 <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
                   {materialOptions.map((mt) => {
                     const isChecked = formData.materials.includes(mt);
@@ -406,7 +408,7 @@ export default function SellerProductForm() {
                             : "bg-background text-on-surface-variant border-outline/10"
                         }`}
                       >
-                        {mt}
+                        {t(`seller.materials.${mt}`, { defaultValue: mt })}
                       </button>
                     );
                   })}
@@ -419,23 +421,23 @@ export default function SellerProductForm() {
         {/* STEP 3: PRICING & DIMENSIONS */}
         {currentStep === 3 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">Step 3: Price & Geometry</h3>
+            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">{t("seller.productForm.step3Heading")}</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Price *</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.priceLabel")}</label>
                 <input
                   type="number"
                   name="price"
                   value={formData.price}
                   onChange={handleTextChange}
-                  placeholder="e.g. 4500"
+                  placeholder={t("seller.productForm.pricePlaceholder")}
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Currency</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.currencyLabel")}</label>
                 <select
                   name="currency"
                   value={formData.currency}
@@ -448,7 +450,7 @@ export default function SellerProductForm() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Stock Quantity</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.stockQuantity")}</label>
                 <input
                   type="number"
                   name="quantity"
@@ -461,37 +463,37 @@ export default function SellerProductForm() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Length (cm) *</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.lengthLabel")}</label>
                 <input
                   type="number"
                   name="length"
                   value={formData.length}
                   onChange={handleTextChange}
-                  placeholder="e.g. 90"
+                  placeholder={t("seller.productForm.lengthPlaceholder")}
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Width (cm) *</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.widthLabel")}</label>
                 <input
                   type="number"
                   name="width"
                   value={formData.width}
                   onChange={handleTextChange}
-                  placeholder="e.g. 80"
+                  placeholder={t("seller.productForm.widthPlaceholder")}
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   required
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-bold text-on-surface-variant">Height (cm) *</label>
+                <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.heightLabel")}</label>
                 <input
                   type="number"
                   name="height"
                   value={formData.height}
                   onChange={handleTextChange}
-                  placeholder="e.g. 75"
+                  placeholder={t("seller.productForm.heightPlaceholder")}
                   className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                   required
                 />
@@ -503,16 +505,16 @@ export default function SellerProductForm() {
         {/* STEP 4: MEDIA UPLOADS */}
         {currentStep === 4 && (
           <div className="space-y-4">
-            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">Step 4: Product Image</h3>
+            <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">{t("seller.productForm.step4Heading")}</h3>
             
             <div className="space-y-1">
-              <label className="text-sm font-bold text-on-surface-variant">Image URL *</label>
+              <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.imageUrlLabel")}</label>
               <input
                 type="url"
                 name="imageUrl"
                 value={formData.imageUrl}
                 onChange={handleTextChange}
-                placeholder="https://images.unsplash.com/photo-..."
+                placeholder={t("seller.productForm.imageUrlPlaceholder")}
                 className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                 required
               />
@@ -520,7 +522,7 @@ export default function SellerProductForm() {
 
             {formData.imageUrl && (
               <div className="mt-4 flex flex-col items-center justify-center p-4 border border-outline/10 bg-background rounded-2xl neo-inset max-w-md mx-auto">
-                <p className="text-xs text-on-surface-variant mb-2 font-bold">Image Preview</p>
+                <p className="text-xs text-on-surface-variant mb-2 font-bold">{t("seller.productForm.imagePreview")}</p>
                 <img
                   src={formData.imageUrl}
                   alt="Product preview"
@@ -546,8 +548,8 @@ export default function SellerProductForm() {
                 : "text-on-surface hover:bg-background"
             }`}
           >
-            <ArrowLeft className="size-4" />
-            <span>Previous</span>
+            <ArrowLeft className="size-4 rtl:rotate-180" />
+            <span>{t("seller.productForm.previous")}</span>
           </button>
 
           {currentStep < 4 ? (
@@ -557,8 +559,8 @@ export default function SellerProductForm() {
               onClick={nextStep}
               className="bg-primary text-white rounded-xl px-5 py-2.5 text-sm font-bold neo-shadow hover:bg-primary/95 flex items-center gap-2 transition-all"
             >
-              <span>Next</span>
-              <ArrowRight className="size-4" />
+              <span>{t("seller.productForm.next")}</span>
+              <ArrowRight className="size-4 rtl:rotate-180" />
             </button>
           ) : (
             <button
@@ -568,7 +570,7 @@ export default function SellerProductForm() {
               className="bg-emerald-600 text-white rounded-xl px-6 py-2.5 text-sm font-bold neo-shadow hover:bg-emerald-700 flex items-center gap-2 transition-all"
             >
               <Save className="size-4" />
-              <span>{isEdit ? "Update Listing" : "Submit Listing"}</span>
+              <span>{isEdit ? t("seller.productForm.updateListing") : t("seller.productForm.submitListing")}</span>
             </button>
           )}
         </div>
@@ -586,9 +588,9 @@ export default function SellerProductForm() {
             </div>
 
             <div className="space-y-2">
-              <h4 className="text-lg font-extrabold text-on-surface">SmartSpace AI Engine</h4>
+              <h4 className="text-lg font-extrabold text-on-surface">{t("seller.productForm.aiEngineTitle")}</h4>
               <p className="text-xs text-on-surface-variant font-medium">
-                Submitting your listing for AI validation against catalog design systems...
+                {t("seller.productForm.aiEngineDesc")}
               </p>
             </div>
           </div>

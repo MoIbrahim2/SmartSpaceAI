@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -8,15 +9,16 @@ import {
   X,
 } from "lucide-react";
 
-const navItems = [
-  { label: "Dashboard", path: "/seller/dashboard", icon: LayoutDashboard },
-  { label: "Products", path: "/seller/products", icon: ShoppingBag },
-  { label: "Orders & Requests", path: "/seller/orders", icon: Receipt },
-  { label: "Earnings & Fees", path: "/seller/earnings", icon: Coins },
-];
-
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { label: t("seller.nav.dashboard"), path: "/seller/dashboard", icon: LayoutDashboard },
+    { label: t("seller.nav.products"), path: "/seller/products", icon: ShoppingBag },
+    { label: t("seller.nav.orders"), path: "/seller/orders", icon: Receipt },
+    { label: t("seller.nav.earnings"), path: "/seller/earnings", icon: Coins },
+  ];
 
   return (
     <>
@@ -29,8 +31,8 @@ export default function Sidebar({ isOpen, onClose }) {
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-surface-bright p-5 neo-shadow transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 bottom-0 left-0 rtl:right-0 rtl:left-auto z-50 w-64 bg-surface-bright p-5 neo-shadow transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          isOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"
         } flex flex-col justify-between`}
       >
         <div>
@@ -91,12 +93,12 @@ export default function Sidebar({ isOpen, onClose }) {
             to="/home"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-primary hover:bg-primary/10 transition-all"
           >
-            <ArrowLeft className="size-5" />
-            <span>Customer View</span>
+            <ArrowLeft className="size-5 rtl:rotate-180" />
+            <span>{t("seller.nav.customerView")}</span>
           </Link>
           <div className="rounded-xl p-3 bg-surface text-xs text-on-surface-variant font-medium text-center">
-            <p>SmartSpace AI v2.4</p>
-            <p className="text-[11px] text-outline mt-0.5">Seller Workstation</p>
+            <p>{t("seller.nav.version")}</p>
+            <p className="text-[11px] text-outline mt-0.5">{t("seller.nav.workstation")}</p>
           </div>
         </div>
       </aside>

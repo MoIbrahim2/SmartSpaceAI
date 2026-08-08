@@ -88,6 +88,8 @@ const productSchema = new mongoose.Schema({
     },
     categoryConfidence: { type: Number },
     qualityScore: { type: Number },
+    confidence: { type: Number },
+    detectedObject: { type: String },
     issues: [{ type: String }],
     normalizationVersion: { type: String },
     reviewerNote: { type: String },
