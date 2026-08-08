@@ -31,7 +31,7 @@ export default function Sidebar({ isOpen, onClose }) {
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 rtl:right-0 rtl:left-auto z-50 w-64 bg-surface-bright p-5 neo-shadow transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 rtl:right-0 rtl:left-auto z-50 w-64 bg-surface-bright p-5 neo-shadow transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:rtl:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"
         } flex flex-col justify-between`}
       >
