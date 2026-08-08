@@ -223,7 +223,7 @@ export default function SellerProducts() {
           }`}
         >
           {row.availability?.inStock
-            ? `${t("seller.products.inStock")} (${row.availability?.quantity || 0})`
+            ? t("seller.products.inStock", { count: row.availability?.quantity || 0 })
             : t("seller.products.outOfStock")}
         </span>
       ),
