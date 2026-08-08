@@ -604,13 +604,23 @@ const generateRoomCompositeImage = async ({
         const totalUniqueProducts = selectedProducts.length;
         const isEnhance = generationType === 'ENHANCE_ROOM' || generationType === 'ENHANCE_EXISTING';
 
+        // Format spatial directives as JSON string
+        let spatialDirectivesJson = '';
+        if (spatialDirectives) {
+          if (typeof spatialDirectives === 'object') {
+            spatialDirectivesJson = JSON.stringify(spatialDirectives, null, 2);
+          } else if (typeof spatialDirectives === 'string') {
+            spatialDirectivesJson = spatialDirectives.trim();
+          }
+        }
+
         // 3. Ultra-Concentrated & Detailed System Prompt Directive for Qwen
         const qwenPrompt = `[SYSTEM ROLE & CORE DIRECTIVE]
 You are a deterministic, ultra-high-precision Architectural Virtual Staging & ${isEnhance ? 'Room Enhancement' : 'Compositing'} Engine. You do not imagine, hallucinate, or generate random furniture. Your EXCLUSIVE purpose is to execute a pixel-perfect ${isEnhance ? 'room enhancement, restyling, and inpainting' : 'compositing'} operation. You will take the provided reference furniture images and clone their exact visual properties into the target room layout (<|image_1|>).
 
 [1. BASE ROOM ARCHITECTURE & LAYOUT (<|image_1|>)]
 ${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
-- MANDATORY 16:9 WIDESCREEN LANDSCAPE PERSPECTIVE: Target room image (<|image_1|>) is a wide-angle, wide-perspective architectural shot. You MUST generate the output in a 16:9 landscape aspect ratio format. Preserve the complete wide view of <|image_1|> showing both left and right walls, window, back wall, door frame, floor, and ceiling. DO NOT crop, narrow, zoom in, or reduce the scene into a portrait or square box.
+- ORIGINAL LAYOUT PERSPECTIVE LOCK: Target room image (<|image_1|>) is the exact original room layout image uploaded by the user. You MUST draw, composite, and render all furniture items directly onto this exact target room layout image (<|image_1|>). Retain the exact camera perspective, aspect ratio, Field of View (FOV), framing, and architectural boundaries of <|image_1|>. DO NOT widen, alter, crop, zoom, or stretch the room's original image framing.
 - STRUCTURAL IMMUTABILITY: The room geometry is locked. You are FORBIDDEN from altering, moving, or modifying the back walls, side walls, floor material, floor texture, ceiling lines, doors, window frames, built-in fixtures, or baseboards.
 - LIGHTING & PERSPECTIVE LOCK: Match the camera Field of View (FOV), vanishing points, horizon line, and room scale perfectly. Analyze natural daylight (windows) and artificial light (ceiling) in <|image_1|>. All placed furniture must cast physically accurate contact shadows and directional shadows matching this exact lighting environment. 
 ${isEnhance ? '- EXISTING FURNITURE & RESTYLING DIRECTIVE: <|image_1|> contains an existing furnished room layout. RETAIN existing furniture items visible in <|image_1|> EXCEPT for items explicitly replaced, removed, or added by the new product inventory below. Perform smooth inpainting and seamless visual integration for new items.' : '- NO ARCHITECTURAL BLEEDING: The room\'s floor texture or wall colors MUST NOT bleed onto the furniture.'}
@@ -628,8 +638,9 @@ ${productRefList.join('\n\n')}
 - GEOMETRIC & DIMENSIONAL ACCURACY: Replicate exact leg shapes, headboard heights, armrest curves, cushion tufting, and frame thicknesses. Do NOT hallucinate longer beds or taller headboards. Lock the aspect ratio of the object to match its reference image exactly.
 
 [4. SPATIAL AWARENESS & PLACEMENT LOGIC]
-- MANDATORY SPATIAL LAYOUT DIRECTIVES (FROM DEEPSEEK SPATIAL GUARDRAIL Engine):
-${spatialDirectives ? spatialDirectives : '- Arrange products logically with clean walking paths, realistic spacing, and balanced ergonomics.'}
+- WINDOW & DOOR AVOIDANCE OVERRIDE: If the Spatial Layout Directives assign coordinates for a tall/large item (like a TV Unit, Wardrobe, or Bed) that physically overlaps a window or door visible in <|image_1|>, you MUST intelligently shift the item's placement along the wall to ensure the window/door remains completely unobstructed. NEVER cover a window.
+- MANDATORY 2D SPATIAL LAYOUT DIAGRAM (JSON FROM DEEPSEEK SPATIAL GUARDRAIL ENGINE):
+${spatialDirectivesJson ? spatialDirectivesJson : '- Arrange products logically with clean walking paths, realistic spacing, and balanced ergonomics.'}
 
 - WARDROBE & DRAWER OPENING CLEARANCE MANDATE: Every Wardrobe, Dresser, Closet, or Storage unit MUST have at least 80cm-100cm of clear, unobstructed open floor space directly in front of its doors and drawers. You are STRICTLY FORBIDDEN from positioning a wardrobe flush or jammed against the side/foot of a bed or nightstand. Maintain a visible clear floor gap in front of wardrobes so doors and drawers can open fully without colliding into beds or nightstands.
 - USER DESIGN INSTRUCTIONS: "${prompt || 'Follow standard aesthetic interior design principles.'}"
@@ -639,7 +650,7 @@ ${spatialDirectives ? spatialDirectives : '- Arrange products logically with cle
 
 [5. ABSOLUTE MANDATORY RULES (VIOLATION IS UNACCEPTABLE)]
 - RULE 1 (ZERO HALLUCINATION OF SHAPE/COLOR): Ignore any text titles, default room templates, or your own assumptions that contradict the reference image pixels. The reference image is absolute law.
-- RULE 2 (EXACT QUANTITY & ALL CATEGORIES INCLUDED): Render EVERY SINGLE product listed in the inventory below (Bed, Wardrobe, Nightstand, etc.). You are FORBIDDEN from omitting core items like the Bed. Render EXACTLY ${totalProductCount} total items from the inventory list. If a product has a quantity of 2, place TWO IDENTICAL, separate copies in the room.
+- RULE 2 (EXACT QUANTITY LIMIT - NO EXTRAS): Render EVERY SINGLE product listed in the inventory below (Bed, Wardrobe, Nightstand, etc.). You are FORBIDDEN from omitting core items like the Bed. Render EXACTLY ${totalProductCount} total items from the inventory list. DO NOT hallucinate extra copies. If a product has a quantity of 2, you are STRICTLY FORBIDDEN from drawing 3 or 4. Rendering more items than listed is a catastrophic failure.
 - RULE 3 (${isEnhance ? 'RESTYLING & CLEAN INTEGRATION' : 'NO STRAY OBJECTS'}): ${isEnhance ? 'Preserve non-replaced items in <|image_1|>, remove/replace old items targeted by the new inventory, and seamlessly composite the new furniture items into <|image_1|> without unrequested clutter.' : 'DO NOT add random decor, plants, rugs, or lamps unless explicitly listed in the inventory above. The room must only contain <|image_1|>\'s architecture and the exact products listed.'}
 
 [FINAL COMPLIANCE CHECKLIST]

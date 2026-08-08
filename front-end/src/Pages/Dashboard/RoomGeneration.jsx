@@ -579,6 +579,16 @@ const RoomGeneration = () => {
           safeProdData = { _id: String(pId), title: "Selected Furniture Item" };
         }
 
+        const catPrefsList = Array.isArray(extractedPreferences?.categoryPreferences)
+          ? extractedPreferences.categoryPreferences
+          : (extractedPreferences?.categoryPreferences && typeof extractedPreferences.categoryPreferences === "object")
+          ? Object.values(extractedPreferences.categoryPreferences)
+          : [];
+        const matchedPref = catPrefsList.find(
+          (cp) => cp?.category?.toLowerCase() === formattedCat?.toLowerCase() || cp?.category?.toLowerCase() === cat?.toLowerCase()
+        );
+        const action = matchedPref?.action || foundProd?.action || (form.generationType === 'ENHANCE_ROOM' ? 'ADD' : null);
+
         selectedProductObjects.push({
           category: formattedCat || "Furniture",
           productId: String(pId),
@@ -586,6 +596,7 @@ const RoomGeneration = () => {
           isRecommended: !!foundProd?.isRecommended,
           price: Number(price) || 0,
           quantity: Number(countsMap[pId] || 1),
+          action: action,
         });
       });
 

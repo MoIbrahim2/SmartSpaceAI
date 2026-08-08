@@ -502,35 +502,19 @@ const generateRoomImage = async (userId, generationId) => {
   try {
     const roomType = generation.roomId?.roomType || 'room';
 
-    // ── Spatial Guardrail Enforcement ──────────────────────────────────
-    // Before calling the image generation model, assert spatial validation
-    const selectedProducts = generation.selectedProducts || [];
-    if (selectedProducts.length > 0) {
-      const currentHash = spatialGuardrailService.computeProductsHash(
-        generation.roomId,
-        selectedProducts
-      );
-
-      // Verify spatial validation before image generation (uses cache if products hash matches)
-      let room = null;
-      if (generation.roomId) {
-        room = await Room.findById(generation.roomId._id || generation.roomId);
-      }
-      await spatialGuardrailService.validateSpatialApplicability(generation, room, selectedProducts);
+    // ── Spatial Guardrail Verification ──────────────────────────────────
+    // Spatial guardrail validation was already executed when clicking Next on Step 3.
+    // Verify existing guardrail status stored on the generation document without re-triggering guardrail service.
+    if (generation.spatialGuardrail?.isApplicable === false) {
+      generation.status = 'FAILED';
       await generation.save();
-
-      // Block rendering if spatial validation failed
-      if (generation.spatialGuardrail?.isApplicable === false) {
-        generation.status = 'FAILED';
-        await generation.save();
-        const violations = (generation.spatialGuardrail.spatialViolations || [])
-          .map(v => v.description)
-          .join('; ');
-        throw new ApiError(
-          HTTP_STATUS.UNPROCESSABLE_ENTITY,
-          `Spatial validation failed: ${violations || 'Selected products do not fit in the room.'}`
-        );
-      }
+      const violations = (generation.spatialGuardrail.spatialViolations || [])
+        .map(v => v.description)
+        .join('; ');
+      throw new ApiError(
+        HTTP_STATUS.UNPROCESSABLE_ENTITY,
+        `Spatial validation failed: ${violations || 'Selected products do not fit in the room.'}`
+      );
     }
     // ── End Spatial Guardrail ──────────────────────────────────────────
 
@@ -546,68 +530,20 @@ const generateRoomImage = async (userId, generationId) => {
       originalRoomImageUrl = generation.roomId?.sourceImages?.[0]?.url || '';
     }
 
-    // Check & trigger QWEN_MODEL_FOR_WIDEN_ROOM if widened room image is null
-    let roomImageUrl = originalRoomImageUrl;
-    if (generation.roomId) {
-      const roomIdToFind = generation.roomId._id || generation.roomId;
-      const roomDoc = await Room.findById(roomIdToFind);
-
-      if (roomDoc) {
-        if (roomDoc.widenedImageUrl) {
-          console.log(`[Generation Service] 🎯 Using stored widened room image: ${roomDoc.widenedImageUrl}`);
-          roomImageUrl = roomDoc.widenedImageUrl;
-        } else {
-          console.log('[Generation Service] ⚡ Widened room image is null. Invoking QWEN_MODEL_FOR_WIDEN_ROOM model...');
-          try {
-            const widenResult = await aiService.widenRoomImage({
-              roomImageUrl: originalRoomImageUrl,
-              roomType
-            });
-
-            if (widenResult?.url) {
-              // Verify that the original room layout/architecture was preserved without adding objects
-              const valResult = await aiService.validateWidenedRoomLayout({
-                originalImageUrl: originalRoomImageUrl,
-                widenedImageUrl: widenResult.url
-              });
-
-              if (valResult?.is_valid) {
-                console.log('[Generation Service] ✓ Widened room layout verified & preserved! Saving to Room record.');
-                roomImageUrl = widenResult.url;
-                roomDoc.widenedImageUrl = widenResult.url;
-                await roomDoc.save();
-              } else {
-                console.warn(`[Generation Service] ⚠️ Widened room layout changed or failed validation (${valResult?.reason || 'layout changed'}). Setting widenedImageUrl = null.`);
-                roomImageUrl = originalRoomImageUrl;
-                roomDoc.widenedImageUrl = null;
-                await roomDoc.save();
-              }
-            } else {
-              console.warn('[Generation Service] Widened room generation returned null. Fallback to original room image.');
-              roomImageUrl = originalRoomImageUrl;
-              roomDoc.widenedImageUrl = null;
-              await roomDoc.save();
-            }
-          } catch (widenErr) {
-            console.error('[Generation Service] Error in room widening workflow:', widenErr.message);
-            roomImageUrl = originalRoomImageUrl;
-            roomDoc.widenedImageUrl = null;
-            await roomDoc.save();
-          }
-        }
-      }
-    }
+    // Always use the original room layout image uploaded by the user in both modes (no room widening)
+    const roomImageUrl = originalRoomImageUrl;
     const roomDimensions = {
       length_cm: generation.roomLayoutData?.length_cm,
       width_cm: generation.roomLayoutData?.width_cm,
       height_cm: generation.roomLayoutData?.height_cm,
     };
 
-    // Extract natural language spatial directives from DeepSeek spatial guardrail result
+    // Extract JSON spatial layout diagram from DeepSeek spatial guardrail result
     let spatialDirectives = '';
     if (generation.spatialGuardrail) {
-      spatialDirectives = generation.spatialGuardrail.naturalLanguagePrompt || 
-        spatialGuardrailService.translateLayoutToPromptDirectives(generation.spatialGuardrail.layoutDiagram) || '';
+      const layoutData = generation.spatialGuardrail.layoutDiagram || generation.spatialGuardrail;
+      const plainData = typeof layoutData?.toObject === 'function' ? layoutData.toObject() : layoutData;
+      spatialDirectives = typeof plainData === 'object' ? JSON.stringify(plainData, null, 2) : String(plainData || '');
     }
 
     const userPrompt = generation.userPrompt || generation.prompt || '';
