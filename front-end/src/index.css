@@ -4,6 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: #a67443;
+  --primary-hover: #946334;
+  --accent: #a67443;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+}
+
 @layer base {
   body {
     margin: 0;

@@ -350,7 +350,7 @@ const Register = () => {
 
       {/* Simple Clean Page Footer Copyright */}
       <footer className="relative z-10 text-center pb-5 text-xs font-medium text-white/60 drop-shadow">
-        © 2024 SmartSpace AI. All rights reserved.
+        {t("common.copyright")}
       </footer>
     </div>
   );

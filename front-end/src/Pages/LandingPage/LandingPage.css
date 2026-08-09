@@ -227,6 +227,8 @@ button, .btn {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-primary {
@@ -596,6 +598,8 @@ button, .btn {
 .nav-actions .btn-design {
   padding: 8px 20px;
   font-size: 13px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .mobile-nav-toggle {

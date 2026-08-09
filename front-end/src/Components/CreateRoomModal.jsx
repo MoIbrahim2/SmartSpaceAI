@@ -9,10 +9,6 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
     name: "",
     roomType: "",
     description: "",
-    width: "",
-    length: "",
-    height: "",
-    unit: "ft",
   });
   const [sourceImages, setSourceImages] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -51,11 +47,12 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
       fd.append("roomType", formData.roomType);
       if (formData.description) fd.append("description", formData.description);
 
+      // Default dimensions for backend validation schema
       const dimensions = {
-        width: Number(formData.width),
-        length: Number(formData.length),
-        height: Number(formData.height),
-        unit: formData.unit,
+        width: 10,
+        length: 12,
+        height: 9,
+        unit: "ft",
       };
       fd.append("dimensions", JSON.stringify(dimensions));
 
@@ -70,7 +67,7 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
         onCreated(data.data.room);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || t("createModal.failedCreateRoom");
+      const msg = err.response?.data?.message || t("createModal.failedCreateRoom") || "Failed to create room.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -83,44 +80,44 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-on-surface/30 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[2rem] bg-surface-bright p-8 neo-shadow">
+      {/* Modal Card */}
+      <div className="relative z-10 w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-3xl bg-surface dark:bg-[#12100e] p-7 md:p-8 shadow-2xl border border-outline/20 dark:border-white/15 text-on-surface dark:text-white transition-all">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
-            {t("createModal.createRoomTitle")}
+        <div className="flex items-center justify-between mb-6 border-b border-outline/10 dark:border-white/10 pb-4">
+          <h2 className="text-2xl font-headline font-bold text-on-surface dark:text-white tracking-tight">
+            {t("createModal.createRoomTitle") || "Create New Room"}
           </h2>
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-bright text-on-surface-variant transition-all hover:text-on-surface neo-shadow neo-button"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-outline/20 dark:border-white/20 bg-background dark:bg-white/10 text-on-surface dark:text-white transition-all hover:bg-surface-variant dark:hover:bg-white/20"
             aria-label="Close modal"
           >
-            <Icon name="close" size={20} />
+            <Icon name="close" size={18} />
           </button>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+          <div className="mb-5 rounded-xl bg-red-500/15 px-4 py-3 text-xs font-medium text-red-700 dark:text-red-300 border border-red-500/30">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4.5">
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">
-              {t("createModal.roomNameLabel")} <span className="text-error">*</span>
+            <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+              {t("createModal.roomNameLabel") || "Room Name"} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="name"
               required
-              placeholder={t("createModal.namePlaceholderRoom")}
-              className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+              placeholder={t("createModal.namePlaceholderRoom") || "e.g. Master Bedroom"}
+              className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
               value={formData.name}
               onChange={handleChange}
             />
@@ -128,109 +125,54 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
 
           {/* Room Type */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">
-              {t("createModal.roomTypeLabel")} <span className="text-error">*</span>
+            <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+              {t("createModal.roomTypeLabel") || "Room Type"} <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <select
-                name="roomType"
-                required
-                className="w-full rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface border-none outline-none neo-inset focus:ring-0 appearance-none cursor-pointer"
-                value={formData.roomType}
-                onChange={handleChange}
-              >
-                <option value="" disabled>{t("createModal.selectRoomType")}</option>
-                {roomTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {t(`createModal.roomType_${type.toLowerCase().replace(" ", "")}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              name="roomType"
+              required
+              className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-[#181614] px-4 text-sm font-medium text-on-surface dark:text-white outline-none focus:border-[#a67443] dark:focus:border-amber-400 cursor-pointer transition-all"
+              value={formData.roomType}
+              onChange={handleChange}
+            >
+              <option value="" disabled>{t("createModal.selectRoomType") || "Select room type"}</option>
+              {roomTypes.map((type) => (
+                <option key={type} value={type}>
+                  {t(`createModal.roomType_${type.toLowerCase().replace(" ", "")}`) || type}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.descriptionLabel")}</label>
+            <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+              {t("createModal.descriptionLabel") || "Description"}
+            </label>
             <textarea
               name="description"
               rows={2}
-              placeholder={t("createModal.descriptionPlaceholderRoom")}
-              className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0 resize-none"
+              placeholder={t("createModal.descriptionPlaceholderRoom") || "Brief notes about room layout..."}
+              className="w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 py-3 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all resize-none"
               value={formData.description}
               onChange={handleChange}
             />
           </div>
 
-          {/* Dimensions */}
-          <div>
-            <label className="text-sm font-semibold text-on-surface pl-1 mb-2 block">
-              {t("createModal.dimensionsLabel")} <span className="text-error">*</span>
-            </label>
-            <div className="grid grid-cols-4 gap-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.widthLabel")}</span>
-                <input
-                  type="number"
-                  name="width"
-                  required
-                  placeholder="10"
-                  className="rounded-xl bg-surface-bright px-3 py-2.5 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
-                  value={formData.width}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.lengthLabel")}</span>
-                <input
-                  type="number"
-                  name="length"
-                  required
-                  placeholder="12"
-                  className="rounded-xl bg-surface-bright px-3 py-2.5 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
-                  value={formData.length}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.heightLabel")}</span>
-                <input
-                  type="number"
-                  name="height"
-                  required
-                  placeholder="9"
-                  className="rounded-xl bg-surface-bright px-3 py-2.5 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
-                  value={formData.height}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs text-on-surface-variant pl-1">{t("createModal.unitLabel")}</span>
-                <select
-                  name="unit"
-                  className="rounded-xl bg-surface-bright px-3 py-2.5 text-sm text-on-surface border-none outline-none neo-inset focus:ring-0 appearance-none cursor-pointer"
-                  value={formData.unit}
-                  onChange={handleChange}
-                >
-                  <option value="ft">ft</option>
-                  <option value="m">m</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
           {/* Source Images */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.roomPhotosLabel")}</label>
+            <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+              {t("createModal.roomPhotosLabel") || "Room Photos"}
+            </label>
             <div
               onClick={() => document.getElementById("room-images-input").click()}
-              className="flex cursor-pointer items-center gap-3 rounded-xl bg-surface-bright px-4 py-3 text-sm neo-inset transition-colors hover:bg-surface-bright/80"
+              className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-outline/30 dark:border-white/20 bg-background dark:bg-white/5 px-4 py-3.5 text-sm transition-all hover:border-[#a67443] dark:hover:border-amber-400"
             >
-              <Icon name="photo_camera" size={20} className="text-primary" />
-              <span className="text-on-surface-variant">
+              <Icon name="photo_camera" size={20} className="text-[#a67443] dark:text-amber-400 shrink-0" />
+              <span className="truncate text-on-surface-variant dark:text-white/70 font-medium">
                 {sourceImages
-                  ? t("dashboard.filesSelected", { count: sourceImages.length })
-                  : t("createModal.clickToUploadPhotos")}
+                  ? t("dashboard.filesSelected", { count: sourceImages.length }) || `${sourceImages.length} files selected`
+                  : (t("createModal.clickToUploadPhotos") || "Click to upload room photos")}
               </span>
               <input
                 type="file"
@@ -243,18 +185,18 @@ export default function CreateRoomModal({ isOpen, onClose, onCreated, apartmentI
             </div>
           </div>
 
-          {/* Submit */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 flex h-14 items-center justify-center gap-2 rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button disabled:opacity-50"
+            className="mt-3 flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base tracking-wide shadow-lg shadow-[#a67443]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
           >
             {loading ? (
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
               <>
                 <Icon name="add" size={20} />
-                {t("createModal.createRoomBtn")}
+                <span>{t("createModal.createRoomBtn") || "Create Room"}</span>
               </>
             )}
           </button>

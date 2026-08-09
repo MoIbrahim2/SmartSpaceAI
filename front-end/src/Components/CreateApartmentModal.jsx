@@ -58,7 +58,7 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
         onCreated(data.data.apartment);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || t("createModal.failedCreateApartment");
+      const msg = err.response?.data?.message || t("createModal.failedCreateApartment") || "Failed to create apartment.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -71,44 +71,44 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-on-surface/30 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-[2rem] bg-surface-bright p-8 neo-shadow">
+      {/* Modal Card */}
+      <div className="relative z-10 w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-3xl bg-surface dark:bg-[#12100e] p-7 md:p-8 shadow-2xl border border-outline/20 dark:border-white/15 text-on-surface dark:text-white transition-all">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-extrabold tracking-tight text-on-surface">
-            {t("createModal.createApartmentTitle")}
+        <div className="flex items-center justify-between mb-6 border-b border-outline/10 dark:border-white/10 pb-4">
+          <h2 className="text-2xl font-headline font-bold text-on-surface dark:text-white tracking-tight">
+            {t("createModal.createApartmentTitle") || "Create New Apartment"}
           </h2>
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-bright text-on-surface-variant transition-all hover:text-on-surface neo-shadow neo-button"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-outline/20 dark:border-white/20 bg-background dark:bg-white/10 text-on-surface dark:text-white transition-all hover:bg-surface-variant dark:hover:bg-white/20"
             aria-label="Close modal"
           >
-            <Icon name="close" size={20} />
+            <Icon name="close" size={18} />
           </button>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+          <div className="mb-5 rounded-xl bg-red-500/15 px-4 py-3 text-xs font-medium text-red-700 dark:text-red-300 border border-red-500/30">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4.5">
           {/* Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">
-              {t("createModal.nameLabel")} <span className="text-error">*</span>
+            <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+              {t("createModal.nameLabel") || "Apartment Name"} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               name="name"
               required
-              placeholder={t("createModal.namePlaceholderApt")}
-              className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+              placeholder={t("createModal.namePlaceholderApt") || "e.g. Modern Sunset Penthouse"}
+              className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
               value={formData.name}
               onChange={handleChange}
             />
@@ -116,43 +116,45 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
 
           {/* Description */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.descriptionLabel")}</label>
+            <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+              {t("createModal.descriptionLabel") || "Description"}
+            </label>
             <textarea
               name="description"
               rows={2}
-              placeholder={t("createModal.descriptionPlaceholderApt")}
-              className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0 resize-none"
+              placeholder={t("createModal.descriptionPlaceholderApt") || "Brief overview of this property..."}
+              className="w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 py-3 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all resize-none"
               value={formData.description}
               onChange={handleChange}
             />
           </div>
 
           {/* Location: Country & City */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">
-                {t("createModal.countryLabel")} <span className="text-error">*</span>
+              <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+                {t("createModal.countryLabel") || "Country"} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="country"
                 required
-                placeholder={t("createModal.countryPlaceholder")}
-                className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+                placeholder={t("createModal.countryPlaceholder") || "Egypt"}
+                className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
                 value={formData.country}
                 onChange={handleChange}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">
-                {t("createModal.cityLabel")} <span className="text-error">*</span>
+              <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+                {t("createModal.cityLabel") || "City"} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="city"
                 required
-                placeholder={t("createModal.cityPlaceholder")}
-                className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+                placeholder={t("createModal.cityPlaceholder") || "Cairo"}
+                className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
                 value={formData.city}
                 onChange={handleChange}
               />
@@ -160,25 +162,29 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
           </div>
 
           {/* Location: District & Street */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.districtLabel")}</label>
+              <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+                {t("createModal.districtLabel") || "District"}
+              </label>
               <input
                 type="text"
                 name="district"
-                placeholder={t("createModal.districtPlaceholder")}
-                className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+                placeholder={t("createModal.districtPlaceholder") || "New Cairo"}
+                className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
                 value={formData.district}
                 onChange={handleChange}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.streetLabel")}</label>
+              <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+                {t("createModal.streetLabel") || "Street"}
+              </label>
               <input
                 type="text"
                 name="street"
-                placeholder={t("createModal.streetPlaceholder")}
-                className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+                placeholder={t("createModal.streetPlaceholder") || "90th Street"}
+                className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-4 text-sm font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
                 value={formData.street}
                 onChange={handleChange}
               />
@@ -186,36 +192,42 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
           </div>
 
           {/* Building, Floor, Apt Number */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.buildingLabel")}</label>
+              <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+                {t("createModal.buildingLabel") || "Building"}
+              </label>
               <input
                 type="text"
                 name="building"
-                placeholder={t("createModal.buildingPlaceholder")}
-                className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+                placeholder="A1"
+                className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-3.5 text-sm font-medium text-on-surface dark:text-white outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
                 value={formData.building}
                 onChange={handleChange}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.floorLabel")}</label>
+              <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+                {t("createModal.floorLabel") || "Floor"}
+              </label>
               <input
                 type="number"
                 name="floor"
-                placeholder={t("createModal.floorPlaceholder")}
-                className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+                placeholder="4"
+                className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-3.5 text-sm font-medium text-on-surface dark:text-white outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
                 value={formData.floor}
                 onChange={handleChange}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.aptNumberLabel")}</label>
+              <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+                {t("createModal.aptNumberLabel") || "Apt #"}
+              </label>
               <input
                 type="text"
                 name="apartmentNumber"
-                placeholder={t("createModal.aptNumberPlaceholder")}
-                className="rounded-xl bg-surface-bright px-4 py-3 text-sm text-on-surface placeholder:text-outline border-none outline-none neo-inset focus:ring-0"
+                placeholder="402"
+                className="h-12 w-full rounded-xl border border-outline/20 dark:border-white/15 bg-background dark:bg-white/5 px-3.5 text-sm font-medium text-on-surface dark:text-white outline-none focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/10 transition-all"
                 value={formData.apartmentNumber}
                 onChange={handleChange}
               />
@@ -224,14 +236,16 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
 
           {/* Cover Image */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-on-surface pl-1">{t("createModal.coverImageLabel")}</label>
+            <label className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider px-1">
+              {t("createModal.coverImageLabel") || "Cover Photo"}
+            </label>
             <div
               onClick={() => document.getElementById("apt-cover-input").click()}
-              className="flex cursor-pointer items-center gap-3 rounded-xl bg-surface-bright px-4 py-3 text-sm neo-inset transition-colors hover:bg-surface-bright/80"
+              className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-outline/30 dark:border-white/20 bg-background dark:bg-white/5 px-4 py-3.5 text-sm transition-all hover:border-[#a67443] dark:hover:border-amber-400"
             >
-              <Icon name="image" size={20} className="text-primary" />
-              <span className="text-on-surface-variant">
-                {coverImage ? coverImage.name : t("createModal.clickToUploadImage")}
+              <Icon name="image" size={20} className="text-[#a67443] dark:text-amber-400 shrink-0" />
+              <span className="truncate text-on-surface-variant dark:text-white/70 font-medium">
+                {coverImage ? coverImage.name : (t("createModal.clickToUploadImage") || "Click to upload property cover image")}
               </span>
               <input
                 type="file"
@@ -243,18 +257,18 @@ export default function CreateApartmentModal({ isOpen, onClose, onCreated }) {
             </div>
           </div>
 
-          {/* Submit */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 flex h-14 items-center justify-center gap-2 rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button disabled:opacity-50"
+            className="mt-3 flex h-13 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base tracking-wide shadow-lg shadow-[#a67443]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
           >
             {loading ? (
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
               <>
                 <Icon name="add" size={20} />
-                {t("createModal.createApartmentBtn")}
+                <span>{t("createModal.createApartmentBtn") || "Create Apartment"}</span>
               </>
             )}
           </button>

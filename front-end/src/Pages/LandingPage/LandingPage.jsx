@@ -7,8 +7,8 @@ import "./LandingPage.css";
 
 const toolsData = {
   staging: {
-    before: "/img/image-before2.png",
-    after: "/img/image-after2.png",
+    before: "/img/living-before.png",
+    after: "/img/living-after.png",
     beforeLabel: "Original",
     afterLabel: "Staged",
   },
@@ -669,7 +669,7 @@ const LandingPage = () => {
               </Link>
             )}
             <Link
-              to={user ? getDashboardPath(user) : "/register"}
+              to="/home"
               className="btn btn-accent btn-design magnetic-btn shine-effect"
               onMouseMove={handleMagneticMouseMove}
               onMouseLeave={handleMagneticMouseLeave}
@@ -729,7 +729,7 @@ const LandingPage = () => {
             <p className="lead">{t("landing.heroLead")}</p>
             <div className="hero-actions">
               <Link
-                to={user ? getDashboardPath(user) : "/register"}
+                to="/home"
                 className="btn btn-accent btn-try magnetic-btn shine-effect"
                 onMouseMove={handleMagneticMouseMove}
                 onMouseLeave={handleMagneticMouseLeave}
@@ -1230,6 +1230,13 @@ const LandingPage = () => {
               </div>
             </div>
             <div className="gallery-item">
+              <img src="/img/living-after.png" alt="Staged Living Room" />
+              <div className="gallery-overlay">
+                <span className="gallery-tag">{t("landing.galleryTagLivingRoom")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleLivingRoom")}</h4>
+              </div>
+            </div>
+            <div className="gallery-item">
               <img src="/img/img6.jpeg" alt="Staged Lawn Front Yard" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">{t("landing.galleryTagFrontYard")}</span>
@@ -1570,7 +1577,7 @@ const LandingPage = () => {
             {t("landing.ctaSub")}
           </p>
           <Link
-            to="/register"
+            to="/home"
             className="btn btn-accent btn-cta magnetic-btn shine-effect"
             onMouseMove={handleMagneticMouseMove}
             onMouseLeave={handleMagneticMouseLeave}

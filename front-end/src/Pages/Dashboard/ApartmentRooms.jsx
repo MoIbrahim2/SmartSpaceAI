@@ -46,12 +46,12 @@ const ApartmentRooms = () => {
   }, [fetchData]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t("common.confirmDeleteRoom"))) return;
+    if (!window.confirm(t("common.confirmDeleteRoom") || "Are you sure you want to delete this room?")) return;
     try {
       await deleteRoom(id);
       fetchData();
     } catch {
-      setError(t("common.failedDeleteRoom"));
+      setError(t("common.failedDeleteRoom") || "Failed to delete room.");
     }
   };
 
@@ -67,70 +67,76 @@ const ApartmentRooms = () => {
     : "";
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-on-surface font-body">
-      <main className="mx-auto w-full max-w-7xl flex-grow px-6 py-12">
+    <div className="flex min-h-screen flex-col bg-background dark:bg-[#0a0908] text-on-surface dark:text-white font-body transition-colors">
+      <main className="mx-auto w-full max-w-7xl flex-grow px-6 py-12 md:px-12">
         {/* Back Button & Header */}
-        <div className="mb-10">
+        <div className="mb-12">
           <button
             onClick={() => navigate("/home")}
-            className="mb-6 flex items-center gap-2 rounded-xl bg-background px-4 py-2 text-sm font-semibold text-on-surface-variant transition-all hover:text-primary neomorph-raised active:neomorph-inset"
+            className="mb-8 inline-flex items-center gap-2 rounded-xl border border-outline/20 dark:border-white/10 bg-surface dark:bg-[#12100e] px-4 py-2.5 text-sm font-bold text-on-surface dark:text-white shadow-sm transition-all hover:bg-stone-50 dark:hover:bg-white/10"
           >
-            <Icon name="arrow_back" size={16} className="rtl:rotate-180" />
-            {t("dashboard.backToApartments") || "Back to Apartments"}
+            <Icon name="arrow_back" size={18} className="rtl:rotate-180 text-[#a67443] dark:text-amber-400" />
+            <span>{t("dashboard.backToApartments") || "Back to Apartments"}</span>
           </button>
 
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-on-surface">
+              <h1 className="text-3xl font-headline font-extrabold tracking-tight text-on-surface dark:text-white md:text-4xl">
                 {loading ? t("common.loading") : apartment?.name || "Apartment"}
               </h1>
               {locationStr && (
-                <p className="mt-1 flex items-center gap-1 text-on-surface-variant">
-                  <Icon name="location_on" size={16} />
-                  {locationStr}
+                <p className="mt-2 flex items-center gap-2 text-base font-semibold text-on-surface-variant dark:text-white/70">
+                  <Icon name="location_on" size={18} className="text-[#a67443] dark:text-amber-400 shrink-0" />
+                  <span>{locationStr}</span>
                 </p>
               )}
             </div>
+
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neomorph-active neomorph-raised"
+              className="flex h-14 items-center justify-center gap-3 whitespace-nowrap rounded-2xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base px-8 shadow-lg shadow-[#a67443]/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
             >
-              <Icon name="add" />
-              {t("common.createNewRoom")}
+              <Icon name="add" size={22} />
+              <span>{t("common.createNewRoom") || "Create New Room"}</span>
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+          <div className="mb-8 rounded-2xl bg-red-500/15 px-5 py-4 text-sm font-semibold text-red-700 dark:text-red-300 border border-red-500/30">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="flex items-center justify-center py-28">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#a67443] border-t-transparent" />
           </div>
         ) : rooms.length === 0 ? (
           <EmptyState
             icon="meeting_room"
-            title={t("dashboard.noRoomsTitle")}
-            description={t("dashboard.noRoomsDesc")}
+            title={t("dashboard.noRoomsTitle") || "No rooms found"}
+            description={t("dashboard.noRoomsDesc") || "Create your first room to start generating designs."}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {rooms.map((room) => (
-              <div key={room._id} className="relative group cursor-pointer" onClick={() => navigate(`/apartments/${apartmentId}/rooms/${room._id}`)}>
+              <div
+                key={room._id}
+                className="relative group cursor-pointer"
+                onClick={() => navigate(`/apartments/${apartmentId}/rooms/${room._id}`)}
+              >
                 <RoomCard room={room} />
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(room._id);
                   }}
-                  className="absolute top-8 right-8 rtl:right-auto rtl:left-8 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
+                  className="absolute top-5 right-5 rtl:right-auto rtl:left-5 flex h-10 w-10 items-center justify-center rounded-full bg-red-600/90 text-white opacity-0 transition-opacity hover:bg-red-700 shadow-lg group-hover:opacity-100"
                   aria-label="Delete room"
+                  title="Delete room"
                 >
-                  <Icon name="delete" size={14} />
+                  <Icon name="delete" size={18} />
                 </button>
               </div>
             ))}
