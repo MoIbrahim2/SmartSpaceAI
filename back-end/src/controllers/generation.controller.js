@@ -1,5 +1,6 @@
 const generationService = require('../services/generation.service');
 const spatialGuardrailService = require('../services/spatialGuardrail.service');
+const userService = require('../services/user.service');
 const Generation = require('../models/generation.model');
 const Room = require('../models/room.model');
 const { sendSuccess } = require('../utils/responseHelper');
@@ -199,7 +200,7 @@ const validateSpatial = asyncHandler(async (req, res) => {
     generation,
     room,
     selectedProducts,
-    { force: true }
+    { force: req.body.force === true }
   );
   const durationMs = Date.now() - startTime;
 
@@ -210,6 +211,54 @@ const validateSpatial = asyncHandler(async (req, res) => {
   return sendSuccess(res, 'generation.spatial_validated', {
     spatialGuardrail: result,
     generationId: generation._id
+  }, HTTP_STATUS.OK);
+});
+
+/**
+ * Refine an existing generated room image based on a spatial prompt
+ */
+const refineRoomImage = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { prompt, resolution } = req.body;
+
+  if (!prompt || !prompt.trim()) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Refinement prompt is required.');
+  }
+
+  const generation = await Generation.findById(id);
+  if (!generation) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+
+  // Resolve resolution key
+  let resolutionKey = '1080p';
+  if (resolution) {
+    const resStr = typeof resolution === 'string' ? resolution : resolution.resolution || resolution.label || '';
+    const normalized = resStr.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (normalized.includes('720')) resolutionKey = '720p';
+    else if (normalized.includes('1080')) resolutionKey = '1080p';
+    else if (normalized.includes('1440') || normalized.includes('2k') || normalized.includes('qhd')) resolutionKey = '1440p';
+    else if (normalized.includes('4k') || normalized.includes('2160') || normalized.includes('uhd')) resolutionKey = '4k';
+  } else if (generation.resolution?.label) {
+    const label = generation.resolution.label.toLowerCase();
+    if (label.includes('720')) resolutionKey = '720p';
+    else if (label.includes('1440') || label.includes('qhd') || label.includes('2k')) resolutionKey = '1440p';
+    else if (label.includes('4k') || label.includes('uhd')) resolutionKey = '4k';
+    else resolutionKey = '1080p';
+  }
+
+  // Deduct credits for refinement pass
+  const { user: updatedUser, creditsDeducted } = await userService.deductCredits(req.user._id, resolutionKey);
+
+  generation.creditsUsed = (generation.creditsUsed || 0) + creditsDeducted;
+  await generation.save();
+
+  const result = await generationService.refineRoomImage(req.user._id, id, { prompt, resolution });
+
+  return sendSuccess(res, 'generation.image_refined', {
+    generation: result,
+    creditsDeducted,
+    remainingCredits: updatedUser.credits
   }, HTTP_STATUS.OK);
 });
 
@@ -224,6 +273,8 @@ module.exports = {
   saveUserPrompt,
   saveResolution,
   generateRoomImage,
+  refineRoomImage,
   getLatestGenerationForRoom,
   validateSpatial
 };
+

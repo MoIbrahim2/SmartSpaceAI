@@ -39,3 +39,7 @@ export const generateRoomImage = (id, data = {}) =>
 
 export const validateSpatial = (data) =>
   api.post("/generations/validate-spatial", data);
+
+export const refineRoomImage = (id, data = {}) =>
+  api.post(`/generations/${id}/refine`, data);
+

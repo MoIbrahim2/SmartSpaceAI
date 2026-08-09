@@ -474,6 +474,13 @@ const en = {
     preferencesExtracted: "Recommendations Ready!",
     extractingPreferences: "Understanding your design preferences",
     extractionHint: "SmartSpaceAI is analyzing your request and matching furniture recommendations.",
+    refineLayoutTitle: "Refine Furniture Placement & Spatial Layout",
+    refineLayoutDesc: "Type spatial prompt instructions to relocate, adjust, or shift furniture in the generated image.",
+    refinePlaceholder: "e.g., Move the sofa closer to the left wall, shift nightstand beside the bed, rotate coffee table 90 degrees...",
+    refinementPromptEmpty: "Please enter a refinement prompt describing where to move furniture.",
+    refiningImage: "Refining Layout...",
+    regenerateWithPrompt: "Regenerate with Spatial Refinement",
+    refineSuccessNotice: "Room layout refined successfully!",
 
     // 2D Spatial Guardrails
     calculatingFloorplanTitle: "Calculating 2D Room Floorplan & Clearances...",
