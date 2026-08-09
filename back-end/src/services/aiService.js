@@ -648,13 +648,14 @@ You are a deterministic, ultra-high-precision Architectural Virtual Staging & ${
 
 [1. BASE ROOM ARCHITECTURE & LAYOUT (<|image_1|>)]
 ${roomImageRef ? roomImageRef : `Target Room Space: A ${roomType} (${dimText}).`}
+- ⛔ STRICT ARCHITECTURAL IMMUTABILITY (ABSOLUTE RULE): The room geometry and structural elements of <|image_1|> ARE 100% FROZEN. You are STRICTLY FORBIDDEN from adding, removing, shifting, or modifying ANY doors, windows, walls, ceiling moldings, light switches, electrical outlets, built-in fixtures, or baseboards.
+- ⛔ ZERO STRUCTURAL HALLUCINATIONS: DO NOT DRAW NEW DOORS OR WINDOWS ON ANY WALL. The back wall, side walls, doors, and windows MUST look 100% identical to <|image_1|>. Render furniture ONLY.
 - ORIGINAL LAYOUT PERSPECTIVE LOCK: Target room image (<|image_1|>) is the exact original room layout image uploaded by the user. You MUST draw, composite, and render all furniture items directly onto this exact target room layout image (<|image_1|>). Retain the exact camera perspective, aspect ratio, Field of View (FOV), framing, and architectural boundaries of <|image_1|>. DO NOT widen, alter, crop, zoom, or stretch the room's original image framing.
-- STRUCTURAL IMMUTABILITY: The room geometry is locked. You are FORBIDDEN from altering, moving, or modifying the back walls, side walls, floor material, floor texture, ceiling lines, doors, window frames, built-in fixtures, or baseboards.
 - LIGHTING & PERSPECTIVE LOCK: Match the camera Field of View (FOV), vanishing points, horizon line, and room scale perfectly. Analyze natural daylight (windows) and artificial light (ceiling) in <|image_1|>. All placed furniture must cast physically accurate contact shadows and directional shadows matching this exact lighting environment. 
 ${isEnhance ? '- EXISTING FURNITURE & RESTYLING DIRECTIVE: <|image_1|> contains an existing furnished room layout. RETAIN existing furniture items visible in <|image_1|> EXCEPT for items explicitly replaced, removed, or added by the new product inventory below. Perform smooth inpainting and seamless visual integration for new items.' : '- NO ARCHITECTURAL BLEEDING: The room\'s floor texture or wall colors MUST NOT bleed onto the furniture.'}
 
 [2. MANDATORY PRODUCT INVENTORY (${totalUniqueProducts} unique products, ${totalProductCount} total items)]
-CRITICAL REQUIREMENT: You MUST clone the EXACT visual products from the provided images into the room. You may not substitute them with generic 3D models from your training data.
+CRITICAL REQUIREMENT: You MUST clone the EXACT visual products from the provided images into the room. NEVER change the product look, materials, wood grain, fabric pattern, or color. You may not substitute them with generic 3D models from your training data.
 
 --- INVENTORY LIST ---
 ${productRefList.join('\n\n')}
@@ -666,12 +667,14 @@ ${productRefList.join('\n\n')}
 - GEOMETRIC & DIMENSIONAL ACCURACY: Replicate exact leg shapes, headboard heights, armrest curves, cushion tufting, and frame thicknesses. Do NOT hallucinate longer beds or taller headboards. Lock the aspect ratio of the object to match its reference image exactly.
 
 [4. SPATIAL AWARENESS & PLACEMENT LOGIC]
-- WINDOW & DOOR AVOIDANCE OVERRIDE: If the Spatial Layout Directives assign coordinates for a tall/large item (like a TV Unit, Wardrobe, or Bed) that physically overlaps a window or door visible in <|image_1|>, you MUST intelligently shift the item's placement along the wall to ensure the window/door remains completely unobstructed. NEVER cover a window.
+- MOVE-ONLY FURNITURE POSITIONING: Spatial directives provide 2D position coordinates for moving furniture within the room. They NEVER authorize creating or altering doors, windows, or room walls.
+- WINDOW & DOOR AVOIDANCE OVERRIDE: If the Spatial Layout Directives assign coordinates for a tall/large item (like a TV Unit, Wardrobe, or Bed) that physically overlaps an existing window or door visible in <|image_1|>, you MUST intelligently shift the item's placement along the wall to ensure the existing window/door remains completely unobstructed. NEVER cover a window or door.
 - MANDATORY 2D SPATIAL LAYOUT DIAGRAM (JSON FROM DEEPSEEK SPATIAL GUARDRAIL ENGINE):
 ${spatialDirectivesJson ? spatialDirectivesJson : '- Arrange products logically with clean walking paths, realistic spacing, and balanced ergonomics.'}
 ${maskImageRef}
 
 - WARDROBE & DRAWER OPENING CLEARANCE MANDATE: Every Wardrobe, Dresser, Closet, or Storage unit MUST have at least 80cm-100cm of clear, unobstructed open floor space directly in front of its doors and drawers. You are STRICTLY FORBIDDEN from positioning a wardrobe flush or jammed against the side/foot of a bed or nightstand. Maintain a visible clear floor gap in front of wardrobes so doors and drawers can open fully without colliding into beds or nightstands.
+- 📺 STANDALONE TV WALL-MOUNT MANDATE: If a Television / TV screen is included in the product inventory WITHOUT a TV Unit or TV stand console, you MUST wall-mount the TV directly onto the wall in the opposite direction of the Bed (in bedrooms) or Sofa (in living rooms), mounted at ergonomic eye level. NEVER float the TV in mid-air or place it on the floor.
 - USER DESIGN INSTRUCTIONS: "${prompt || 'Follow standard aesthetic interior design principles.'}"
 - CORE FOCAL ITEM MANDATE: Major focal furniture items (e.g. BED in a Bedroom, SOFA in a Living Room) are MANDATORY central focal points. The Bed must be rendered prominently placed against a main wall with its headboard and frame clearly visible. Secondary items like Nightstands and Wardrobes must be positioned adjacent or along walls relative to the main Bed.
 - SCALE & PROPORTION: Adhere strictly to the physical dimensions provided in the inventory. Use the room's doors and windows (which have standard heights) as a scale reference. DO NOT stretch objects along the Z-axis.
@@ -681,11 +684,12 @@ ${maskImageRef}
 - RULE 1 (ZERO HALLUCINATION OF SHAPE/COLOR): Ignore any text titles, default room templates, or your own assumptions that contradict the reference image pixels. The reference image is absolute law.
 - RULE 2 (EXACT QUANTITY LIMIT - NO EXTRAS): Render EVERY SINGLE product listed in the inventory below (Bed, Wardrobe, Nightstand, etc.). You are FORBIDDEN from omitting core items like the Bed. Render EXACTLY ${totalProductCount} total items from the inventory list. DO NOT hallucinate extra copies. If a product has a quantity of 2, you are STRICTLY FORBIDDEN from drawing 3 or 4. Rendering more items than listed is a catastrophic failure.
 - RULE 3 (${isEnhance ? 'RESTYLING & CLEAN INTEGRATION' : 'NO STRAY OBJECTS'}): ${isEnhance ? 'Preserve non-replaced items in <|image_1|>, remove/replace old items targeted by the new inventory, and seamlessly composite the new furniture items into <|image_1|> without unrequested clutter.' : 'DO NOT add random decor, plants, rugs, or lamps unless explicitly listed in the inventory above. The room must only contain <|image_1|>\'s architecture and the exact products listed.'}
+- RULE 4 (STRUCTURAL & ARCHITECTURAL LOCK): DO NOT draw new doors, windows, walls, or alter camera angles. The architectural structure of <|image_1|> is 100% immutable.
 
 [FINAL COMPLIANCE CHECKLIST]
 ✓ Are the exact RGB colors, textures, and dimensions cloned 100% from the reference images?
 ✓ Are the proportions correct without any unnatural stretching?
-✓ Is the room's original architecture, flooring, and perspective 100% preserved?
+✓ Is the room's original architecture, doors, windows, flooring, and perspective 100% preserved with ZERO added doors/windows?
 ✓ Are there EXACTLY ${totalProductCount} inserted items, with no unrequested decor?
 ✓ Are contact shadows physically accurate without altering the object's true color?`;
 
@@ -1264,7 +1268,7 @@ Evaluation Rules:
  * @param {Object} [params.resolution] - Output resolution { width, height }
  * @returns {Promise<Object>} { url, promptUsed, modelUsed }
  */
-const refineRoomImage = async ({ previousImageUrl, prompt, resolution = { width: 1280, height: 720 } }) => {
+const refineRoomImage = async ({ previousImageUrl, originalRoomImageUrl, prompt, resolution = { width: 1280, height: 720 } }) => {
   const apiKey = process.env.QWEN_API_KEY || process.env.DASHSCOPE_API_KEY;
   if (!apiKey) {
     throw new Error('AI API Key is missing. Please check your environment variables.');
@@ -1294,37 +1298,66 @@ const refineRoomImage = async ({ previousImageUrl, prompt, resolution = { width:
     throw new Error('Previous generated image source is required for room refinement.');
   }
 
+  let origImgSrc = null;
+  if (originalRoomImageUrl) {
+    if (originalRoomImageUrl.startsWith('data:image/') || originalRoomImageUrl.startsWith('http://') || originalRoomImageUrl.startsWith('https://')) {
+      origImgSrc = originalRoomImageUrl;
+    } else {
+      const relPath = originalRoomImageUrl.replace(/^\//, '');
+      const localPath = path.join(process.cwd(), relPath);
+      if (fs.existsSync(localPath)) {
+        const fileBuffer = fs.readFileSync(localPath);
+        const ext = path.extname(localPath).toLowerCase().replace('.', '') || 'jpg';
+        const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+        origImgSrc = `data:${mime};base64,${fileBuffer.toString('base64')}`;
+      }
+    }
+  }
+
   const modelUsed = process.env.QWEN_MODEL_FOR_IMAGE_GEN || 'qwen-image-2.0-pro';
 
-  const messageContent = [
-    { image: prevImgSrc },
-    {
-      text: `[SPATIAL MANIPULATION & ROOM REFINEMENT DIRECTIVE]
+  const messageContent = [];
+  if (origImgSrc) {
+    messageContent.push({ image: origImgSrc }); // <|image_1|>
+  }
+  messageContent.push({ image: prevImgSrc }); // <|image_1|> or <|image_2|>
+
+  const origTag = origImgSrc ? '<|image_1|>' : null;
+  const prevTag = origImgSrc ? '<|image_2|>' : '<|image_1|>';
+
+  messageContent.push({
+    text: `[SPATIAL MANIPULATION & ROOM REFINEMENT DIRECTIVE]
 You are a senior spatial AI architectural renderer.
-<|image_1|> is the base rendered room composite image.
+${origTag ? `${origTag} is the ORIGINAL room layout photo uploaded by the user, showing the TRUE immutable room architecture (walls, doors, windows, ceiling molding).\n${prevTag} is the current rendered room composite.` : `${prevTag} is the current rendered room composite.`}
 
 [USER SPATIAL MANIPULATION INSTRUCTION]
 "${prompt}"
 
 [STRICT ABSOLUTE MANDATES (VIOLATION IS UNACCEPTABLE)]
-1. STRICT PRODUCT APPEARANCE PRESERVATION (NEVER ALTER PRODUCT LOOK):
-   - You MUST NOT change the visual appearance, color, material, texture, geometry, fabric, or style of ANY furniture product in <|image_1|>.
-   - The bed, nightstands, wardrobe, sofa, TV unit, tables, and all products in <|image_1|> must retain 100% identical visual appearance and pixel fidelity.
+1. ⛔ STRICT ARCHITECTURAL IMMUTABILITY (ABSOLUTE BAN ON NEW WINDOWS / DOORS):
+   - YOU MUST NOT ADD ANY NEW WINDOWS, DOORS, BLINDS, WALL OPENINGS, OR ARCHITECTURAL FEATURES.
+   - ${origTag ? `Cross-reference ${origTag} (the original room photo): any wall surface that is blank in ${origTag} MUST REMAIN 100% BLANK. DO NOT draw or render a window or door on a wall that does not have one in ${origTag}.` : 'Do NOT draw or render a window or door on a plain wall.'}
+   - The walls, ceiling moldings, floor texture, doors, and windows are 100% FROZEN and IMMUTABLE.
 
-2. POSITION MOVEMENT ONLY (ABSOLUTE PROHIBITION OF ADDITIONS / REMOVALS):
+2. ⛔ STRICT PRODUCT APPEARANCE PRESERVATION (NEVER ALTER PRODUCT LOOK):
+   - You MUST NOT change the visual appearance, color, material, wood grain, fabric, geometry, or style of ANY furniture product.
+   - All furniture products in ${prevTag} must retain 100% identical visual appearance and pixel fidelity.
+
+3. ⛔ POSITION MOVEMENT ONLY (ABSOLUTE PROHIBITION OF ADDITIONS / REMOVALS):
    - YOU ARE ONLY ALLOWED TO MOVE, RELOCATE, OR RE-ORIENT EXISTING OBJECTS.
-   - IF THE USER REQUESTS ADDING A NEW OBJECT (e.g., carpet, rug, bed, sofa, lamp, plant, decor) OR REMOVING AN EXISTING OBJECT, YOU MUST IGNORE AND REJECT THE ADDITION/REMOVAL INSTRUCTION.
+   - IF THE USER REQUESTS ADDING A NEW OBJECT OR REMOVING AN EXISTING OBJECT, YOU MUST IGNORE AND REJECT THE ADDITION/REMOVAL INSTRUCTION.
    - DO NOT ADD ANY NEW OBJECTS. DO NOT REMOVE ANY EXISTING OBJECTS.
-   - Maintain the EXACT set of furniture items present in <|image_1|>, solely shifting their positions/rotations across the floor as requested.
+   - Maintain the EXACT set of furniture items present in ${prevTag}, solely shifting their positions/rotations across the floor as requested.
 
-3. ARCHITECTURAL & LIGHTING CONTINUITY:
-   - Keep the room structure, walls, floor, window light, doors, and camera angle 100% identical to <|image_1|>.
-   - Ensure realistic contact shadows, proper ground contact, and natural perspective after relocating furniture.`
-    }
-  ];
+4. 📺 STANDALONE TV WALL-MOUNT MANDATE:
+   - If there is a TV/Television without a TV unit or TV stand, it MUST be wall-mounted on the wall directly opposite to the Bed or Sofa at eye level. Do NOT float it in mid-air or place it on the floor.
+
+5. REALISTIC CONTACT & LIGHTING CONTINUITY:
+   - Ensure realistic contact shadows and natural perspective after relocating furniture.`
+  });
 
   const qwenApiUrl = process.env.QWEN_API_URL || 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
-  console.log(`[AI Service] Calling Qwen API for refinement (${modelUsed}) with 1 previous image...`);
+  console.log(`[AI Service] Calling Qwen API for refinement (${modelUsed}) with ${messageContent.filter(m => m.image).length} images...`);
 
   return await withRetry(async () => {
     const response = await fetch(qwenApiUrl, {

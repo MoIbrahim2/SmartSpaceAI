@@ -481,6 +481,7 @@ const en = {
     refiningImage: "Refining Layout...",
     regenerateWithPrompt: "Regenerate with Spatial Refinement",
     refineSuccessNotice: "Room layout refined successfully!",
+    noProductsSelectedError: "Please select at least one furniture item before proceeding.",
 
     // 2D Spatial Guardrails
     calculatingFloorplanTitle: "Calculating 2D Room Floorplan & Clearances...",

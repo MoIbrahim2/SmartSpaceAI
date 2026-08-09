@@ -703,10 +703,30 @@ const refineRoomImage = async (userId, generationId, payload) => {
   await generation.save();
 
   try {
-    const resolution = generation.resolution || { width: 1280, height: 720 };
+    let originalRoomImageUrl = generation.roomLayoutData?.room_image_path;
+    if (!originalRoomImageUrl && generation.roomId) {
+      const RoomLayout = require('../models/roomLayout.model');
+      const layout = await RoomLayout.findOne({ roomId: generation.roomId._id || generation.roomId });
+      if (layout?.room_image_path) {
+        originalRoomImageUrl = layout.room_image_path;
+      }
+    }
+
+    let resolution = payload.resolution || generation.resolution;
+    if (typeof resolution === 'string') {
+      const resKey = resolution.toLowerCase();
+      let width = 1920, height = 1080;
+      if (resKey.includes('720')) { width = 1280; height = 720; }
+      else if (resKey.includes('1440') || resKey.includes('2k') || resKey.includes('qhd')) { width = 2560; height = 1440; }
+      else if (resKey.includes('4k') || resKey.includes('2160') || resKey.includes('uhd')) { width = 3840; height = 2160; }
+      resolution = { width, height };
+    } else if (!resolution || typeof resolution !== 'object') {
+      resolution = { width: 1280, height: 720 };
+    }
 
     const imageResult = await aiService.refineRoomImage({
       previousImageUrl,
+      originalRoomImageUrl,
       prompt,
       resolution
     });

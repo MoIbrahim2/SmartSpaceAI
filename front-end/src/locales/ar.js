@@ -481,6 +481,7 @@ const ar = {
     refiningImage: "جاري تعديل التوزيع المكاني...",
     regenerateWithPrompt: "إعادة التوليد بتعديل المكان",
     refineSuccessNotice: "تم تعديل توزيع الأثاث في الغرفة بنجاح!",
+    noProductsSelectedError: "يرجى اختيار قطعة أثاث واحدة على الأقل قبل المتابعة.",
 
     // 2D Spatial Guardrails
     calculatingFloorplanTitle: "حساب التخطيط ثنائي الأبعاد للغرفة والمساحات المتاحة...",
