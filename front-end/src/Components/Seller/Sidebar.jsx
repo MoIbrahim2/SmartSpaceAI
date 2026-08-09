@@ -38,18 +38,11 @@ export default function Sidebar({ isOpen, onClose }) {
         <div>
           {/* Logo & Mobile Close */}
           <div className="flex items-center justify-between pb-6 mb-6 border-b border-outline/10">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center rounded-xl bg-primary p-2.5 text-white neo-shadow">
-                <ShoppingBag className="size-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-extrabold tracking-tight text-on-surface">
-                  SmartSpace
-                </h2>
-                <p className="text-xs font-semibold text-primary uppercase tracking-wider">
-                  Seller Portal
-                </p>
-              </div>
+            <div className="flex flex-col items-start gap-1">
+              <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-12 w-auto object-contain rounded-xl" />
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider pl-1">
+                Seller Portal
+              </p>
             </div>
             <button
               onClick={onClose}

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 import ProductDetailModal from "./ProductDetailModal";
 import BudgetWarningModal from "./BudgetWarningModal";
-import { parseProductDetails, getProductId, getExternalStoreUrl } from "../../utils/productUtils";
+import { parseProductDetails, getProductId, getExternalStoreUrl, formatCategoryName } from "../../utils/productUtils";
 import { useCart } from "../../context/CartContext";
 
 const StepSelectProducts = ({
@@ -106,8 +106,14 @@ const StepSelectProducts = ({
     const validation = validateCategorySelections();
     if (!validation.valid) {
       console.warn("[StepSelectProducts] ⚠️ Category selection incomplete:", validation);
+      const catDisplayName = formatCategoryName(validation.categoryName, t);
       setValidationError(
-        `Please select at least ${validation.required} item(s) for ${validation.categoryName.replace("_", " ")} before proceeding (currently selected: ${validation.selected}).`
+        t("dashboard.selectionIncompleteError", {
+          required: validation.required,
+          category: catDisplayName,
+          selected: validation.selected,
+          defaultValue: `Please select at least ${validation.required} item(s) for ${catDisplayName} before proceeding (currently selected: ${validation.selected}).`
+        })
       );
       setActiveCategory(validation.categoryName);
       return;
@@ -144,18 +150,18 @@ const StepSelectProducts = ({
             </h1>
           </div>
           <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
-            Choose furniture items for each category. Items marked with a <strong className="text-amber-500 font-bold">Golden Card</strong> are recommended by us and pre-selected automatically.
+            {t("dashboard.stepThreeBannerDesc", "Choose furniture items for each category. Items marked with a Golden Card are recommended by us and pre-selected automatically.")}
           </p>
         </div>
 
         <div className="bg-background p-4 rounded-xl neomorph-raised border border-outline-variant/30 shrink-0 text-right rtl:text-left">
           <span className="text-xs text-on-surface-variant block font-semibold uppercase tracking-wider">
-            Active Category Status
+            {t("dashboard.activeCategoryStatus", "Active Category Status")}
           </span>
           <span className="font-headline font-bold text-lg text-primary">
             {isOptionalActiveCategory
-              ? `${selectedInActiveCategoryCount} Selected (Optional)`
-              : `${selectedInActiveCategoryCount} / ${requiredCountForCategory} Selected`}
+              ? t("dashboard.selectedOptional", { selected: selectedInActiveCategoryCount, defaultValue: `${selectedInActiveCategoryCount} Selected (Optional)` })
+              : t("dashboard.selectedRequired", { selected: selectedInActiveCategoryCount, required: requiredCountForCategory, defaultValue: `${selectedInActiveCategoryCount} / ${requiredCountForCategory} Selected` })}
           </span>
         </div>
       </div>
@@ -178,22 +184,24 @@ const StepSelectProducts = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="font-headline font-bold text-lg text-on-surface flex items-center gap-2 capitalize">
             <Icon name="category" className="text-primary" size={20} />
-            <span>Category: {activeCategory.replace("_", " ")}</span>
+            <span>{t("dashboard.categoryHeader", { category: formatCategoryName(activeCategory, t), defaultValue: `Category: ${formatCategoryName(activeCategory, t)}` })}</span>
             <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
               isOptionalActiveCategory
                 ? "bg-stone-500/10 text-stone-500 dark:text-stone-400"
                 : "bg-primary/10 text-primary"
             }`}>
               {isOptionalActiveCategory
-                ? "Optional"
-                : `${requiredCountForCategory} ${requiredCountForCategory === 1 ? "item required" : "items required"}`}
+                ? t("dashboard.optionalBadge", "Optional")
+                : requiredCountForCategory === 1
+                ? t("dashboard.itemRequiredBadge", "1 item required")
+                : t("dashboard.itemsRequiredBadge", { count: requiredCountForCategory, defaultValue: `${requiredCountForCategory} items required` })}
             </span>
           </h2>
 
           {/* Budget Meter */}
           <div className="w-full sm:w-80 flex flex-col gap-2 shrink-0 bg-background p-3.5 rounded-2xl neomorph-raised">
             <div className="flex justify-between text-xs font-semibold text-on-surface-variant">
-              <span>{t("dashboard.budget", "Room Budget")}</span>
+              <span>{t("dashboard.roomBudget", "Room Budget")}</span>
               <span className={currentSpent > baseBudget && baseBudget > 0 ? "text-red-500 font-bold" : "text-primary font-bold"}>
                 {formatCurrency(currentSpent)} / {formatCurrency(baseBudget)}
               </span>
@@ -224,16 +232,17 @@ const StepSelectProducts = ({
               const reqCount = categoryCounts[cat] ?? 0;
               const catProductIds = new Set(catProds.map((p) => getProductId(p)));
               const selCount = addedProducts.filter((id) => catProductIds.has(id)).length;
+              const catLabel = formatCategoryName(cat, t);
               return (
                 <option key={cat} value={cat}>
-                  {cat.replace("_", " ")} ({reqCount === 0 ? `${selCount} selected • Optional` : `${selCount}/${reqCount} selected`})
+                  {catLabel} ({reqCount === 0 ? t("dashboard.selectedOptional", { selected: selCount, defaultValue: `${selCount} Selected (Optional)` }) : `${selCount}/${reqCount}`})
                 </option>
               );
             })}
           </select>
         </div>
 
-        {/* Desktop/Tablet Flex-Wrap Category Pills (Shows ALL categories clearly without cutting) */}
+        {/* Desktop/Tablet Flex-Wrap Category Pills */}
         <div className="hidden sm:flex flex-wrap items-center gap-2.5 pb-2 pt-1 w-full">
           {categories.map((category) => {
             const isCatActive = activeCategory === category;
@@ -257,7 +266,7 @@ const StepSelectProducts = ({
                     : "neomorph-raised text-on-surface-variant hover:text-primary hover:scale-[1.02]"
                 }`}
               >
-                <span className="capitalize">{category.replace("_", " ")}</span>
+                <span className="capitalize">{formatCategoryName(category, t)}</span>
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     isComplete
@@ -267,7 +276,7 @@ const StepSelectProducts = ({
                       : "bg-surface-variant text-on-surface-variant"
                   }`}
                 >
-                  {isOptional ? (selCount > 0 ? `${selCount} Selected` : "Optional") : `${selCount}/${reqCount}`}
+                  {isOptional ? (selCount > 0 ? t("dashboard.selectedOptional", { selected: selCount, defaultValue: `${selCount} Selected` }) : t("dashboard.optionalBadge", "Optional")) : `${selCount}/${reqCount}`}
                 </span>
                 {isComplete && <Icon name="check_circle" size={16} className="text-emerald-500 shrink-0" />}
               </button>
@@ -281,7 +290,7 @@ const StepSelectProducts = ({
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5 mr-1">
             <Icon name="filter_list" size={16} className="text-primary" />
-            Filter Source:
+            {t("dashboard.filterSource", "Filter Source:")}
           </span>
 
           <button
@@ -293,7 +302,7 @@ const StepSelectProducts = ({
                 : "bg-background text-on-surface-variant neomorph-raised hover:text-on-surface"
             }`}
           >
-            All Items ({currentCategoryProducts.length})
+            {t("dashboard.allItems", { count: currentCategoryProducts.length, defaultValue: `All Items (${currentCategoryProducts.length})` })}
           </button>
 
           <button
@@ -306,7 +315,7 @@ const StepSelectProducts = ({
             }`}
           >
             <Icon name="store" size={14} />
-            SmartSpace Sellers ({localCount})
+            {t("dashboard.smartspaceSellers", { count: localCount, defaultValue: `SmartSpace Sellers (${localCount})` })}
           </button>
 
           <button
@@ -319,7 +328,7 @@ const StepSelectProducts = ({
             }`}
           >
             <Icon name="public" size={14} />
-            External Retailers ({externalCount})
+            {t("dashboard.externalRetailers", { count: externalCount, defaultValue: `External Retailers (${externalCount})` })}
           </button>
         </div>
 
@@ -327,14 +336,14 @@ const StepSelectProducts = ({
         {availableSellers.length > 0 && (
           <div className="flex items-center gap-2 w-full md:w-auto">
             <span className="text-xs font-bold text-on-surface-variant whitespace-nowrap">
-              Store / Seller:
+              {t("dashboard.storeSellerLabel", "Store / Seller:")}
             </span>
             <select
               value={sellerFilter}
               onChange={(e) => setSellerFilter(e.target.value)}
               className="p-2 rounded-xl neomorph-raised bg-background text-xs font-bold text-on-surface border border-outline-variant focus:outline-none focus:border-primary shrink-0"
             >
-              <option value="ALL">All Stores & Brands</option>
+              <option value="ALL">{t("dashboard.allStoresBrands", "All Stores & Brands")}</option>
               {availableSellers.map((seller) => (
                 <option key={seller} value={seller}>
                   {seller}
@@ -349,13 +358,17 @@ const StepSelectProducts = ({
       {filteredProducts.length === 0 ? (
         <div className="neomorph-inset rounded-2xl p-10 text-center my-6 flex flex-col items-center justify-center">
           <Icon name="filter_alt_off" size={40} className="text-on-surface-variant/40 mb-2" />
-          <h4 className="font-headline font-bold text-on-surface text-base">No products match your filter</h4>
-          <p className="text-xs text-on-surface-variant mt-1 mb-4">Try clearing your source or seller filters to see available options.</p>
+          <h4 className="font-headline font-bold text-on-surface text-base">
+            {t("dashboard.noProductsFilter", "No products match your filter")}
+          </h4>
+          <p className="text-xs text-on-surface-variant mt-1 mb-4">
+            {t("dashboard.noProductsFilterDesc", "Try clearing your source or seller filters to see available options.")}
+          </p>
           <button
             onClick={() => { setSourceFilter("ALL"); setSellerFilter("ALL"); }}
             className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-md"
           >
-            Reset Filters
+            {t("dashboard.resetFilters", "Reset Filters")}
           </button>
         </div>
       ) : (
@@ -402,10 +415,10 @@ const StepSelectProducts = ({
                   <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 flex flex-col gap-1.5 z-10">
                     <span className="px-3 py-1 rounded-full bg-amber-500 text-stone-950 text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-lg">
                       <Icon name="star" size={14} />
-                      Recommended by Us
+                      {t("dashboard.recommendedByUs", "Recommended by Us")}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold tracking-wide shadow-md">
-                      Chosen Automatically
+                      {t("dashboard.chosenAutomatically", "Chosen Automatically")}
                     </span>
                   </div>
                 )}
@@ -484,7 +497,7 @@ const StepSelectProducts = ({
                 className="w-full py-2.5 rounded-xl neomorph-raised text-xs font-bold text-on-surface hover:text-primary active:neomorph-inset transition-all flex items-center justify-center gap-1.5 mt-auto"
               >
                 <Icon name="visibility" size={16} />
-                {t("dashboard.viewDetails", "View Details & Specs")}
+                {t("dashboard.viewDetailsSpecs", "View Details & Specs")}
               </button>
             </div>
           );

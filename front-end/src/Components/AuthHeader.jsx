@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
 const AuthHeader = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -28,51 +28,82 @@ const AuthHeader = () => {
     });
   };
 
+  const handleLanguageChange = () => {
+    const nextLang = i18n.language?.startsWith("ar") ? "en" : "ar";
+    i18n.changeLanguage(nextLang);
+    document.documentElement.dir = nextLang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = nextLang;
+  };
+
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between bg-surface/80 px-6 py-4 shadow-[0px_4px_12px_rgba(0,0,0,0.02)] backdrop-blur-md md:px-12">
-      <div className="text-xl font-headline font-extrabold tracking-tight text-primary">
-        SmartSpace
-      </div>
+    <nav className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-black/40 px-6 py-3.5 backdrop-blur-md md:px-12 transition-colors">
+      {/* Brand Logo - Navigates to Home (/) */}
+      <Link to="/" className="flex items-center gap-2.5">
+        <img
+          src="/img/logo-smart.png"
+          alt="SmartSpace Logo"
+          className="h-12 md:h-14 w-auto object-contain rounded-xl drop-shadow"
+        />
+      </Link>
+
+      {/* Center Nav Links */}
       <div className="hidden items-center gap-8 md:flex">
         <Link
-          className="font-body text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
+          className="font-body text-sm font-medium text-white/90 transition-colors hover:text-amber-300"
           to="/credits"
         >
-          Pricing
+          {t("common.pricing")}
         </Link>
         <Link
-          className="font-body text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
+          className="font-body text-sm font-medium text-white/90 transition-colors hover:text-amber-300"
           to="/contact"
         >
-          Contact Us
+          {t("common.technicalSupport")}
         </Link>
         <Link
-          className="font-body text-sm font-semibold text-on-surface-variant transition-colors hover:text-primary"
+          className="font-body text-sm font-medium text-white/90 transition-colors hover:text-amber-300"
           to="/projects"
         >
-          Gallery
+          {t("common.gallery")}
         </Link>
       </div>
-      <div className="flex items-center gap-4">
+
+      {/* Right Controls */}
+      <div className="flex items-center gap-3">
+        {/* Dark Mode / Light Mode Toggle */}
         <button
-          className="px-3 h-10 rounded-full bg-surface text-on-surface-variant font-bold text-sm transition-all hover:text-primary neo-raised neo-button-active flex items-center justify-center"
-          onClick={() => i18n.changeLanguage(i18n.language.startsWith("ar") ? "en" : "ar")}
+          onClick={toggleTheme}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20"
+          aria-label="Toggle Theme"
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={18} />
+        </button>
+
+        {/* Language Switcher Pill (Arabic / English) */}
+        <button
+          className="flex h-9 items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-4 text-xs font-semibold text-white transition-all hover:bg-white/20"
+          onClick={handleLanguageChange}
           aria-label="Toggle Language"
         >
-          {i18n.language.startsWith("ar") ? "EN" : "العربية"}
+          <Icon name="language" size={15} className="text-white/80" />
+          <span>{i18n.language?.startsWith("ar") ? "English" : "العربية"}</span>
         </button>
         
+        {/* Log In Pill */}
         <Link
-          className="rounded-full bg-surface px-6 py-2 text-sm font-bold text-primary transition-all hover:opacity-90 neo-raised neo-button-active"
+          className="hidden sm:flex h-9 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-5 text-sm font-medium text-white transition-all hover:bg-white/20"
           to="/login"
         >
-          Log In
+          {t("common.logIn")}
         </Link>
+
+        {/* Register Pill */}
         <Link
-          className="rounded-full bg-surface px-6 py-2 text-sm font-bold text-primary transition-all hover:opacity-90 neo-raised neo-button-active"
+          className="flex h-9 items-center justify-center rounded-full bg-[#b88653] hover:bg-[#a67443] px-5 text-sm font-semibold text-white shadow-md transition-all"
           to="/register"
         >
-          Register
+          {t("common.register")}
         </Link>
       </div>
     </nav>

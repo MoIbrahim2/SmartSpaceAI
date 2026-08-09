@@ -53,7 +53,9 @@ const storage = multer.diskStorage({
   }
 });
 
-// Filter out non-image files
+const ALLOWED_EXTENSIONS = ['jpeg', 'jpg', 'png', 'bmp', 'webp'];
+
+// Filter out non-image files and enforce allowed file extensions (First Guard)
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (allowedMimeTypes.includes(file.mimetype)) {
@@ -61,6 +63,8 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.'), false);
   }
+
+  cb(null, true);
 };
 
 // Initialize multer

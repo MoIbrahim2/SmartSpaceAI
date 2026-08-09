@@ -1,14 +1,28 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --primary: #a67443;
+  --primary-hover: #946334;
+  --accent: #a67443;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+}
 
 @layer base {
   body {
     margin: 0;
     background-color: #f5f5f4;
     font-family: "Plus Jakarta Sans", sans-serif;
+  }
+
+  html[lang^="ar"] body,
+  [dir="rtl"] body,
+  [dir="rtl"] {
+    font-family: "Cairo", "Plus Jakarta Sans", sans-serif;
   }
 
   * {

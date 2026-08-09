@@ -7,8 +7,8 @@ import "./LandingPage.css";
 
 const toolsData = {
   staging: {
-    before: "/img/image-before2.png",
-    after: "/img/image-after2.png",
+    before: "/img/living-before.png",
+    after: "/img/living-after.png",
     beforeLabel: "Original",
     afterLabel: "Staged",
   },
@@ -308,11 +308,8 @@ const LandingPage = () => {
       <header className={`main-header ${isScrolled ? "scrolled" : ""}`} id="header">
         <div className="nav-container">
           {/* Logo */}
-          <div className="logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <span className="logo-main">
-              SmartSpace<span>.ai</span>
-            </span>
-            <span className="logo-sub">{t("common.logoSub")}</span>
+          <div className="logo cursor-pointer flex items-center" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-12 md:h-14 w-auto object-contain rounded-xl" />
           </div>
 
           {/* Mobile Overlay */}
@@ -325,8 +322,8 @@ const LandingPage = () => {
           <div className={`nav-wrapper ${isMobileMenuOpen ? "mobile-open" : ""}`}>
             {/* Mobile Header (Hidden on Desktop) */}
             <div className="mobile-drawer-header">
-              <div className="logo" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setIsMobileMenuOpen(false); }}>
-                <span className="logo-main">SmartSpace<span>.ai</span></span>
+              <div className="logo cursor-pointer flex items-center" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setIsMobileMenuOpen(false); }}>
+                <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-10 w-auto object-contain rounded-xl" />
               </div>
               <button className="mobile-drawer-close" onClick={() => setIsMobileMenuOpen(false)}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -598,7 +595,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="person" size={18} />
-                      <span>My Profile</span>
+                      <span>{t("common.myProfile")}</span>
                     </Link>
 
                     <Link
@@ -617,7 +614,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="dashboard" size={18} />
-                      <span>Dashboard</span>
+                      <span>{t("common.dashboard")}</span>
                     </Link>
 
                     <Link
@@ -636,7 +633,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="settings" size={18} />
-                      <span>Settings</span>
+                      <span>{t("common.settings")}</span>
                     </Link>
 
                     <button
@@ -661,7 +658,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="logout" size={18} />
-                      <span>Logout</span>
+                      <span>{t("common.logout")}</span>
                     </button>
                   </div>
                 )}
@@ -672,7 +669,7 @@ const LandingPage = () => {
               </Link>
             )}
             <Link
-              to={user ? getDashboardPath(user) : "/register"}
+              to="/home"
               className="btn btn-accent btn-design magnetic-btn shine-effect"
               onMouseMove={handleMagneticMouseMove}
               onMouseLeave={handleMagneticMouseLeave}
@@ -732,7 +729,7 @@ const LandingPage = () => {
             <p className="lead">{t("landing.heroLead")}</p>
             <div className="hero-actions">
               <Link
-                to={user ? getDashboardPath(user) : "/register"}
+                to="/home"
                 className="btn btn-accent btn-try magnetic-btn shine-effect"
                 onMouseMove={handleMagneticMouseMove}
                 onMouseLeave={handleMagneticMouseLeave}
@@ -1233,6 +1230,13 @@ const LandingPage = () => {
               </div>
             </div>
             <div className="gallery-item">
+              <img src="/img/living-after.png" alt="Staged Living Room" />
+              <div className="gallery-overlay">
+                <span className="gallery-tag">{t("landing.galleryTagLivingRoom")}</span>
+                <h4 className="gallery-title">{t("landing.galleryTitleLivingRoom")}</h4>
+              </div>
+            </div>
+            <div className="gallery-item">
               <img src="/img/img6.jpeg" alt="Staged Lawn Front Yard" />
               <div className="gallery-overlay">
                 <span className="gallery-tag">{t("landing.galleryTagFrontYard")}</span>
@@ -1573,7 +1577,7 @@ const LandingPage = () => {
             {t("landing.ctaSub")}
           </p>
           <Link
-            to="/register"
+            to="/home"
             className="btn btn-accent btn-cta magnetic-btn shine-effect"
             onMouseMove={handleMagneticMouseMove}
             onMouseLeave={handleMagneticMouseLeave}
@@ -1588,7 +1592,9 @@ const LandingPage = () => {
         <div className="container">
           <div className="landing-footer-grid">
             <div className="landing-footer-brand">
-              <div className="landing-footer-logo">SmartSpace AI</div>
+              <div className="landing-footer-logo">
+                <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-14 w-auto object-contain rounded-xl" />
+              </div>
               <p>
                 {t("landing.footerDesc")}
               </p>

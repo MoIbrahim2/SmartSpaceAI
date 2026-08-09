@@ -29,7 +29,15 @@ const normalizeProductsForSpatial = (selectedProducts) => {
     let h = Math.round(Number(dims.height || dims.h || 80));
 
     const category = p.category || pData.classification?.canonicalCategory || pData.category || 'Furniture';
-    const title = pData.basic?.name || pData.name || pData.title || category || 'Unknown';
+    const rawTitle = pData.basic?.name || pData.name || pData.title || category || 'Unknown';
+    let title = String(rawTitle).trim()
+      .replace(/^(Enjoy free delivery|Free shipping|Buy now and pay later|Get \d+% off|Special offer|Limited time offer)[^.]*\.\s*/i, '')
+      .replace(/^(Enjoy free delivery|Free shipping|Buy now and pay later)[^.]*\s+/i, '');
+    if (title.length > 90) {
+      const short = title.slice(0, 85);
+      const lastSpace = short.lastIndexOf(' ');
+      title = (lastSpace > 30 ? short.slice(0, lastSpace) : short) + '…';
+    }
     const catLower = category.toLowerCase();
     const titleLower = title.toLowerCase();
 
@@ -67,6 +75,7 @@ const normalizeProductsForSpatial = (selectedProducts) => {
         height: h
       },
       quantity: p.quantity || 1,
+      action: p.action || pData.action || null,
       isCoreItem: ['Sofa', 'Bed', 'Dining Table', 'Desk', 'TV Unit', 'Wardrobe'].includes(
         category
       )
@@ -132,12 +141,30 @@ const normalizeSpatialViolations = (violations) => {
  * Build the system prompt that instructs DeepSeek v3.2 to act as an
  * Expert Architectural Spatial Planner & Ergonomics Engine.
  *
+ * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
  * @returns {string} System prompt text
  */
-const buildSpatialSystemPrompt = () => {
+const buildSpatialSystemPrompt = (generationType = 'CREATE_FROM_SCRATCH') => {
+  const isEnhance = generationType === 'ENHANCE_ROOM' || generationType === 'ENHANCE_EXISTING';
+  const enhanceDirectives = isEnhance
+    ? `\n## ENHANCE_ROOM MODE DIRECTIVES:
+- SPECIAL MODE: ENHANCE_ROOM (Room Enhancement & Restyling)
+- The room ALREADY CONTAINS existing furniture.
+- Products have actions attached:
+  * 'ADD': New item to be placed into available empty floor space.
+  * 'REPLACE': Swapping an existing furniture piece for this new item (the old item is removed, freeing up its spot).
+  * 'KEEP': An item already present in the room layout that remains.
+  * 'REMOVE': An existing item slated for removal (frees up floor space).
+- EVALUATION RULES FOR ENHANCE_ROOM:
+  1. Only evaluate new items (action 'ADD' or 'REPLACE') to ensure they fit in available floor space or replace existing furniture without overlapping other items.
+  2. Items with action 'REMOVE' expand available floor space and free up floor capacity.
+  3. Items with action 'KEEP' already exist in the room; do NOT flag them as violating space unless a new 'ADD' item literally overlaps them.
+`
+    : '';
+
   return `You are an Expert Architectural Spatial Planner & Ergonomics Engine.
 Your EXCLUSIVE task is to evaluate whether a set of furniture products physically fit inside a room with specific dimensions, and if they do, compute a 2D floor layout with exact coordinates.
-
+${enhanceDirectives}
 ## Physical Dimension Fitting & Placement Directives
 1. Viability First (isApplicable):
    - A layout is VALID (isApplicable = true) as long as all floor-standing furniture items physically fit inside the room boundary perimeter WITHOUT literally overlapping each other's 2D bounding boxes or extending past walls.
@@ -147,9 +174,13 @@ Your EXCLUSIVE task is to evaluate whether a set of furniture products physicall
 2. ITEMS THAT NEVER CAUSE VIOLATIONS:
    - Rugs, carpets, and floor mats lie FLAT on the floor under furniture. They NEVER cause clearance blockages, walkway obstructions, or spatial conflicts. Do NOT include them in violations or suggestedRemovals.
    - Lamps, pillows, cushions, vases, and small decor items sit ON TOP of other furniture surfaces. They NEVER cause spatial violations.
+   - Curtains, blinds, and wall art hang on walls or windows. They NEVER cause floor walkway blockages.
    - Nightstands placed beside a bed is the standard expected configuration — NOT a violation.
 
-3. FULL 4-WALL DIRECTIONAL PLACEMENT (NORTH, WEST, SOUTH, EAST):
+3. MULTIPLE ITEMS (Quantity > 1):
+   - If placing identical items (e.g., 2 nightstands, 2 curtains, 4 chairs), they MUST have completely different X or Y center coordinates. NEVER place two items at the exact same (X, Y) point.
+
+4. FULL 4-WALL DIRECTIONAL PLACEMENT (NORTH, WEST, SOUTH, EAST):
    - You MUST utilize ALL FOUR ROOM WALL DIRECTIONS (NORTH, WEST, SOUTH, EAST) to create a balanced, spacious architectural room layout. Do NOT cluster all furniture items against only 1 or 2 walls!
    - Wall Direction Definitions:
      * NORTH WALL (Back Wall, Y = roomLength cm): Primary focal wall for main central items (e.g. Bed headboard, TV Console).
@@ -158,18 +189,55 @@ Your EXCLUSIVE task is to evaluate whether a set of furniture products physicall
      * SOUTH WALL (Front/Foreground Wall, Y = 0 cm): Foreground wall area; place lower-profile side items (e.g. storage bench, ottoman, side chair, console table) ensuring clear entry pathways.
    - Position wardrobes flat against any of the available walls where space allows.
 
-4. VIOLATION CRITERIA (ONLY flag these as violations):
+5. VIOLATION CRITERIA (ONLY flag these as violations):
    - Mark "isApplicable": false ONLY if:
      a) Any single item's width or length exceeds the room wall it would be placed against.
-     b) Two floor-standing furniture items (NOT rugs/lamps) literally overlap in 2D bounding-box space.
-     c) Total floor-standing furniture footprint (EXCLUDING rugs/lamps/decor) exceeds 70% of total floor area.
+     b) Two floor-standing furniture items (NOT rugs/lamps/curtains) literally overlap in 2D bounding-box space.
+     c) Total floor-standing furniture footprint (EXCLUDING rugs/lamps/decor/curtains) exceeds 70% of total floor area.
+
+## FUNCTIONAL ZONING & RELATIONAL RULES (MANDATORY):
+The layout MUST make logical sense for human use and ergonomics. You must identify the "Primary Anchor" of the room (e.g., Sofa, Bed, Dining Table, Desk) and logically organize all other items around it.
+
+1. PRIMARY ANCHOR PLACEMENT & CLEARANCE:
+   - Identify the primary functional item (e.g., the Bed in a bedroom, the main Sofa in a living room, the Dining Table in a dining room, the Desk in an office).
+   - Center this anchor item along a primary solid wall (or the center of the room for dining tables).
+   - You MUST maintain at least 60cm of clear walking space on all active sides of the anchor (e.g., both sides of a bed, the front and sides of a sofa, all around a dining table). NEVER push these items flush into side corners.
+
+2. SYMMETRY & FLANKING (SUPPORT ITEMS):
+   - Items designed to support the anchor (e.g., Nightstands, End Tables, Side Tables) MUST be placed immediately adjacent to the anchor.
+   - If there are two identical support items (e.g., 2 nightstands, 2 end tables), they MUST perfectly flank the anchor symmetrically on the left and right.
+   - FLANKING MATH: Left Item Center X = (Anchor X) - (Anchor Width / 2) - (Item Width / 2). Right Item Center X = (Anchor X) + (Anchor Width / 2) + (Item Width / 2). They must share the anchor's Y coordinate.
+
+3. DIRECT LINE OF SIGHT (OPPOSING ALIGNMENTS):
+   - Focal units (e.g., TV Consoles, Media Units, Whiteboards) MUST be placed on the wall directly OPPOSITE the primary seating/sleeping anchor.
+   - The Focal Unit's center axis MUST exactly match the primary anchor's center axis (X or Y) so a human sitting on the sofa or bed looks directly straight at it.
+   - NEVER place a TV/Media unit on the same wall as the sofa/bed, or at an awkward viewing angle.
+   - Place coffee tables exactly in the center space between the Sofa and the TV Unit.
+
+4. TALL STORAGE & BULKY ITEMS:
+   - Tall items (Wardrobes, Bookcases, Display Cabinets, Filing Cabinets) must be placed in corners or along secondary side walls.
+   - They must NEVER block windows, doors, or the direct line of sight between the Primary Anchor and the Focal Unit.
 
 ## Coordinate Plane & Origin
 - Define (0, 0, 0) as the bottom-left floor corner of the room.
 - X-axis = Room Width (0 to roomWidth cm).
 - Y-axis = Room Length (0 to roomLength cm).
 - Z-axis = Room Height (0 to roomHeight cm).
-- All position values represent the CENTER of each item in centimeters.
+- All position values represent the CENTER of the item in centimeters.
+
+## CRITICAL SPATIAL MATH FORMULAS (YOU MUST USE THESE):
+1. Bounding Box Collision Check:
+   An item's physical footprint spans from [X - (width/2)] to [X + (width/2)] and [Y - (length/2)] to [Y + (length/2)]. You MUST verify that these ranges do not intersect with any other floor-standing item.
+
+2. Wall Anchoring Formulas:
+   To place an item flush against a wall, its center coordinate MUST be calculated using its dimensions:
+   - WEST WALL (Left): X = (width / 2)
+   - EAST WALL (Right): X = roomWidth - (width / 2)
+   - SOUTH WALL (Front): Y = (length / 2)
+   - NORTH WALL (Back): Y = roomLength - (length / 2)
+
+3. Rotation Logic:
+   If an item is rotated 90 or 270 degrees, its physical Width and Length SWAP. You must use the SWAPPED dimensions when checking wall boundaries and bounding box overlaps.
 
 ## Camera Frustum Calculation
 - Assume room photo perspective is shot from a top corner (e.g., X=10, Y=10, Z=170, angled at 45°).
@@ -228,9 +296,11 @@ Return ONLY the raw JSON object.
  *
  * @param {Object} roomMetrics - { length, width, height } in cm
  * @param {Array<Object>} products - Array of product objects with dimensions
+ * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
  * @returns {string} User prompt text
  */
-const buildSpatialUserPrompt = (roomMetrics, products) => {
+const buildSpatialUserPrompt = (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH') => {
+  const isEnhance = generationType === 'ENHANCE_ROOM' || generationType === 'ENHANCE_EXISTING';
   const productList = products.map((p, idx) => {
     const pData = p.productData || p;
     const dims = p.dimensions || pData.dimensions || pData.specifications?.dimensions || {};
@@ -240,6 +310,7 @@ const buildSpatialUserPrompt = (roomMetrics, products) => {
     const qty = p.quantity || 1;
     const title = p.title || pData.basic?.name || pData.name || pData.title || p.category || 'Unknown';
     const category = p.category || pData.classification?.canonicalCategory || pData.category || 'Furniture';
+    const action = p.action || pData.action || (isEnhance ? 'ADD' : null);
     const isCoreItem = p.isCoreItem !== undefined
       ? p.isCoreItem
       : ['Sofa', 'Bed', 'Dining Table', 'Desk', 'TV Unit', 'Wardrobe'].includes(category);
@@ -249,7 +320,7 @@ const buildSpatialUserPrompt = (roomMetrics, products) => {
    Category: "${category}"
    Dimensions: ${w}cm (W) × ${d}cm (D) × ${h}cm (H)
    Quantity: ${qty}
-   Is Core Item: ${isCoreItem ? 'Yes' : 'No'}`;
+   ${action ? `Action: ${action}\n   ` : ''}Is Core Item: ${isCoreItem ? 'Yes' : 'No'}`;
   }).join('\n');
 
   return `## Room Metrics
@@ -257,6 +328,7 @@ const buildSpatialUserPrompt = (roomMetrics, products) => {
 - Width: ${roomMetrics.width}cm
 - Height: ${roomMetrics.height}cm
 - Total Floor Area: ${((roomMetrics.length * roomMetrics.width) / 10000).toFixed(2)} m²
+- Generation Mode: ${generationType}
 
 ## Selected Products (${products.length} unique items)
 ${productList}
@@ -272,8 +344,8 @@ Evaluate whether all products fit within this room while respecting ergonomic cl
  * Fallback algorithmic spatial evaluation engine.
  * Computes deterministic physical layout & clearance checks when external AI APIs are unavailable.
  */
-const evaluateAlgorithmicSpatialSafety = (roomMetrics, products) => {
-  console.log('[SpatialGuardrail] 🛠️ Executing local deterministic spatial algorithm fallback...');
+const evaluateAlgorithmicSpatialSafety = (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH') => {
+  console.log(`[SpatialGuardrail] 🛠️ Executing local deterministic spatial algorithm fallback (mode=${generationType})...`);
   
   const roomAreaSqM = (roomMetrics.length * roomMetrics.width) / 10000;
   const violations = [];
@@ -297,12 +369,14 @@ const evaluateAlgorithmicSpatialSafety = (roomMetrics, products) => {
     const cat = (prod.category || '').toLowerCase();
     const title = (prod.title || '').toLowerCase();
     return (
-      cat.includes('decor') || cat.includes('lighting') || cat.includes('lamp') || cat.includes('pillow') || cat.includes('cushion') || cat.includes('vase') || cat.includes('art') || cat.includes('mirror') || cat.includes('accessory') || cat.includes('plant') ||
-      title.includes('lamp') || title.includes('pillow') || title.includes('cushion') || title.includes('vase') || title.includes('مصباح') || title.includes('وسادة') || title.includes('ديكور') || title.includes('فازة') || title.includes('مرآة') || title.includes('ساعة')
+      cat.includes('decor') || cat.includes('lighting') || cat.includes('lamp') || cat.includes('pillow') || cat.includes('cushion') || cat.includes('vase') || cat.includes('art') || cat.includes('mirror') || cat.includes('accessory') || cat.includes('plant') || cat.includes('curtain') || cat.includes('blind') || cat.includes('drape') || cat.includes('ستائر') || cat.includes('ستارة') ||
+      title.includes('lamp') || title.includes('pillow') || title.includes('cushion') || title.includes('vase') || title.includes('curtain') || title.includes('blind') || title.includes('drape') || title.includes('مصباح') || title.includes('وسادة') || title.includes('ديكور') || title.includes('فازة') || title.includes('مرآة') || title.includes('ساعة') || title.includes('ستارة') || title.includes('ستائر')
     );
   };
 
   products.forEach((prod) => {
+    if (prod.action === 'REMOVE') return; // Skip items being removed in ENHANCE_ROOM
+
     const w = prod.dimensions?.width || 80;
     const l = prod.dimensions?.length || 60;
     const h = prod.dimensions?.height || 80;
@@ -456,9 +530,10 @@ const evaluateAlgorithmicSpatialSafety = (roomMetrics, products) => {
  *
  * @param {Object} roomMetrics - { length, width, height } in cm
  * @param {Array<Object>} products - Normalized product array
+ * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
  * @returns {Promise<Object>} Parsed spatial guardrail result
  */
-const invokeSpatialModel = async (roomMetrics, products) => {
+const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH') => {
   const apiKey = process.env.BEDROCK_API_KEY;
   const primaryModel = process.env.STEP3_MODEL_ID || 'global.anthropic.claude-sonnet-4-5-20250929-v1:0';
   
@@ -470,11 +545,11 @@ const invokeSpatialModel = async (roomMetrics, products) => {
 
   if (!apiKey) {
     console.warn('[SpatialGuardrail] BEDROCK_API_KEY not configured. Falling back to algorithmic engine.');
-    return evaluateAlgorithmicSpatialSafety(roomMetrics, products);
+    return evaluateAlgorithmicSpatialSafety(roomMetrics, products, generationType);
   }
 
-  const systemPrompt = buildSpatialSystemPrompt();
-  const userPrompt = buildSpatialUserPrompt(roomMetrics, products);
+  const systemPrompt = buildSpatialSystemPrompt(generationType);
+  const userPrompt = buildSpatialUserPrompt(roomMetrics, products, generationType);
 
   const callModelApi = async (targetModel) => {
     return await fetch(endpointUrl, {
@@ -729,7 +804,7 @@ Audit this proposed layout carefully. Is it realistic in real life? Return JSON 
  * Evaluates physical space fitting based on bounding box footprint area, required clearance buffers (50cm),
  * and cumulative wall perimeter limits for the specific room dimensions.
  */
-const checkPhysicalFeasibility = (roomMetrics, products) => {
+const checkPhysicalFeasibility = (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH') => {
   const violations = [];
   const suggestedRemovals = [];
 
@@ -743,6 +818,8 @@ const checkPhysicalFeasibility = (roomMetrics, products) => {
   const floorStandingItems = [];
 
   products.forEach((prod) => {
+    if (prod.action === 'REMOVE') return; // REMOVE items free space and are not added
+
     const catLower = (prod.category || '').toLowerCase();
     const titleLower = (prod.title || '').toLowerCase();
     const w = prod.dimensions?.width || 80;
@@ -751,7 +828,7 @@ const checkPhysicalFeasibility = (roomMetrics, products) => {
     const qty = prod.quantity || 1;
 
     const isRug = catLower.includes('rug') || catLower.includes('carpet') || titleLower.includes('rug') || titleLower.includes('sajada') || titleLower.includes('سجاد');
-    const isDecor = catLower.includes('lighting') || catLower.includes('lamp') || catLower.includes('pillow') || catLower.includes('decor') || titleLower.includes('lamp') || titleLower.includes('مصباح');
+    const isDecor = catLower.includes('lighting') || catLower.includes('lamp') || catLower.includes('pillow') || catLower.includes('decor') || catLower.includes('curtain') || catLower.includes('blind') || catLower.includes('drape') || catLower.includes('art') || titleLower.includes('lamp') || titleLower.includes('curtain') || titleLower.includes('blind') || titleLower.includes('drape') || titleLower.includes('ستائر') || titleLower.includes('ستارة') || titleLower.includes('مصباح');
 
     // 1. Single item exceeds room dimensions
     if (w > roomMetrics.width && w > roomMetrics.length) {
@@ -831,10 +908,12 @@ const checkPhysicalFeasibility = (roomMetrics, products) => {
  * @param {Object} generation - Mongoose Generation document
  * @param {Object} room - Mongoose Room document (with dimensions)
  * @param {Array<Object>} selectedProducts - Fully populated product list
+ * @param {Object} options - Options including generationType and force
  * @returns {Promise<Object>} The spatial guardrail result object
  */
 const validateSpatialApplicability = async (generation, room, selectedProducts, options = {}) => {
-  console.log(`[SpatialGuardrail Service] Starting spatial validation for Generation ID: ${generation._id} (force=${!!options.force})`);
+  const generationType = options.generationType || generation.generationType || 'CREATE_FROM_SCRATCH';
+  console.log(`[SpatialGuardrail Service] Starting spatial validation for Generation ID: ${generation._id} (type=${generationType}, force=${!!options.force})`);
   
   // Build room metrics
   const roomMetrics = {
@@ -859,7 +938,7 @@ const validateSpatialApplicability = async (generation, room, selectedProducts, 
   console.log(`[SpatialGuardrail Service] Products Hash: ${currentHash}`);
 
   // Deterministic feasibility pre-check for impossible requests (3 beds, perimeter overflow, etc.)
-  const feasibility = checkPhysicalFeasibility(roomMetrics, normalizedProducts);
+  const feasibility = checkPhysicalFeasibility(roomMetrics, normalizedProducts, generationType);
   if (!feasibility.isApplicable) {
     console.warn(`[SpatialGuardrail Service] ❌ Feasibility check failed: ${feasibility.spatialViolations[0]?.description}`);
     const guardrailData = {
@@ -882,7 +961,7 @@ const validateSpatialApplicability = async (generation, room, selectedProducts, 
   console.log('[SpatialGuardrail Service] ⚡ Invoking spatial model (caching disabled/forced)...');
 
   // Invoke the spatial model
-  const result = await invokeSpatialModel(roomMetrics, normalizedProducts);
+  const result = await invokeSpatialModel(roomMetrics, normalizedProducts, generationType);
 
   const naturalLanguagePrompt = result.naturalLanguagePrompt || translateLayoutToPromptDirectives(result.layoutDiagram);
 
@@ -946,11 +1025,24 @@ const translateLayoutToPromptDirectives = (layoutDiagram) => {
     wallGroups[wall].push(alloc);
   }
 
+  // Count instances to prevent quantity hallucination
+  const itemCounts = {};
+  const currentCounts = {};
+  for (const alloc of layoutDiagram.allocations) {
+    const id = alloc.productId || alloc.productName || alloc.name || alloc.category || 'Furniture';
+    itemCounts[id] = (itemCounts[id] || 0) + 1;
+  }
+
   // Generate per-item placement directives
   for (const alloc of layoutDiagram.allocations) {
     const pos = alloc.position || alloc.coordinates || {};
     const dim = alloc.dimensions || {};
-    const name = alloc.title || alloc.productName || alloc.name || alloc.category || 'Furniture';
+    const baseName = alloc.title || alloc.productName || alloc.name || alloc.category || 'Furniture';
+    const id = alloc.productId || alloc.productName || alloc.name || alloc.category || 'Furniture';
+    currentCounts[id] = (currentCounts[id] || 0) + 1;
+    
+    const instanceStr = itemCounts[id] > 1 ? ` (Instance ${currentCounts[id]} of ${itemCounts[id]})` : '';
+    const name = `${baseName}${instanceStr}`;
     const category = alloc.category || 'Furniture';
     const posX = pos.x ?? pos.x_cm ?? '?';
     const posY = pos.y ?? pos.y_cm ?? '?';

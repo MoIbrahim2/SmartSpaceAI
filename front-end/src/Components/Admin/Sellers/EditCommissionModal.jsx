@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Modal from "../Shared/Modal";
 
 export default function EditCommissionModal({ seller, isOpen, onClose, onUpdate }) {
+  const { t } = useTranslation();
   const [rate, setRate] = useState(12);
 
   useEffect(() => {
@@ -17,11 +19,11 @@ export default function EditCommissionModal({ seller, isOpen, onClose, onUpdate 
   if (!seller) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Update Commission: ${seller.name}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={t("admin.sellers.editCommTitle", { name: seller.name })}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-            New Commission Rate (%)
+            {t("admin.sellers.newCommRate")}
           </label>
           <input
             required
@@ -33,7 +35,7 @@ export default function EditCommissionModal({ seller, isOpen, onClose, onUpdate 
             className="w-full rounded-xl bg-surface px-4 py-2.5 text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary/40 border border-outline/20"
           />
           <p className="text-xs text-on-surface-variant mt-1.5">
-            This rate will apply to all future marketplace sales by {seller.name}.
+            {t("admin.sellers.commHelpText", { name: seller.name })}
           </p>
         </div>
 
@@ -43,13 +45,13 @@ export default function EditCommissionModal({ seller, isOpen, onClose, onUpdate 
             onClick={onClose}
             className="rounded-xl px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface border border-outline/20"
           >
-            Cancel
+            {t("admin.shared.cancel")}
           </button>
           <button
             type="submit"
             className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all"
           >
-            Save Commission
+            {t("admin.sellers.saveCommBtn")}
           </button>
         </div>
       </form>

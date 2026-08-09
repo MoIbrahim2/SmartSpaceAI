@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DollarSign, Clock, CheckCircle2, Eye, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import StatCard from "../../Components/Admin/Shared/StatCard";
 import DataTable from "../../Components/Admin/Shared/DataTable";
@@ -14,6 +15,7 @@ import { useToast } from "../../Components/Admin/Shared/ToastContext";
 import { getMonthlyCommissions, markCommissionPaid } from "../../api/AdminApi";
 
 export default function CommissionReports() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ export default function CommissionReports() {
         month: parseInt(reportItem.month, 10) || 5,
         amount: reportItem.numericEarned || 0,
       });
-      showToast("Payout marked as Paid!", "success");
+      showToast(t("admin.commissions.toastPayoutPaid"), "success");
       setMarkPaidConfirmOpen(false);
       setDrawerOpen(false);
       fetchCommissions();
@@ -111,7 +113,7 @@ export default function CommissionReports() {
 
   const columns = [
     {
-      label: "Seller Name",
+      label: t("admin.commissions.colSellerName"),
       key: "sellerName",
       render: (row) => (
         <div>
@@ -122,27 +124,27 @@ export default function CommissionReports() {
         </div>
       ),
     },
-    { label: "Gross Sales", key: "grossSales" },
-    { label: "Commission Rate", key: "commissionRate" },
+    { label: t("admin.commissions.colGrossSales"), key: "grossSales" },
+    { label: t("admin.commissions.colCommRate"), key: "commissionRate" },
     {
-      label: "Earned Fee",
+      label: t("admin.commissions.colEarnedFee"),
       key: "earnedCommission",
       render: (row) => <span className="font-extrabold text-primary">{row.earnedCommission}</span>,
     },
     {
-      label: "Status",
+      label: t("admin.commissions.colStatus"),
       key: "payoutStatus",
       render: (row) => <StatusBadge status={row.payoutStatus} />,
     },
     {
-      label: "Actions",
+      label: t("admin.commissions.colActions"),
       key: "actions",
       sortable: false,
       render: (row) => (
         <ActionDropdown
           actions={[
             {
-              label: "View Report Details",
+              label: t("admin.commissions.actViewDetails"),
               icon: Eye,
               onClick: () => {
                 setActiveReport(row);
@@ -152,7 +154,7 @@ export default function CommissionReports() {
             ...(row.payoutStatus !== "Paid"
               ? [
                   {
-                    label: "Mark Payout Paid",
+                    label: t("admin.commissions.actMarkPaid"),
                     icon: Check,
                     onClick: () => {
                       setActiveReport(row);
@@ -168,20 +170,20 @@ export default function CommissionReports() {
   ];
 
   if (loading && reports.length === 0) {
-    return <LoadingState message="Loading commission reports..." />;
+    return <LoadingState message={t("admin.commissions.loading")} />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Commission & Financial Reports"
-        description="Audit gross sales, earned platform fees, and track seller payouts."
+        title={t("admin.commissions.title")}
+        description={t("admin.commissions.description")}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard title="Total Earned Fees" value={`$${totalEarned.toLocaleString()}`} change="+18.5%" isPositive={true} icon={DollarSign} />
-        <StatCard title="Pending Payouts" value={`$${pendingEarned.toLocaleString()}`} change={`${reports.filter(r => r.payoutStatus !== "Paid").length} sellers`} isPositive={false} icon={Clock} />
-        <StatCard title="Completed Payouts" value={`$${paidEarned.toLocaleString()}`} change="Completed" isPositive={true} icon={CheckCircle2} />
+        <StatCard title={t("admin.commissions.totalEarnedFees")} value={`$${totalEarned.toLocaleString()}`} change="+18.5%" isPositive={true} icon={DollarSign} />
+        <StatCard title={t("admin.commissions.pendingPayouts")} value={`$${pendingEarned.toLocaleString()}`} change={`${reports.filter(r => r.payoutStatus !== "Paid").length} sellers`} isPositive={false} icon={Clock} />
+        <StatCard title={t("admin.commissions.completedPayouts")} value={`$${paidEarned.toLocaleString()}`} change="Completed" isPositive={true} icon={CheckCircle2} />
       </div>
 
       <ReportFilters
@@ -193,11 +195,11 @@ export default function CommissionReports() {
         onMonthChange={setMonth}
         year={year}
         onYearChange={setYear}
-        onExportCSV={() => showToast("Exporting financial report CSV...", "info")}
+        onExportCSV={() => showToast(t("admin.commissions.toastExportCsv"), "info")}
       />
 
       {filtered.length === 0 ? (
-        <EmptyState title="No commission reports found" description="Try modifying your filters or search terms." />
+        <EmptyState title={t("admin.commissions.noReportsTitle")} description={t("admin.commissions.noReportsDesc")} />
       ) : (
         <DataTable columns={columns} data={filtered} />
       )}
@@ -212,9 +214,9 @@ export default function CommissionReports() {
       <ConfirmDialog
         isOpen={markPaidConfirmOpen}
         onClose={() => setMarkPaidConfirmOpen(false)}
-        title="Confirm Payout Payment"
-        message={`Mark commission payout of ${activeReport?.earnedCommission} to '${activeReport?.sellerName}' as Paid?`}
-        confirmText="Confirm Payment"
+        title={t("admin.commissions.confirmPayTitle")}
+        message={t("admin.commissions.confirmPayMsg", { amount: activeReport?.earnedCommission, seller: activeReport?.sellerName })}
+        confirmText={t("admin.commissions.confirmPayBtn")}
         variant="success"
         onConfirm={() => handleMarkPaid(activeReport)}
       />

@@ -10,6 +10,7 @@ const ROOM_STYLES = [
     description: "Corner perspective view of an empty modern room with sleek furniture, clean lines, and ambient lighting.",
     descriptionAr: "منظور واسع من زاوية الغرفة لغرفة مودرن خالية تحتوي على أثاث عصري أنيق وإضاءة خافتة.",
     promptSnippet: "Design this room in a Modern style featuring sleek furniture, clean architectural lines, neutral tones, and ambient LED lighting.",
+    promptSnippetAr: "صمم هذه الغرفة بطراز مودرن مع أثاث عصري أنيق، خطوط معمارية ناعمة، ألوان محايدة، وإضاءة LED خافتة.",
     images: [
       "/img/styles/modern_1.jpg",
       "/img/styles/modern_2.jpg",
@@ -26,6 +27,7 @@ const ROOM_STYLES = [
     description: "Corner view of an empty Nordic room showing light oak furniture, crisp linen, and bright natural light.",
     descriptionAr: "رؤية من زاوية الغرفة لغرفة اسكندنافية خالية بأثاث البلوط الفاتح وضوء طبيعي ناصع.",
     promptSnippet: "Design this room in a Scandinavian style featuring light oak wooden furniture, crisp white linen textiles, woven rugs, and bright cozy decor.",
+    promptSnippetAr: "صمم هذه الغرفة بطراز اسكندنافي مع أثاث من خشب البلوط الفاتح، أقمشة كتان بيضاء، سجاد منسوج، وديكور مريح ومشرق.",
     images: [
       "/img/styles/scandinavian_1.jpg",
       "/img/styles/scandinavian_2.jpg",
@@ -42,6 +44,7 @@ const ROOM_STYLES = [
     description: "Corner perspective view of an empty Boho room with rattan furniture, woven textiles, and leafy plants.",
     descriptionAr: "منظور زاوية لغرفة بوهيمية خالية تحتوي على أثاث الرتان وخيزران ونباتات حية دافئة.",
     promptSnippet: "Design this room in a Bohemian style featuring rattan and macrame furniture, rich woven textiles, warm earthy colors, and lush indoor plants.",
+    promptSnippetAr: "صمم هذه الغرفة بطراز بوهيمي مع أثاث الرتان والمكرامية، منسوجات غنية، ألوان ترابية دافئة، ونباتات زينة داخلية ورقة.",
     images: [
       "/img/styles/bohemian_1.jpg",
       "/img/styles/bohemian_2.jpg",
@@ -58,6 +61,7 @@ const ROOM_STYLES = [
     description: "Corner perspective shot of an empty industrial loft room with exposed brick, metal iron, and leather furniture.",
     descriptionAr: "لقطة زاوية لغرفة لوفت صناعية خالية بها طوب أحمر، أثاث معدني وسوداء وجلد فاخر.",
     promptSnippet: "Design this room in an Industrial style featuring exposed brick walls, dark iron frame furniture, distressed leather seating, and Edison bulb lighting.",
+    promptSnippetAr: "صمم هذه الغرفة بطراز صناعي (إندستريال) مع جدران من الطوب الأحمر المكشوف، أثاث بإطارات حديدية داكنة، مقاعد جلدية كلاسيكية، وإضاءة مصابيح إديسون.",
     images: [
       "/img/styles/industrial_1.jpg",
       "/img/styles/industrial_2.jpg",
@@ -74,6 +78,7 @@ const ROOM_STYLES = [
     description: "Corner perspective view of an empty minimalist room with functional low-profile furniture and tranquil space.",
     descriptionAr: "رؤية واسعة من زاوية غرفة بسيطة خالية تماماً من الازدحام وأثاث مونوكروم هادئ.",
     promptSnippet: "Design this room in a Minimalist style featuring low-profile functional furniture, neutral monochromatic colors, zero clutter, and serene open space.",
+    promptSnippetAr: "صمم هذه الغرفة بطراز مينيماليست (بسيط) مع أثاث عملي منخفض، ألوان مونوكروم محايدة، مساحة خالية من الفوضى، وبيئة هادئة ومفتوحة.",
     images: [
       "/img/styles/minimalist_1.jpg",
       "/img/styles/minimalist_2.jpg",
@@ -90,6 +95,7 @@ const ROOM_STYLES = [
     description: "Corner perspective view of an empty luxury room with velvet sofas, marble tables, and brass details.",
     descriptionAr: "رؤية فخمة من زاوية غرفة فاخرة خالية تحتوي على كنبات قطيفة وأسطح رخام ولمسات ذهبية.",
     promptSnippet: "Design this room in a Luxury Art Deco style featuring velvet furniture, polished marble tables, brass metallic accents, and elegant chandelier lighting.",
+    promptSnippetAr: "صمم هذه الغرفة بطراز فاخر (آرت ديكو) مع أثاث مخملي (قطيفة)، طاولات رخامية مصقولة، لمسات معدنية ذهبية من النحاس، وإضاءة ثريا أنيقة.",
     images: [
       "/img/styles/luxury_1.jpg",
       "/img/styles/luxury_2.jpg",
@@ -106,6 +112,7 @@ const ROOM_STYLES = [
     description: "Corner perspective view of an empty contemporary room showing soft curved furniture silhouettes.",
     descriptionAr: "رؤية واسعة من زاوية غرفة معاصرة خالية تحتوي على أثاث ناعم وإضاءة فنية متميزة.",
     promptSnippet: "Design this room in a Contemporary style featuring soft curved furniture, statement lighting, plush textured fabrics, and modern artistic accents.",
+    promptSnippetAr: "صمم هذه الغرفة بطراز معاصر (كونتمبراري) مع أثاث ذو منحنيات ناعمة، إضاءة فنية بارزة، أقمشة فاخرة ذات ملمس مميز، ولمسات فنية حديثة.",
     images: [
       "/img/styles/contemporary_1.jpg",
       "/img/styles/contemporary_2.jpg",
@@ -151,19 +158,23 @@ const StepDesignInstructions = ({ form, setForm, setStep, onExtractPreferences, 
   };
 
   const handleApplyStyle = (styleToApply = currentStyle) => {
-    const snippet = styleToApply.promptSnippet;
+    const snippet = isArabic && styleToApply.promptSnippetAr
+      ? styleToApply.promptSnippetAr
+      : styleToApply.promptSnippet;
+
     setForm((prev) => {
       const currentPrompt = prev.prompt ? prev.prompt.trim() : "";
       if (!currentPrompt) {
         return { ...prev, prompt: snippet };
       }
-      if (currentPrompt.includes(snippet)) {
+      const altSnippet = isArabic ? styleToApply.promptSnippet : styleToApply.promptSnippetAr;
+      if (currentPrompt.includes(snippet) || (altSnippet && currentPrompt.includes(altSnippet))) {
         return prev;
       }
       return { ...prev, prompt: `${currentPrompt}\n\n${snippet}` };
     });
 
-    setToastMessage(t("dashboard.styleAppliedToast") || "Style applied to your design instructions!");
+    setToastMessage(t("dashboard.styleAppliedToast") || (isArabic ? "تم تطبيق الاستايل على وصف الغرفة!" : "Style applied to your design instructions!"));
     setTimeout(() => setToastMessage(""), 2500);
   };
 

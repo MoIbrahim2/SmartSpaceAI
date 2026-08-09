@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ApartmentCard from "../../Components/ApartmentCard";
 import EmptyState from "../../Components/EmptyState/EmptyState";
 import CreateApartmentModal from "../../Components/CreateApartmentModal";
@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const Dashboard = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [apartments, setApartments] = useState([]);
@@ -54,12 +54,12 @@ const Dashboard = () => {
   }, [fetchApartments]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t("common.confirmDeleteApartment"))) return;
+    if (!window.confirm(t("common.confirmDeleteApartment") || "Are you sure you want to delete this apartment?")) return;
     try {
       await deleteApartment(id);
       fetchApartments();
     } catch {
-      setError(t("common.failedDeleteApartment"));
+      setError(t("common.failedDeleteApartment") || "Failed to delete apartment.");
     }
   };
 
@@ -69,15 +69,17 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface-bright text-on-surface font-body">
-      <main className="mx-auto w-full max-w-[1200px] flex-grow px-6 py-10 md:px-20">
-        <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-xl flex-1">
-            <div className="relative flex h-14 items-center rounded-full bg-surface-bright px-6 neo-inset">
-              <Icon name="search" className="text-outline" />
+    <div className="flex min-h-screen flex-col bg-background dark:bg-[#0a0908] text-on-surface dark:text-white font-body transition-colors">
+      <main className="mx-auto w-full max-w-7xl flex-grow px-6 py-12 md:px-12">
+        
+        {/* Search & Actions Header */}
+        <div className="mb-12 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-lg flex-1">
+            <div className="group relative flex h-14 items-center rounded-2xl bg-surface dark:bg-[#12100e] border border-outline/20 dark:border-white/10 px-5 shadow-sm transition-all focus-within:border-[#a67443] dark:focus-within:border-amber-400">
+              <Icon name="search" className="text-outline dark:text-white/50 group-focus-within:text-[#a67443] dark:group-focus-within:text-amber-400 transition-colors" size={22} />
               <input
-                className="ml-3 rtl:ml-0 rtl:mr-3 w-full bg-transparent text-base text-on-surface placeholder:text-outline outline-none border-none focus:outline-none focus:border-none focus:ring-0 focus:ring-transparent"
-                placeholder={t("dashboard.searchApartments")}
+                className="ml-3.5 rtl:ml-0 rtl:mr-3.5 w-full bg-transparent text-base font-medium text-on-surface dark:text-white placeholder:text-outline/60 dark:placeholder:text-white/40 outline-none"
+                placeholder={t("dashboard.searchApartments") || "Search your apartments..."}
                 type="text"
                 aria-label="Search apartments"
                 autoComplete="off"
@@ -87,69 +89,74 @@ const Dashboard = () => {
               />
             </div>
           </div>
+
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-primary px-8 font-bold text-white transition-all hover:bg-on-primary-fixed-variant neo-shadow neo-button"
+            className="flex h-14 items-center justify-center gap-3 whitespace-nowrap rounded-2xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base px-8 shadow-lg shadow-[#a67443]/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
           >
-            <Icon name="add" />
-            {t("dashboard.createNewApartment")}
+            <Icon name="add" size={22} />
+            <span>{t("dashboard.createNewApartment") || "Create New Apartment"}</span>
           </button>
         </div>
 
-        <h2 className="mb-8 text-3xl font-extrabold tracking-tight text-on-surface">
-          {t("dashboard.myApartments")}
-        </h2>
+        {/* Section Heading */}
+        <div className="mb-10 flex items-center justify-between">
+          <h2 className="text-3xl font-headline font-extrabold tracking-tight text-on-surface dark:text-white md:text-4xl">
+            {t("dashboard.myApartments") || "My Apartments"}
+          </h2>
+        </div>
 
         {error && (
-          <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+          <div className="mb-8 rounded-2xl bg-red-500/15 px-5 py-4 text-sm font-semibold text-red-700 dark:text-red-300 border border-red-500/30">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-24">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="flex items-center justify-center py-28">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#a67443] border-t-transparent" />
           </div>
         ) : apartments.length === 0 ? (
           <EmptyState
             icon="domain"
-            title={t("dashboard.noApartmentsTitle")}
-            description={t("dashboard.noApartmentsDesc")}
+            title={t("dashboard.noApartmentsTitle") || "No apartments found"}
+            description={t("dashboard.noApartmentsDesc") || "Create your first apartment to start staging rooms."}
           />
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {apartments.map((apartment) => (
                 <div key={apartment._id} className="relative group">
                   <ApartmentCard apartment={apartment} />
                   <button
                     onClick={() => handleDelete(apartment._id)}
-                    className="absolute top-4 right-4 rtl:right-auto rtl:left-4 flex h-8 w-8 items-center justify-center rounded-full bg-error/80 text-white opacity-0 transition-opacity hover:bg-error group-hover:opacity-100"
+                    className="absolute top-5 right-5 rtl:right-auto rtl:left-5 flex h-10 w-10 items-center justify-center rounded-full bg-red-600/90 text-white opacity-0 transition-opacity hover:bg-red-700 shadow-lg group-hover:opacity-100"
                     aria-label="Delete apartment"
+                    title="Delete apartment"
                   >
-                    <Icon name="delete" size={14} />
+                    <Icon name="delete" size={18} />
                   </button>
                 </div>
               ))}
             </div>
             {totalPages > 1 && (
-              <div className="mt-10 flex items-center justify-center gap-4">
+              <div className="mt-14 flex items-center justify-center gap-5">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="rounded-full bg-surface-bright px-6 py-3 font-bold text-primary neo-shadow neo-button disabled:opacity-40"
+                  className="rounded-xl border border-outline/20 dark:border-white/10 bg-surface dark:bg-[#12100e] px-6 py-3 text-base font-bold text-on-surface dark:text-white shadow-sm transition-all hover:bg-stone-50 dark:hover:bg-white/10 disabled:opacity-40"
                 >
-                  {t("common.previous")}
+                  {t("common.previous") || "Previous"}
                 </button>
-                <span className="text-sm font-medium text-on-surface-variant">
-                  {t("common.pageOf", { page, totalPages })}
+                <span className="text-base font-semibold text-on-surface-variant dark:text-white/80">
+                  {t("common.pageOf", { page, totalPages }) || `Page ${page} of ${totalPages}`}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="rounded-full bg-surface-bright px-6 py-3 font-bold text-primary neo-shadow neo-button disabled:opacity-40"
+                  className="rounded-xl border border-outline/20 dark:border-white/10 bg-surface dark:bg-[#12100e] px-6 py-3 text-base font-bold text-on-surface dark:text-white shadow-sm transition-all hover:bg-stone-50 dark:hover:bg-white/10 disabled:opacity-40"
                 >
-                  {t("common.next")}
+                  {t("common.next") || "Next"}
                 </button>
               </div>
             )}

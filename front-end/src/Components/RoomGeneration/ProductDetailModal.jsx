@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
-import { parseProductDetails, getProductId, getExternalStoreUrl } from "../../utils/productUtils";
+import { parseProductDetails, getProductId, getExternalStoreUrl, formatCategoryName } from "../../utils/productUtils";
 import { useCart } from "../../context/CartContext";
 
 const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelected, onToggleSelect, onIncrement, onDecrement, formatCurrency }) => {
@@ -51,7 +51,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
             {product.isRecommended && (
               <span className="absolute top-5 left-5 rtl:left-auto rtl:right-5 px-3 py-1 rounded-full bg-amber-500 text-stone-950 text-xs font-bold flex items-center gap-1 shadow-md">
                 <Icon name="star" size={14} />
-                Recommended
+                {t("dashboard.recommendedByUs", "Recommended")}
               </span>
             )}
           </div>
@@ -64,11 +64,11 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
                 </span>
                 {isInternal ? (
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
-                    SmartSpace Seller Product
+                    {t("dashboard.smartspaceSellerProduct", "SmartSpace Seller Product")}
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold border border-sky-500/30">
-                    Live Scraped
+                    {t("dashboard.liveScraped", "Live Scraped")}
                   </span>
                 )}
               </div>
@@ -82,19 +82,19 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
 
             <div className="flex flex-col gap-2 pt-2 border-t border-outline-variant/20">
               <div className="flex justify-between text-xs text-on-surface-variant">
-                <span>Category</span>
-                <span className="font-semibold text-on-surface capitalize">{product.category || "Furniture"}</span>
+                <span>{t("dashboard.categoryLabel", "Category")}</span>
+                <span className="font-semibold text-on-surface capitalize">{formatCategoryName(product.category || "Furniture", t)}</span>
               </div>
               <div className="flex justify-between text-xs text-on-surface-variant">
-                <span>Style</span>
+                <span>{t("dashboard.styleLabel", "Style")}</span>
                 <span className="font-semibold text-on-surface">{attributes.style}</span>
               </div>
               <div className="flex justify-between text-xs text-on-surface-variant">
-                <span>Material</span>
+                <span>{t("dashboard.materialLabel", "Material")}</span>
                 <span className="font-semibold text-on-surface">{attributes.material}</span>
               </div>
               <div className="flex justify-between text-xs text-on-surface-variant">
-                <span>Color</span>
+                <span>{t("dashboard.colorLabel", "Color")}</span>
                 <span className="font-semibold text-on-surface">{attributes.color}</span>
               </div>
             </div>
@@ -105,19 +105,19 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
         <div className="neomorph-inset rounded-2xl p-5 flex flex-col gap-3">
           <h3 className="font-headline font-bold text-sm text-on-surface flex items-center gap-2">
             <Icon name="square_foot" size={18} className="text-primary" />
-            Dimensions & Spatial Fit
+            {t("dashboard.dimensionsFitHeader", "Dimensions & Spatial Fit")}
           </h3>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-background rounded-xl p-3 neomorph-raised">
-              <span className="text-xs text-on-surface-variant block">Width</span>
+              <span className="text-xs text-on-surface-variant block">{t("dashboard.widthLabel", "Width")}</span>
               <span className="font-bold text-sm text-primary">{dimensions.width || 120} cm</span>
             </div>
             <div className="bg-background rounded-xl p-3 neomorph-raised">
-              <span className="text-xs text-on-surface-variant block">Length / Depth</span>
+              <span className="text-xs text-on-surface-variant block">{t("dashboard.lengthDepthLabel", "Length / Depth")}</span>
               <span className="font-bold text-sm text-primary">{dimensions.length || dimensions.depth || 200} cm</span>
             </div>
             <div className="bg-background rounded-xl p-3 neomorph-raised">
-              <span className="text-xs text-on-surface-variant block">Height</span>
+              <span className="text-xs text-on-surface-variant block">{t("dashboard.heightLabel", "Height")}</span>
               <span className="font-bold text-sm text-primary">{dimensions.height || 85} cm</span>
             </div>
           </div>
@@ -139,7 +139,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
               className="flex-1 py-3.5 px-5 rounded-xl font-headline font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all flex items-center justify-center gap-2 text-sm shadow-md"
             >
               <Icon name="open_in_new" size={18} />
-              Buy from Store ({brand})
+              {t("dashboard.buyFromStore", { brand, defaultValue: `Buy from Store (${brand})` })}
             </a>
           ) : isInternal && (
             <button
@@ -149,7 +149,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
               className="flex-1 py-3.5 px-5 rounded-xl font-headline font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 text-sm shadow-md"
             >
               <Icon name="shopping_cart" size={18} />
-              Add to SmartSpace Cart
+              {t("dashboard.addToCart", "Add to SmartSpace Cart")}
             </button>
           )}
 

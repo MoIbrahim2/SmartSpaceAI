@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Icon from "../Icon";
 import { API_HOST } from "../../api";
-import { parseProductDetails, getExternalStoreUrl } from "../../utils/productUtils";
+import { parseProductDetails, getExternalStoreUrl, formatCategoryName } from "../../utils/productUtils";
 import { useCart } from "../../context/CartContext";
 
 const RESOLUTION_CREDIT_COSTS = {
@@ -60,13 +60,13 @@ const StepRoomGenerationResult = ({
 
   // Determine active image URL to render based on viewMode
   let activeDisplayUrl = finalImgUrl;
-  let activeBadgeLabel = "SmartSpace AI Render";
+  let activeBadgeLabel = t("dashboard.smartspaceAIRenderBadge", "SmartSpace AI Render");
   if (viewMode === "widened" && widenedImgUrl) {
     activeDisplayUrl = widenedImgUrl;
-    activeBadgeLabel = "Widened Empty Room (AI Lens)";
+    activeBadgeLabel = t("dashboard.widenedEmptyRoomBadge", "Widened Empty Room (AI Lens)");
   } else if (viewMode === "original" && originalImgUrl) {
     activeDisplayUrl = originalImgUrl;
-    activeBadgeLabel = "Original Uploaded Empty Room";
+    activeBadgeLabel = t("dashboard.originalUploadedBadge", "Original Uploaded Empty Room");
   }
 
   const currentCost = RESOLUTION_CREDIT_COSTS[selectedRes] || 12;
@@ -80,7 +80,13 @@ const StepRoomGenerationResult = ({
 
   const onGenerateClick = () => {
     if (!hasEnoughCredits) {
-      setCreditError(`Insufficient credits! You need ${currentCost} credits but only have ${userCredits}. Please top up.`);
+      setCreditError(
+        t("dashboard.insufficientCreditsMsg", {
+          cost: currentCost,
+          userCredits,
+          defaultValue: `Insufficient credits! You need ${currentCost} credits but only have ${userCredits}. Please top up.`
+        })
+      );
       if (onCreditsError) onCreditsError();
       return;
     }
@@ -97,7 +103,7 @@ const StepRoomGenerationResult = ({
     addToCart(prod);
     setIsDrawerOpen(true);
     const parsed = parseProductDetails(prod, prod.category);
-    setAddedNotice(`Added "${parsed.title}" to cart!`);
+    setAddedNotice(t("dashboard.addedToCartNotice", { title: parsed.title, defaultValue: `Added "${parsed.title}" to cart!` }));
     setTimeout(() => setAddedNotice(""), 3000);
   };
 
@@ -122,13 +128,13 @@ const StepRoomGenerationResult = ({
           </div>
           <div>
             <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
-              Credits Available
+              {t("dashboard.creditsAvailable", "Credits Available")}
             </span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-black text-on-surface tabular-nums">
                 {userCredits}
               </span>
-              <span className="text-xs text-on-surface-variant font-medium">credits</span>
+              <span className="text-xs text-on-surface-variant font-medium">{t("dashboard.credits", "credits")}</span>
             </div>
           </div>
         </div>
@@ -142,8 +148,8 @@ const StepRoomGenerationResult = ({
             <Icon name={hasEnoughCredits ? "check_circle" : "warning"} size={14} />
             <span>
               {hasEnoughCredits 
-                ? `${currentCost} credits for ${displayRes}` 
-                : `Need ${currentCost} credits`}
+                ? t("dashboard.creditsForRes", { cost: currentCost, res: displayRes, defaultValue: `${currentCost} credits for ${displayRes}` })
+                : t("dashboard.needCredits", { cost: currentCost, defaultValue: `Need ${currentCost} credits` })}
             </span>
           </div>
           <button
@@ -151,7 +157,7 @@ const StepRoomGenerationResult = ({
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-xs font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg hover:from-amber-600 hover:to-yellow-700 transition-all active:scale-95"
           >
             <Icon name="add_circle" size={14} />
-            <span>Top Up</span>
+            <span>{t("dashboard.topUp", "Top Up")}</span>
           </button>
         </div>
       </div>
@@ -163,7 +169,7 @@ const StepRoomGenerationResult = ({
             {t("dashboard.stepFourTitle", "Your AI Room Design Rendering")}
           </h1>
           <p className="text-on-surface-variant text-sm mt-1">
-            Generated with smart spatial alignment based on your room dimensions & selected products.
+            {t("dashboard.stepFourSub", "Generated with smart spatial alignment based on your room dimensions & selected products.")}
           </p>
         </div>
 
@@ -172,7 +178,7 @@ const StepRoomGenerationResult = ({
           className="px-4 py-2 rounded-xl text-xs font-semibold text-primary bg-background neomorph-raised hover:text-primary-variant transition-all flex items-center gap-2"
         >
           <Icon name={showProductSummary ? "expand_less" : "chair"} size={16} />
-          {showProductSummary ? "Hide Selected Products" : `View Selected Products (${selectedProducts.length})`}
+          {showProductSummary ? t("dashboard.hideSelectedProducts", "Hide Selected Products") : t("dashboard.viewSelectedProducts", { count: selectedProducts.length, defaultValue: `View Selected Products (${selectedProducts.length})` })}
         </button>
       </div>
 
@@ -200,7 +206,7 @@ const StepRoomGenerationResult = ({
                   />
                   <div className="overflow-hidden">
                     <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">
-                      {p.category || "Item"}
+                      {formatCategoryName(p.category || "Item", t)}
                     </span>
                     <span className="text-xs font-bold text-on-surface line-clamp-1">
                       {title}
@@ -221,7 +227,7 @@ const StepRoomGenerationResult = ({
                       title="Open product page on retailer store (Amazon, Noon, etc.)"
                     >
                       <Icon name="open_in_new" size={15} />
-                      <span>Buy Store</span>
+                      <span>{t("dashboard.buyStoreShort", "Buy Store")}</span>
                     </a>
                   ) : (
                     <button
@@ -230,7 +236,7 @@ const StepRoomGenerationResult = ({
                       title="Add to SmartSpace Cart"
                     >
                       <Icon name="add_shopping_cart" size={15} />
-                      <span>Add Cart</span>
+                      <span>{t("dashboard.addCartShort", "Add Cart")}</span>
                     </button>
                   )}
                 </div>
@@ -246,10 +252,10 @@ const StepRoomGenerationResult = ({
           <Icon name="hd" className="text-primary" size={22} />
           <div>
             <span className="text-xs font-bold text-on-surface uppercase tracking-wider block">
-              Render Quality & Resolution
+              {t("dashboard.renderQualityHeader", "Render Quality & Resolution")}
             </span>
             <span className="text-[11px] text-on-surface-variant">
-              Select output resolution — credit cost shown per tier
+              {t("dashboard.selectOutputRes", "Select output resolution — credit cost shown per tier")}
             </span>
           </div>
         </div>
@@ -259,6 +265,10 @@ const StepRoomGenerationResult = ({
             const active = selectedRes === opt.id;
             const cost = RESOLUTION_CREDIT_COSTS[opt.id];
             const canAfford = userCredits >= cost;
+            const optDesc = opt.id === "720p" ? t("dashboard.res720pDesc", opt.desc)
+                          : opt.id === "1080p" ? t("dashboard.res1080pDesc", opt.desc)
+                          : opt.id === "1440p" ? t("dashboard.res1440pDesc", opt.desc)
+                          : t("dashboard.res4kDesc", opt.desc);
             return (
               <button
                 key={opt.id}
@@ -270,7 +280,7 @@ const StepRoomGenerationResult = ({
                     ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/25 border border-amber-400/30"
                     : "bg-background text-on-surface-variant neomorph-raised hover:text-on-surface active:neomorph-inset"
                 }`}
-                title={opt.desc}
+                title={optDesc}
               >
                 <span>{opt.label}</span>
                 <span className={`text-[10px] font-black flex items-center gap-0.5 ${
@@ -279,7 +289,7 @@ const StepRoomGenerationResult = ({
                     : canAfford ? "text-amber-600" : "text-red-500"
                 }`}>
                   <Icon name="toll" size={10} />
-                  {cost} credits
+                  {cost} {t("dashboard.credits", "credits")}
                 </span>
               </button>
             );
@@ -300,7 +310,7 @@ const StepRoomGenerationResult = ({
             }`}
           >
             <Icon name="auto_awesome" size={16} />
-            <span>Furnished Design Render</span>
+            <span>{t("dashboard.furnishedDesignRender", "Furnished Design Render")}</span>
           </button>
 
           {widenedImgUrl && (
@@ -314,7 +324,7 @@ const StepRoomGenerationResult = ({
               }`}
             >
               <Icon name="aspect_ratio" size={16} />
-              <span>Widened Empty Room (AI Lens)</span>
+              <span>{t("dashboard.widenedEmptyRoom", "Widened Empty Room (AI Lens)")}</span>
             </button>
           )}
 
@@ -329,7 +339,7 @@ const StepRoomGenerationResult = ({
               }`}
             >
               <Icon name="image" size={16} />
-              <span>Original Upload</span>
+              <span>{t("dashboard.originalUpload", "Original Upload")}</span>
             </button>
           )}
         </div>
@@ -341,7 +351,7 @@ const StepRoomGenerationResult = ({
             title="Expand Fullscreen"
           >
             <Icon name="zoom_in" size={16} />
-            <span>Full Resolution</span>
+            <span>{t("dashboard.fullResolution", "Full Resolution")}</span>
           </button>
         )}
       </div>
@@ -354,7 +364,7 @@ const StepRoomGenerationResult = ({
               <Icon name="credit_card_off" size={20} className="text-red-500" />
             </div>
             <div>
-              <span className="text-sm font-bold text-red-600 block">Insufficient Credits</span>
+              <span className="text-sm font-bold text-red-600 block">{t("dashboard.insufficientCredits", "Insufficient Credits")}</span>
               <span className="text-xs text-red-500/80">{creditError}</span>
             </div>
           </div>
@@ -363,15 +373,15 @@ const StepRoomGenerationResult = ({
             className="px-4 py-2 rounded-xl bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md hover:bg-red-600 transition-all active:scale-95 shrink-0"
           >
             <Icon name="add_circle" size={14} />
-            Top Up Now
+            {t("dashboard.topUpNow", "Top Up Now")}
           </button>
         </div>
       )}
 
       {/* Main Generated Image Preview - Uses object-contain so it NEVER crops! */}
-      <div className="flex-grow bg-slate-950/80 rounded-2xl neomorph-inset overflow-hidden flex items-center justify-center min-h-[460px] max-h-[75vh] p-4 mb-6 relative group border border-outline-variant/10">
+      <div className="flex-grow bg-white rounded-2xl overflow-hidden flex items-center justify-center min-h-[460px] max-h-[75vh] p-4 mb-6 relative group border border-outline-variant/20 shadow-sm">
         {isGenerating ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/90 z-20 p-6 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 z-20 p-6 text-center">
             <div className="relative w-20 h-20 mb-6">
               <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping"></div>
               <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
@@ -380,19 +390,18 @@ const StepRoomGenerationResult = ({
               </div>
             </div>
             <h3 className="font-headline font-bold text-xl text-on-surface mb-2">
-              Generating {displayRes} Room Render...
+              {t("dashboard.generatingRoomRender", { res: displayRes, defaultValue: `Generating ${displayRes} Room Render...` })}
             </h3>
             <p className="text-xs text-on-surface-variant max-w-md mb-3">
-              Expanding architectural perspective & synthesizing furniture layout with soft lighting.
+              {t("dashboard.generatingRoomRenderSub", "Expanding architectural perspective & synthesizing furniture layout with soft lighting.")}
             </p>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-bold">
               <Icon name="toll" size={14} />
-              <span>{currentCost} credits will be deducted</span>
+              <span>{t("dashboard.creditsWillBeDeducted", { cost: currentCost, defaultValue: `${currentCost} credits will be deducted` })}</span>
             </div>
           </div>
         ) : activeDisplayUrl ? (
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-            {/* Image rendered with object-contain to NEVER cut or crop edges */}
             <img
               alt={activeBadgeLabel}
               className="max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-[1.01] cursor-pointer"
@@ -412,24 +421,24 @@ const StepRoomGenerationResult = ({
                 className="px-3.5 py-2 rounded-xl bg-black/75 hover:bg-black/90 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 border border-white/20 shadow-lg pointer-events-auto transition-all active:scale-95"
               >
                 <Icon name="fullscreen" size={16} />
-                <span>Expand</span>
+                <span>{t("dashboard.expand", "Expand")}</span>
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center text-center p-8">
-            <div className="w-20 h-20 rounded-full bg-surface-variant/30 flex items-center justify-center mb-4 text-primary">
+            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-4 text-amber-500">
               <Icon name="auto_awesome" size={40} />
             </div>
             <h3 className="font-headline font-bold text-xl text-on-surface mb-2">
-              Ready to Render Your Room
+              {t("dashboard.readyToRenderTitle", "Ready to Render Your Room")}
             </h3>
             <p className="text-sm text-on-surface-variant max-w-md mb-4">
-              Your room specifications and furniture selections are saved. Choose your target resolution above and click <strong>Start Generation</strong> to produce the final AI visualization.
+              {t("dashboard.readyToRenderDesc", "Your room specifications and furniture selections are saved. Choose your target resolution above and click Start Generation to produce the final AI visualization.")}
             </p>
             <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-bold mb-6">
               <Icon name="toll" size={14} />
-              <span>This will cost {currentCost} credits</span>
+              <span>{t("dashboard.thisWillCostCredits", { cost: currentCost, defaultValue: `This will cost ${currentCost} credits` })}</span>
             </div>
             <button
               onClick={onGenerateClick}
@@ -441,8 +450,8 @@ const StepRoomGenerationResult = ({
               }`}
             >
               <Icon name="auto_awesome" size={20} />
-              <span>Start Generation ({displayRes})</span>
-              <span className="text-xs opacity-90">• {currentCost} credits</span>
+              <span>{t("dashboard.startGenerationBtn", { res: displayRes, defaultValue: `Start Generation (${displayRes})` })}</span>
+              <span className="text-xs opacity-90">• {currentCost} {t("dashboard.credits", "credits")}</span>
             </button>
           </div>
         )}
@@ -457,7 +466,7 @@ const StepRoomGenerationResult = ({
           <div className="w-full flex items-center justify-between text-white z-10">
             <div className="flex items-center gap-2">
               <Icon name="auto_awesome" className="text-amber-400" size={20} />
-              <span className="font-bold text-base">{activeBadgeLabel} — Full Resolution ({displayRes})</span>
+              <span className="font-bold text-base">{t("dashboard.fullResolutionTitle", { res: displayRes, defaultValue: `${activeBadgeLabel} — Full Resolution (${displayRes})` })}</span>
             </div>
 
             <button
@@ -480,7 +489,7 @@ const StepRoomGenerationResult = ({
           </div>
 
           <div className="flex items-center gap-4 text-white text-xs font-medium z-10 bg-white/10 px-4 py-2 rounded-2xl backdrop-blur-md border border-white/10">
-            <span>Tip: Right click or long press to save high-resolution render</span>
+            <span>{t("dashboard.lightboxTip", "Tip: Right click or long press to save high-resolution render")}</span>
             <a
               href={activeDisplayUrl}
               target="_blank"
@@ -489,7 +498,7 @@ const StepRoomGenerationResult = ({
               className="px-4 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-md hover:from-amber-600 hover:to-amber-700 transition-all"
             >
               <Icon name="download" size={16} />
-              <span>Download Image</span>
+              <span>{t("dashboard.downloadImage", "Download Image")}</span>
             </a>
           </div>
         </div>
@@ -502,7 +511,7 @@ const StepRoomGenerationResult = ({
           className="px-6 py-3 rounded-xl bg-background text-on-surface-variant font-semibold text-sm transition-all neomorph-raised hover:text-on-surface active:neomorph-inset flex items-center gap-2"
         >
           <Icon name="arrow_forward" size={16} className="rotate-180 rtl:rotate-0" />
-          {t("common.goBack", "Back to Selection")}
+          {t("dashboard.backToSelection", "Back to Selection")}
         </button>
 
         <div className="flex items-center gap-3">
@@ -525,7 +534,7 @@ const StepRoomGenerationResult = ({
             disabled={isGenerating}
             className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-headline font-bold text-sm shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-yellow-700 active:scale-95 transition-all flex items-center gap-2"
           >
-            {t("common.finish", "Finish & Save Room")}
+            {t("dashboard.finishSaveRoom", "Finish & Save Room")}
             <Icon name="check_circle" size={18} />
           </button>
         </div>

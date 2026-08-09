@@ -96,7 +96,8 @@ const generationSchema = new mongoose.Schema({
     productData: { type: mongoose.Schema.Types.Mixed },
     isRecommended: { type: Boolean, default: false },
     price: { type: Number },
-    quantity: { type: Number, default: 1 }
+    quantity: { type: Number, default: 1 },
+    action: { type: String, enum: ['REPLACE', 'ADD', 'KEEP', 'REMOVE', null], default: null }
   }],
   recommendationResult: {
     type: mongoose.Schema.Types.Mixed

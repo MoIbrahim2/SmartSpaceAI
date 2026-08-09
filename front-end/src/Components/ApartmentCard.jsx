@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import Icon from "./Icon";
 import { API_HOST } from "../api";
+import { useTranslation } from "react-i18next";
 
 export default function ApartmentCard({ apartment }) {
+  const { t } = useTranslation();
+
   const locationStr = apartment.location
     ? [apartment.location.city, apartment.location.district, apartment.location.street]
       .filter(Boolean)
@@ -10,10 +13,10 @@ export default function ApartmentCard({ apartment }) {
     : "Location not specified";
 
   return (
-    <div className="group overflow-hidden rounded-3xl bg-surface-bright transition-transform duration-300 hover:scale-[1.02] neo-shadow">
-      <div className="relative m-2 aspect-video overflow-hidden rounded-2xl">
+    <div className="group overflow-hidden rounded-[1.75rem] bg-surface dark:bg-[#12100e] border border-outline/15 dark:border-white/10 shadow-md transition-all duration-300 hover:shadow-2xl hover:scale-[1.015] text-on-surface dark:text-white flex flex-col">
+      <div className="relative m-3 aspect-[16/10] overflow-hidden rounded-2xl bg-surface-variant dark:bg-white/5">
         <img
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           src={
             apartment.coverImage?.url
               ? (apartment.coverImage.url.startsWith("http")
@@ -24,27 +27,29 @@ export default function ApartmentCard({ apartment }) {
           }
           alt={apartment.name}
           width={400}
-          height={225}
+          height={250}
           loading="lazy"
         />
       </div>
 
-      <div className="p-6">
-        <h3 className="mb-1 text-xl font-bold text-on-surface">
-          {apartment.name}
-        </h3>
+      <div className="flex flex-1 flex-col justify-between p-6 pt-2">
+        <div>
+          <h3 className="mb-2 text-xl font-headline font-extrabold text-on-surface dark:text-white line-clamp-1 leading-snug">
+            {apartment.name}
+          </h3>
 
-        <p className="flex items-center gap-1 text-on-surface-variant">
-          <Icon name="location_on" size={16} />
-          {locationStr}
-        </p>
+          <p className="flex items-center gap-2 text-sm font-semibold text-on-surface-variant dark:text-white/70">
+            <Icon name="location_on" size={18} className="text-[#a67443] dark:text-amber-400 shrink-0" />
+            <span className="truncate">{locationStr}</span>
+          </p>
+        </div>
 
         <Link
           to={`/apartments/${apartment._id}`}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-surface-bright px-4 py-2 text-sm font-bold text-primary transition-all hover:scale-[1.02] neo-shadow neo-button"
+          className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base shadow-md shadow-[#a67443]/20 transition-all active:scale-[0.99]"
         >
-          View Details
-          <Icon name="arrow_forward" size={14} />
+          <span>{t("common.viewDetails") || "View Details"}</span>
+          <Icon name="arrow_forward" size={18} className="rtl:rotate-180" />
         </Link>
       </div>
     </div>

@@ -13,8 +13,80 @@ import {
   saveResolution,
   validateSpatial
 } from "../../api";
-import { getProductId } from "../../utils/productUtils";
+import { getProductId, cleanProductTitle } from "../../utils/productUtils";
 import { useAuth } from "../../context/AuthContext";
+
+// Helper to translate spatial guardrail backend violation messages to Arabic
+const translateSpatialDescription = (description, t, lang) => {
+  if (!description || typeof description !== "string") return "";
+
+  const isAr = lang && lang.startsWith("ar");
+  if (!isAr) return description;
+
+  const desc = description.trim();
+
+  // Pattern 1: Physical space capacity exceeded
+  const pat1 = /Physical space capacity exceeded:\s*Selected furniture footprint \(([\d.]+)m² raw \/ ([\d.]+)m² required with walkways\) cannot physically fit inside this ([\d.]+)[x×]([\d.]+)cm room \(([\d.]+)m²\) without overlapping items or blocking walkways\./i;
+  const m1 = desc.match(pat1);
+  if (m1) {
+    const [, raw, req, w, l, area] = m1;
+    return `تم تجاوز سعة المساحة الفعلية: المساحة المطلوبة للأثاث (${raw} م² صافي / ${req} م² مع ممرات الحركة) لا تتسع داخل هذه الغرفة بأبعاد ${w}×${l} سم (${area} م²) دون تداخل القطع أو إعاقة ممرات الحركة.`;
+  }
+
+  // Pattern 2: Total furniture footprint exceeds
+  const pat2 = /Total furniture footprint \(([\d.]+)m²\) exceeds maximum recommended floor capacity \(([\d.]+)m²\) for this ([\d.]+)[x×]([\d.]+)cm room\./i;
+  const m2 = desc.match(pat2);
+  if (m2) {
+    const [, footprint, max, length, width] = m2;
+    return `إجمالي المساحة التي يشغلها الأثاث (${footprint} م²) يتجاوز الحد الأقصى الموصى به للمساحة (${max} م²) لهذه الغرفة بأبعاد ${length}×${width} سم.`;
+  }
+
+  // Pattern 3: Insufficient floor area for "X"
+  const pat3 = /Insufficient floor area for "([^"]+)". Item extends past room boundary \(([\d.]+)cm\)\./i;
+  const m3 = desc.match(pat3);
+  if (m3) {
+    const [, itemTitle, boundary] = m3;
+    return `المساحة غير كافية لـ "${cleanProductTitle(itemTitle)}". القطعة تتجاوز حدود الغرفة (${boundary} سم).`;
+  }
+
+  // Pattern 4: Walkway clearance blockage
+  const pat4 = /Walkway clearance blockage:\s*Placing "([^"]+)" near "([^"]+)" leaves only ([\d.]+)cm clearance \(minimum required: ([\d.]+)cm\)\./i;
+  const m4 = desc.match(pat4);
+  if (m4) {
+    const [, item1, item2, clearance, req] = m4;
+    return `انسداد ممر الحركة: وضع "${cleanProductTitle(item1)}" بالقرب من "${cleanProductTitle(item2)}" يترك مسافة قدرها ${clearance} سم فقط (الحد الأدنى المطلوب: ${req} سم).`;
+  }
+
+  // Pattern 5: Door blockage
+  const pat5 = /Door swing clearance blockage:\s*"([^"]+)" blocks room entry door\./i;
+  const m5 = desc.match(pat5);
+  if (m5) {
+    const [, item] = m5;
+    return `إعاقة حركة الباب: القطعة "${cleanProductTitle(item)}" تسبب انسداداً عند مدخل باب الغرفة.`;
+  }
+
+  // Pattern 6: Window blockage
+  const pat6 = /Window blockage:\s*"([^"]+)" height \(([\d.]+)cm\) obstructs window\./i;
+  const m6 = desc.match(pat6);
+  if (m6) {
+    const [, item, height] = m6;
+    return `إعاقة النافذة: ارتفاع القطعة "${cleanProductTitle(item)}" (${height} سم) يعيق النافذة.`;
+  }
+
+  // Fallback for custom text from backend model
+  if (desc.includes("Physical space capacity exceeded")) {
+    return desc
+      .replace("Physical space capacity exceeded", "تم تجاوز سعة المساحة الفعلية")
+      .replace("Selected furniture footprint", "مساحة الأثاث المحددة")
+      .replace("raw", "صافي")
+      .replace("required with walkways", "المطلوبة مع الممرات")
+      .replace("cannot physically fit inside this", "لا تتسع داخل هذه الغرفة بأبعاد")
+      .replace("room", "الغرفة")
+      .replace("without overlapping items or blocking walkways", "دون تداخل القطع أو إعاقة ممرات الحركة");
+  }
+
+  return desc;
+};
 
 // Import step sub-components
 import Stepper from "../../Components/RoomGeneration/Stepper";
@@ -34,7 +106,7 @@ const preferenceMessages = [
 ];
 
 const RoomGeneration = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, refreshCredits } = useAuth();
@@ -579,6 +651,16 @@ const RoomGeneration = () => {
           safeProdData = { _id: String(pId), title: "Selected Furniture Item" };
         }
 
+        const catPrefsList = Array.isArray(extractedPreferences?.categoryPreferences)
+          ? extractedPreferences.categoryPreferences
+          : (extractedPreferences?.categoryPreferences && typeof extractedPreferences.categoryPreferences === "object")
+          ? Object.values(extractedPreferences.categoryPreferences)
+          : [];
+        const matchedPref = catPrefsList.find(
+          (cp) => cp?.category?.toLowerCase() === formattedCat?.toLowerCase() || cp?.category?.toLowerCase() === cat?.toLowerCase()
+        );
+        const action = matchedPref?.action || foundProd?.action || (form.generationType === 'ENHANCE_ROOM' ? 'ADD' : null);
+
         selectedProductObjects.push({
           category: formattedCat || "Furniture",
           productId: String(pId),
@@ -586,6 +668,7 @@ const RoomGeneration = () => {
           isRecommended: !!foundProd?.isRecommended,
           price: Number(price) || 0,
           quantity: Number(countsMap[pId] || 1),
+          action: action,
         });
       });
 
@@ -795,14 +878,14 @@ const RoomGeneration = () => {
               </div>
             </div>
             <h3 className="font-headline text-xl font-bold text-on-surface">
-              Calculating 2D Room Floorplan & Clearances...
+              {t("dashboard.calculatingFloorplanTitle", "Calculating 2D Room Floorplan & Clearances...")}
             </h3>
             <p className="text-xs text-on-surface-variant leading-relaxed max-w-sm">
-              SmartSpaceAI is evaluating furniture dimensions, walkway clearances, and ergonomic spacing rules to ensure everything fits perfectly in your room.
+              {t("dashboard.calculatingFloorplanDesc", "SmartSpaceAI is evaluating furniture dimensions, walkway clearances, and ergonomic spacing rules to ensure everything fits perfectly in your room.")}
             </p>
             <div className="flex items-center gap-2 text-xs text-amber-500 font-semibold">
               <Icon name="architecture" size={16} />
-              <span>Spatial Analysis Engine Active</span>
+              <span>{t("dashboard.spatialEngineActive", "Spatial Analysis Engine Active")}</span>
             </div>
           </div>
         </div>
@@ -819,10 +902,10 @@ const RoomGeneration = () => {
               </div>
               <div>
                 <h3 className="font-headline text-xl font-bold text-on-surface">
-                  Spatial Layout Conflict
+                  {t("dashboard.spatialConflictTitle", "Spatial Layout Conflict")}
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-0.5">
-                  Some selected products cannot fit within your room dimensions.
+                  {t("dashboard.spatialConflictDesc", "Some selected products cannot fit within your room dimensions.")}
                 </p>
               </div>
             </div>
@@ -842,6 +925,11 @@ const RoomGeneration = () => {
                   DOOR_IMPACT: "text-orange-500 bg-orange-500/10",
                   WINDOW_BLOCKAGE: "text-blue-500 bg-blue-500/10"
                 };
+                const translatedType = violation.type === "DIMENSION_OVERFLOW" ? t("dashboard.violationDimensionOverflow", "Dimension Overflow")
+                                     : violation.type === "WALKWAY_BLOCKAGE" ? t("dashboard.violationWalkwayBlockage", "Walkway Blockage")
+                                     : violation.type === "DOOR_IMPACT" ? t("dashboard.violationDoorImpact", "Door Impact")
+                                     : violation.type === "WINDOW_BLOCKAGE" ? t("dashboard.violationWindowBlockage", "Window Blockage")
+                                     : (violation.type || "").replace(/_/g, " ");
 
                 return (
                   <div key={idx} className="p-4 rounded-xl neomorph-inset border border-red-500/20">
@@ -851,10 +939,10 @@ const RoomGeneration = () => {
                       </div>
                       <div>
                         <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-                          {(violation.type || "").replace(/_/g, " ")}
+                          {translatedType}
                         </span>
                         <p className="text-sm text-on-surface mt-1 leading-relaxed">
-                          {violation.description}
+                          {translateSpatialDescription(violation.description, t, i18n.language)}
                         </p>
                       </div>
                     </div>
@@ -868,15 +956,16 @@ const RoomGeneration = () => {
               <div className="mb-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
                 <h4 className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                   <Icon name="lightbulb" size={14} />
-                  Suggested Removals
+                  {t("dashboard.suggestedRemovals", "Suggested Removals")}
                 </h4>
                 <p className="text-xs text-on-surface-variant mb-3">
-                  Remove the following items to make the layout fit:
+                  {t("dashboard.suggestedRemovalsDesc", "Remove the following items to make the layout fit:")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {spatialResult.suggestedRemovals.map((productId) => {
                     const product = allProductsList.find((p) => getProductId(p) === productId);
-                    const title = product?.basic?.name || product?.name || product?.title || productId;
+                    const rawTitle = product?.basic?.name || product?.name || product?.title || productId;
+                    const title = cleanProductTitle(rawTitle);
                     return (
                       <button
                         key={productId}
@@ -887,7 +976,7 @@ const RoomGeneration = () => {
                         className="px-3 py-1.5 rounded-lg bg-red-500/10 text-red-600 text-xs font-bold hover:bg-red-500/20 transition-all flex items-center gap-1.5 active:scale-95"
                       >
                         <Icon name="remove_circle" size={14} />
-                        Remove "{title}"
+                        {t("dashboard.removeProductAction", { title, defaultValue: `Remove "${title}"` })}
                       </button>
                     );
                   })}
@@ -905,7 +994,7 @@ const RoomGeneration = () => {
                 className="w-full sm:w-auto px-6 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-variant transition-all flex items-center justify-center gap-2 shadow-md active:scale-95"
               >
                 <Icon name="edit" size={16} />
-                Adjust Products to Fix Layout
+                {t("dashboard.adjustProductsToFix", "Adjust Products to Fix Layout")}
               </button>
             </div>
           </div>

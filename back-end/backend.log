@@ -1,0 +1,34 @@
+◇ injected env (20) from .env // tip: ⌘ suppress logs { quiet: true }
+MongoDB Connected: localhost
+Server running in development mode on port 3000
+(node:34980) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[AI Service] 🚀 Starting Qwen Staging Pipeline: 4 product(s) split into 2 pass(es) (max 2 products per call)...
+[AI Service] 🔄 Pipeline Pass 1/2: Processing 2 product(s)...
+[AI Service] Downloading product image for "Visit the FurniFlex Store FurniFlex Home Box Bella 3-Door Wardrobe With 2 Drawers 177 x 120 x 40 cm Beige": https://m.media-amazon.com/images/I/417uL1Xz9eL._AC_SL1500_.jpg
+[AI Service] ✓ Downloaded product image (17KB) for "Visit the FurniFlex Store FurniFlex Home Box Bella 3-Door Wardrobe With 2 Drawers 177 x 120 x 40 cm Beige"
+[AI Service] Product parsed for pass 1: "Visit the FurniFlex Store FurniFlex Home Box Bella 3-Door Wardrobe With 2 Drawers 177 x 120 x 40 cm Beige" (Wardrobe) | Wall: NORTH | Has Image: true
+[AI Service] Downloading product image for "Domani RIVOLI TV UNIT T061": https://cdn.shopify.com/s/files/1/0630/7400/9327/files/rivoli-tv-unit-t061.png?v=1763992582
+[AI Service] ✓ Downloaded product image (786KB) for "Domani RIVOLI TV UNIT T061"
+[AI Service] Product parsed for pass 1: "Domani RIVOLI TV UNIT T061" (TV) | Wall: SOUTH | Has Image: true
+[AI Service] Calling Qwen API (qwen-image-edit-max) [Pass 1/2] with 3 images...
+[AI Service] ✓ Pass 1/2 completed: uploads/generations/generated_room_pass_1_1786231177372_514kf.jpg
+[AI Service] 🔄 Pipeline Pass 2/2: Processing 2 product(s)...
+[AI Service] Downloading product image for "Enjoy free delivery on orders above 500 EGP.Buy now and pay later with 0% interest, 0% down payment, and 0% admin fees for up to 3 months. Modern Nightstand with 2 Drawers &amp; Leather Handles - White &amp; Wooden Finish": https://eg.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/59/7294431/1.jpg?7402
+[AI Service] ✓ Downloaded product image (44KB) for "Enjoy free delivery on orders above 500 EGP.Buy now and pay later with 0% interest, 0% down payment, and 0% admin fees for up to 3 months. Modern Nightstand with 2 Drawers &amp; Leather Handles - White &amp; Wooden Finish"
+[AI Service] Product parsed for pass 2: "Enjoy free delivery on orders above 500 EGP.Buy now and pay later with 0% interest, 0% down payment, and 0% admin fees for up to 3 months. Modern Nightstand with 2 Drawers &amp; Leather Handles - White &amp; Wooden Finish" (Nightstand) | Wall: WEST | Has Image: true
+[AI Service] Downloading product image for "IKEA SNÖRUTA زوج ستائر - رمادي فاتح-بيج أبيض/نقش زهور مع شريط ستارة ‎145x300 سم‏ - SNÖRUTA زوج ستائر - رمادي فاتح-بيج أبيض/نقش زهور مع شريط ستارة ‎145x300 سم‏. القماش يخفف دخول ضوء النهار إلى الغرفة ويقلل من الوهج. وهو يعطي إحساسًا مريحًا بالخصوصية حيث لا يمكن للأشخاص رؤية ما بالداخل. وفي الليل، يمكن رؤية ظلال خفيفة من الخارج عندما تكون الغرفة مضاءة. ستائر، 1 زوج متضمن.": https://www.ikea.com/eg/ar/images/products/snoeruta-curtains-1-pair-light-grey-beige-white-floral-pattern-with-heading-tape__1459622_pe993592_s5.jpg
+[AI Service] ✓ Downloaded product image (298KB) for "IKEA SNÖRUTA زوج ستائر - رمادي فاتح-بيج أبيض/نقش زهور مع شريط ستارة ‎145x300 سم‏ - SNÖRUTA زوج ستائر - رمادي فاتح-بيج أبيض/نقش زهور مع شريط ستارة ‎145x300 سم‏. القماش يخفف دخول ضوء النهار إلى الغرفة ويقلل من الوهج. وهو يعطي إحساسًا مريحًا بالخصوصية حيث لا يمكن للأشخاص رؤية ما بالداخل. وفي الليل، يمكن رؤية ظلال خفيفة من الخارج عندما تكون الغرفة مضاءة. ستائر، 1 زوج متضمن."
+[AI Service] Product parsed for pass 2: "IKEA SNÖRUTA زوج ستائر - رمادي فاتح-بيج أبيض/نقش زهور مع شريط ستارة ‎145x300 سم‏ - SNÖRUTA زوج ستائر - رمادي فاتح-بيج أبيض/نقش زهور مع شريط ستارة ‎145x300 سم‏. القماش يخفف دخول ضوء النهار إلى الغرفة ويقلل من الوهج. وهو يعطي إحساسًا مريحًا بالخصوصية حيث لا يمكن للأشخاص رؤية ما بالداخل. وفي الليل، يمكن رؤية ظلال خفيفة من الخارج عندما تكون الغرفة مضاءة. ستائر، 1 زوج متضمن." (Curtains) | Wall: SOUTH | Has Image: true
+[AI Service] Calling Qwen API (qwen-image-edit-max) [Pass 2/2] with 3 images...
+[AI Service] ✓ Pass 2/2 completed: uploads/generations/generated_room_pass_2_1786231233998_10k6d.jpg
+(node:34980) [MONGOOSE] Warning: mongoose: the `new` option for `findOneAndUpdate()` and `findOneAndReplace()` is deprecated. Use `returnDocument: 'after'` instead.
+[AI Service] 🚀 Starting Qwen Staging Pipeline: 4 product(s) split into 2 pass(es) (max 2 products per call)...
+[AI Service] 🔄 Pipeline Pass 1/2: Processing 2 product(s)...
+[AI Service] Downloading product image for "Visit the FurniFlex Store FurniFlex Home Box Bella 3-Door Wardrobe With 2 Drawers 177 x 120 x 40 cm Beige": https://m.media-amazon.com/images/I/417uL1Xz9eL._AC_SL1500_.jpg
+[AI Service] ✓ Downloaded product image (17KB) for "Visit the FurniFlex Store FurniFlex Home Box Bella 3-Door Wardrobe With 2 Drawers 177 x 120 x 40 cm Beige"
+[AI Service] Product parsed for pass 1: "Visit the FurniFlex Store FurniFlex Home Box Bella 3-Door Wardrobe With 2 Drawers 177 x 120 x 40 cm Beige" (Wardrobe) | Wall: NORTH | Has Image: true
+[AI Service] Downloading product image for "Domani RIVOLI TV UNIT T061": https://cdn.shopify.com/s/files/1/0630/7400/9327/files/rivoli-tv-unit-t061.png?v=1763992582
+[AI Service] ✓ Downloaded product image (786KB) for "Domani RIVOLI TV UNIT T061"
+[AI Service] Product parsed for pass 1: "Domani RIVOLI TV UNIT T061" (TV) | Wall: SOUTH | Has Image: true
+[AI Service] Calling Qwen API (qwen-image-edit-max) [Pass 1/2] with 3 images...

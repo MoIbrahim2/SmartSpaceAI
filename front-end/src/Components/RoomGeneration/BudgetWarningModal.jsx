@@ -20,30 +20,34 @@ const BudgetWarningModal = ({ isOpen, onClose, onProceed, currentSpent, baseBudg
             <Icon name="warning" size={32} />
           </div>
           <div>
-            <h2 className="font-headline text-xl font-bold text-on-surface">Budget Limit Exceeded</h2>
-            <p className="text-xs text-on-surface-variant">Warning: Selected products exceed target budget</p>
+            <h2 className="font-headline text-xl font-bold text-on-surface">
+              {t("dashboard.budgetWarningTitle", "Budget Limit Exceeded")}
+            </h2>
+            <p className="text-xs text-on-surface-variant">
+              {t("dashboard.budgetWarningSub", "Warning: Selected products exceed target budget")}
+            </p>
           </div>
         </div>
 
         {/* Breakdown Card */}
         <div className="neomorph-inset rounded-2xl p-5 flex flex-col gap-3">
           <div className="flex justify-between items-center text-sm">
-            <span className="text-on-surface-variant">Target Room Budget:</span>
+            <span className="text-on-surface-variant">{t("dashboard.targetRoomBudget", "Target Room Budget:")}</span>
             <span className="font-bold text-on-surface">{formatCurrency(baseBudget)}</span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-on-surface-variant">Total Selected Items:</span>
+            <span className="text-on-surface-variant">{t("dashboard.totalSelectedItems", "Total Selected Items:")}</span>
             <span className="font-bold text-amber-500">{formatCurrency(currentSpent)}</span>
           </div>
           <div className="h-px bg-outline-variant/30 my-1"></div>
           <div className="flex justify-between items-center text-sm font-bold">
-            <span className="text-amber-500">Exceeded Amount:</span>
+            <span className="text-amber-500">{t("dashboard.exceededAmount", "Exceeded Amount:")}</span>
             <span className="text-amber-500">+{formatCurrency(difference)}</span>
           </div>
         </div>
 
         <p className="text-sm text-on-surface-variant leading-relaxed">
-          You can return to review your selections and swap for more budget-friendly alternatives, or proceed to room generation anyway.
+          {t("dashboard.budgetWarningDesc", "You can return to review your selections and swap for more budget-friendly alternatives, or proceed to room generation anyway.")}
         </p>
 
         {/* Modal Actions */}
@@ -52,13 +56,13 @@ const BudgetWarningModal = ({ isOpen, onClose, onProceed, currentSpent, baseBudg
             onClick={onClose}
             className="flex-1 py-3 px-4 rounded-xl font-semibold text-on-surface bg-background neomorph-raised hover:text-primary active:neomorph-inset transition-all text-sm"
           >
-            Review & Edit Products
+            {t("dashboard.reviewEditProducts", "Review & Edit Products")}
           </button>
           <button
             onClick={onProceed}
             className="flex-1 py-3 px-4 rounded-xl font-headline font-semibold text-stone-950 bg-amber-500 hover:bg-amber-400 shadow-lg active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
           >
-            Proceed Anyway
+            {t("dashboard.proceedAnyway", "Proceed Anyway")}
             <Icon name="arrow_forward" size={16} />
           </button>
         </div>

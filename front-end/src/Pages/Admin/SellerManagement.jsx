@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { UserPlus, Eye, Edit2, Ban, Trash2, Users, CheckCircle, ShieldAlert, Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import StatCard from "../../Components/Admin/Shared/StatCard";
 import DataTable from "../../Components/Admin/Shared/DataTable";
@@ -23,6 +24,7 @@ import {
 } from "../../api/AdminApi";
 
 export default function SellerManagement() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,22 +43,32 @@ export default function SellerManagement() {
       const res = await getSellers({ search, status });
       const rawSellers = res.sellers || res.data || (Array.isArray(res) ? res : []);
 
-      const formatted = rawSellers.map((s) => ({
-        id: s._id || s.id,
-        _id: s._id || s.id,
-        name: s.storeName || `${s.profile?.firstName || ""} ${s.profile?.lastName || ""}`.trim() || s.name || s.email,
-        email: s.authentication?.email || s.email || "",
-        phone: s.phone || "+20 100 000 0000",
-        storeUrl: s.storeUrl || "https://smartspace.ai",
-        address: s.address || "Cairo, Egypt",
-        productsCount: s.productsCount || 0,
-        commissionRate: s.sellerMetrics?.baseCommissionPercentage ?? s.baseCommissionPercentage ?? s.commissionRate ?? 10,
-        status: s.status || "Verified",
-        totalSales: `$${(s.sellerMetrics?.totalSalesAmount || 0).toLocaleString()}`,
-        joinedDate: s.createdAt ? new Date(s.createdAt).toISOString().split("T")[0] : "2025-01-01",
-        taxId: s.taxId || "TAX-000000",
-        bankAccount: s.bankAccount || "N/A",
-      }));
+      const formatted = rawSellers.map((s) => {
+        const firstName = s.profile?.firstName || "";
+        const lastName = s.profile?.lastName || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        const sellerName = fullName || s.name || s.storeName || s.sellerProfile?.businessName || s.email || s.authentication?.email || "Seller";
+        const sellerEmail = s.email || s.authentication?.email || "";
+        const totalSalesVal = typeof s.totalSalesAmount === "number" ? s.totalSalesAmount : (s.sellerMetrics?.totalSalesAmount || 0);
+
+        return {
+          id: s._id || s.id,
+          _id: s._id || s.id,
+          name: sellerName,
+          email: sellerEmail,
+          phone: s.phone || s.sellerProfile?.phone || "",
+          storeUrl: s.storeUrl || s.sellerProfile?.storeUrl || "",
+          address: s.address || s.sellerProfile?.address || "",
+          productsCount: s.productsCount ?? s.sellerMetrics?.productsCount ?? 0,
+          commissionRate: s.commissionRate ?? s.baseCommissionPercentage ?? s.base_commission_percentage ?? 10,
+          status: s.status || "ACTIVE",
+          totalSales: `$${totalSalesVal.toLocaleString()}`,
+          totalSalesAmount: totalSalesVal,
+          joinedDate: s.createdAt ? new Date(s.createdAt).toISOString().split("T")[0] : "",
+          taxId: s.taxId || s.sellerProfile?.taxId || "",
+          bankAccount: s.bankAccount || s.sellerProfile?.bankAccount || "",
+        };
+      });
 
       setSellers(formatted);
     } catch (err) {
@@ -74,7 +86,7 @@ export default function SellerManagement() {
   const handleCreateSeller = async (formData) => {
     try {
       await createSeller(formData);
-      showToast(`Seller account '${formData.email}' registered successfully!`, "success");
+      showToast(t("admin.sellers.toastRegistered", { email: formData.email }), "success");
       setCreateModalOpen(false);
       fetchSellersList();
     } catch (err) {
@@ -94,7 +106,7 @@ export default function SellerManagement() {
   const handleUpdateCommission = async (sellerId, newRate) => {
     try {
       await updateSellerCommission(sellerId, newRate);
-      showToast("Commission rate updated!", "success");
+      showToast(t("admin.sellers.toastCommissionUpdated"), "success");
       setEditCommissionOpen(false);
       fetchSellersList();
     } catch (err) {
@@ -105,7 +117,7 @@ export default function SellerManagement() {
   const handleResendCode = async (seller) => {
     try {
       await resendSellerVerificationCode(seller.id);
-      showToast(`Verification code sent to ${seller.email}!`, "success");
+      showToast(t("admin.sellers.toastCodeSent", { email: seller.email }), "success");
     } catch (err) {
       showToast(
         err.response?.data?.message || err.message || "Failed to resend verification code",
@@ -118,7 +130,7 @@ export default function SellerManagement() {
     if (!activeSeller) return;
     try {
       await deleteSeller(activeSeller.id);
-      showToast(`Seller account '${activeSeller.name}' permanently deleted.`, "success");
+      showToast(t("admin.sellers.toastDeleted", { name: activeSeller.name }), "success");
       setDeleteConfirmOpen(false);
       setActiveSeller(null);
       fetchSellersList();
@@ -130,9 +142,15 @@ export default function SellerManagement() {
     }
   };
 
+  const statusOptions = [
+    { label: t("admin.sellers.allStatuses"), value: "All" },
+    { label: t("admin.sellers.verified"), value: "Verified" },
+    { label: t("admin.sellers.pendingVerification"), value: "Pending Verification" },
+  ];
+
   const columns = [
     {
-      label: "Seller Name",
+      label: t("admin.sellers.colSellerName"),
       key: "name",
       render: (row) => (
         <div>
@@ -141,20 +159,20 @@ export default function SellerManagement() {
         </div>
       ),
     },
-    { label: "Products", key: "productsCount" },
+    { label: t("admin.sellers.colProducts"), key: "productsCount" },
     {
-      label: "Commission",
+      label: t("admin.sellers.colCommission"),
       key: "commissionRate",
       render: (row) => <span className="font-bold">{row.commissionRate}%</span>,
     },
-    { label: "Total Sales", key: "totalSales" },
+    { label: t("admin.sellers.colTotalSales"), key: "totalSales" },
     {
-      label: "Status",
+      label: t("admin.sellers.colStatus"),
       key: "status",
       render: (row) => <StatusBadge status={row.status} />,
     },
     {
-      label: "Actions",
+      label: t("admin.sellers.colActions"),
       key: "actions",
       sortable: false,
       render: (row) => {
@@ -167,7 +185,7 @@ export default function SellerManagement() {
           <ActionDropdown
             actions={[
               {
-                label: "View Profile Details",
+                label: t("admin.sellers.actViewProfile"),
                 icon: Eye,
                 onClick: () => {
                   setActiveSeller(row);
@@ -177,14 +195,14 @@ export default function SellerManagement() {
               ...(isPending
                 ? [
                     {
-                      label: "Resend Verification Code",
+                      label: t("admin.sellers.actResendCode"),
                       icon: Send,
                       onClick: () => handleResendCode(row),
                     },
                   ]
                 : []),
               {
-                label: "Edit Commission",
+                label: t("admin.sellers.actEditCommission"),
                 icon: Edit2,
                 onClick: () => {
                   setActiveSeller(row);
@@ -192,7 +210,7 @@ export default function SellerManagement() {
                 },
               },
               {
-                label: "Delete Seller Account",
+                label: t("admin.sellers.actDeleteSeller"),
                 icon: Trash2,
                 variant: "danger",
                 onClick: () => {
@@ -208,37 +226,37 @@ export default function SellerManagement() {
   ];
 
   if (loading && sellers.length === 0) {
-    return <LoadingState message="Loading sellers..." />;
+    return <LoadingState message={t("admin.sellers.loading")} />;
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Seller Management"
-        description="Verify seller identity, update commission fees, and audit store metrics."
+        title={t("admin.sellers.title")}
+        description={t("admin.sellers.description")}
       >
         <button
           onClick={() => setCreateModalOpen(true)}
           className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all"
         >
           <UserPlus className="size-4" />
-          <span>Register Seller</span>
+          <span>{t("admin.sellers.registerSeller")}</span>
         </button>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard title="Total Stores" value={sellers.length} icon={Users} />
-        <StatCard title="Verified Sellers" value={sellers.filter((s) => s.status === "Verified" || s.status === "ACTIVE").length} isPositive={true} icon={CheckCircle} />
-        <StatCard title="Pending Review" value={sellers.filter((s) => s.status.includes("Pending") || s.status === "PENDING_ACTIVATION").length} icon={ShieldAlert} />
+        <StatCard title={t("admin.sellers.totalStores")} value={sellers.length} icon={Users} />
+        <StatCard title={t("admin.sellers.verifiedSellers")} value={sellers.filter((s) => s.status === "Verified" || s.status === "ACTIVE").length} isPositive={true} icon={CheckCircle} />
+        <StatCard title={t("admin.sellers.pendingReview")} value={sellers.filter((s) => s.status.includes("Pending") || s.status === "PENDING_ACTIVATION").length} icon={ShieldAlert} />
       </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline/10 neomorph-raised">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search seller or email..." />
-        <FilterDropdown value={status} onChange={setStatus} label="Status" options={["All", "Verified", "Pending Verification"]} />
+        <SearchInput value={search} onChange={setSearch} placeholder={t("admin.sellers.searchPlaceholder")} />
+        <FilterDropdown value={status} onChange={setStatus} label={t("admin.sellers.statusFilter")} options={statusOptions} />
       </div>
 
       {sellers.length === 0 ? (
-        <EmptyState title="No sellers found" description="Try clearing search query or changing filters." />
+        <EmptyState title={t("admin.sellers.noSellersTitle")} description={t("admin.sellers.noSellersDesc")} />
       ) : (
         <DataTable columns={columns} data={sellers} />
       )}
@@ -261,9 +279,9 @@ export default function SellerManagement() {
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
-        title="Delete Seller Account"
-        message={`Are you sure you want to permanently delete '${activeSeller?.name}' from the users database?`}
-        confirmText="Delete Seller"
+        title={t("admin.sellers.deleteConfirmTitle")}
+        message={t("admin.sellers.deleteConfirmMsg", { name: activeSeller?.name })}
+        confirmText={t("admin.sellers.deleteConfirmBtn")}
         variant="danger"
         onConfirm={handleDeleteSeller}
       />

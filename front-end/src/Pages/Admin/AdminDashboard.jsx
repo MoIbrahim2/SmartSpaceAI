@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { DollarSign, Users, ShieldAlert, ShoppingBag } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import StatCard from "../../Components/Admin/Shared/StatCard";
 import DataTable from "../../Components/Admin/Shared/DataTable";
 import StatusBadge from "../../Components/Admin/Shared/StatusBadge";
 import QuickActions from "../../Components/Admin/Dashboard/QuickActions";
-import RevenueChart from "../../Components/Admin/Dashboard/RevenueChart";
 import NotificationsWidget from "../../Components/Admin/Dashboard/NotificationsWidget";
 import ActivityFeed from "../../Components/Admin/Dashboard/ActivityFeed";
 import CreateSellerModal from "../../Components/Admin/Sellers/CreateSellerModal";
@@ -14,6 +14,7 @@ import { useToast } from "../../Components/Admin/Shared/ToastContext";
 import { getDashboardStats, getModerationItems, createSeller } from "../../api/AdminApi";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [createSellerOpen, setCreateSellerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,7 +64,7 @@ export default function AdminDashboard() {
   const handleCreateSeller = async (newSellerData) => {
     try {
       const created = await createSeller(newSellerData);
-      showToast(`Seller account '${created.seller?.email || newSellerData.email}' created!`, "success");
+      showToast(t("admin.sellers.toastRegistered", { email: created.seller?.email || newSellerData.email }), "success");
       setCreateSellerOpen(false);
       // Refresh dashboard stats
       const dashStats = await getDashboardStats().catch(() => null);
@@ -84,7 +85,7 @@ export default function AdminDashboard() {
 
   const columns = [
     {
-      label: "Product",
+      label: t("admin.moderation.colProduct"),
       key: "productTitle",
       render: (row) => (
         <div className="flex items-center gap-3">
@@ -100,51 +101,51 @@ export default function AdminDashboard() {
         </div>
       ),
     },
-    { label: "Seller", key: "sellerName" },
-    { label: "Price", key: "price" },
+    { label: t("admin.moderation.colSeller"), key: "sellerName" },
+    { label: t("seller.products.colPrice"), key: "price" },
     {
-      label: "Status",
+      label: t("admin.moderation.colStatus"),
       key: "status",
       render: (row) => <StatusBadge status={row.status} />,
     },
   ];
 
   if (loading) {
-    return <LoadingState message="Loading Admin Dashboard..." />;
+    return <LoadingState message={t("admin.dashboard.loading")} />;
   }
 
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Admin Overview"
-        description="Monitor revenue, seller activities, pending product moderations, and orders."
+        title={t("admin.dashboard.title")}
+        description={t("admin.dashboard.description")}
       />
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
-          title="Total Revenue"
+          title={t("admin.dashboard.totalRevenue")}
           value={stats.totalRevenue?.value || "$0"}
           change={stats.totalRevenue?.change || "0%"}
           isPositive={stats.totalRevenue?.isPositive ?? true}
           icon={DollarSign}
         />
         <StatCard
-          title="Active Sellers"
+          title={t("admin.dashboard.activeSellers")}
           value={stats.activeSellers?.value || "0"}
           change={stats.activeSellers?.change || "0"}
           isPositive={stats.activeSellers?.isPositive ?? true}
           icon={Users}
         />
         <StatCard
-          title="Pending Moderation"
+          title={t("admin.dashboard.pendingModeration")}
           value={stats.pendingModeration?.value || "0"}
           change={stats.pendingModeration?.change || "0"}
           isPositive={stats.pendingModeration?.isPositive ?? true}
           icon={ShieldAlert}
         />
         <StatCard
-          title="Total Orders"
+          title={t("admin.dashboard.totalOrders")}
           value={stats.totalOrders?.value || "0"}
           change={stats.totalOrders?.change || "0%"}
           isPositive={stats.totalOrders?.isPositive ?? true}
@@ -152,21 +153,16 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* Quick Actions & Revenue Chart Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <RevenueChart data={stats.revenueChartData || []} />
-        </div>
-        <div className="space-y-6">
-          <QuickActions onCreateSeller={() => setCreateSellerOpen(true)} />
-          <NotificationsWidget items={[]} />
-        </div>
+      {/* Quick Actions & Notifications Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <QuickActions onCreateSeller={() => setCreateSellerOpen(true)} />
+        <NotificationsWidget items={[]} />
       </div>
 
       {/* Table & Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-extrabold text-on-surface">Pending Product Moderation</h2>
+          <h2 className="text-lg font-extrabold text-on-surface">{t("admin.dashboard.pendingModerationTable")}</h2>
           <DataTable columns={columns} data={moderations} />
         </div>
         <div>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ShieldCheck, Eye, Check, X, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import DataTable from "../../Components/Admin/Shared/DataTable";
 import StatusBadge from "../../Components/Admin/Shared/StatusBadge";
@@ -15,6 +16,7 @@ import { useToast } from "../../Components/Admin/Shared/ToastContext";
 import { getModerationItems, updateModerationStatus } from "../../api/AdminApi";
 
 export default function ModerationQueue() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -47,7 +49,7 @@ export default function ModerationQueue() {
   const handleApprove = async (id) => {
     try {
       await updateModerationStatus(id, "ACCEPTED", "Approved by admin review");
-      showToast("Product approved and published to catalog!", "success");
+      showToast(t("admin.moderation.toastApproved"), "success");
       setApproveConfirmOpen(false);
       setDrawerOpen(false);
       fetchModerationQueue();
@@ -59,7 +61,7 @@ export default function ModerationQueue() {
   const handleReject = async (id, reason) => {
     try {
       await updateModerationStatus(id, "REJECTED", reason);
-      showToast(`Product rejected. Reason: ${reason}`, "warning");
+      showToast(t("admin.moderation.toastRejected", { reason }), "warning");
       setRejectModalOpen(false);
       setDrawerOpen(false);
       fetchModerationQueue();
@@ -70,7 +72,7 @@ export default function ModerationQueue() {
 
   const columns = [
     {
-      label: "Product",
+      label: t("admin.moderation.colProduct"),
       key: "productTitle",
       render: (row) => (
         <div className="flex items-center gap-3">
@@ -88,9 +90,9 @@ export default function ModerationQueue() {
         </div>
       ),
     },
-    { label: "Seller", key: "sellerName" },
+    { label: t("admin.moderation.colSeller"), key: "sellerName" },
     {
-      label: "AI Confidence",
+      label: t("admin.moderation.colAiConf"),
       key: "aiConfidence",
       render: (row) => (
         <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
@@ -100,7 +102,7 @@ export default function ModerationQueue() {
       ),
     },
     {
-      label: "Quality Index",
+      label: t("admin.moderation.colQualityIdx"),
       key: "qualityScore",
       render: (row) => (
         <span className="rounded-lg bg-surface-bright px-2.5 py-1 text-xs font-extrabold border border-outline/20">
@@ -109,19 +111,19 @@ export default function ModerationQueue() {
       ),
     },
     {
-      label: "Status",
+      label: t("admin.moderation.colStatus"),
       key: "status",
       render: (row) => <StatusBadge status={row.status} />,
     },
     {
-      label: "Actions",
+      label: t("admin.moderation.colActions"),
       key: "actions",
       sortable: false,
       render: (row) => (
         <ActionDropdown
           actions={[
             {
-              label: "Inspect Product Details",
+              label: t("admin.moderation.actInspect"),
               icon: Eye,
               onClick: () => {
                 setActiveProduct(row);
@@ -129,7 +131,7 @@ export default function ModerationQueue() {
               },
             },
             {
-              label: "Approve Product",
+              label: t("admin.moderation.actApprove"),
               icon: Check,
               onClick: () => {
                 setActiveProduct(row);
@@ -137,7 +139,7 @@ export default function ModerationQueue() {
               },
             },
             {
-              label: "Reject Product",
+              label: t("admin.moderation.actReject"),
               icon: X,
               variant: "danger",
               onClick: () => {
@@ -152,31 +154,31 @@ export default function ModerationQueue() {
   ];
 
   if (loading && queue.length === 0) {
-    return <LoadingState message="Loading moderation queue..." />;
+    return <LoadingState message={t("admin.moderation.loading")} />;
   }
 
   const statusOptions = [
-    { label: "All Statuses", value: "ALL" },
-    { label: "Manual Review Required", value: "MANUAL_REVIEW_REQUIRED" },
-    { label: "Pending AI Validation", value: "PENDING_AI_VALIDATION" },
-    { label: "Accepted", value: "ACCEPTED" },
-    { label: "Rejected", value: "REJECTED" },
+    { label: t("admin.moderation.optAll"), value: "ALL" },
+    { label: t("admin.moderation.optManualReview"), value: "MANUAL_REVIEW_REQUIRED" },
+    { label: t("admin.moderation.optPendingAi"), value: "PENDING_AI_VALIDATION" },
+    { label: t("admin.moderation.optAccepted"), value: "ACCEPTED" },
+    { label: t("admin.moderation.optRejected"), value: "REJECTED" },
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Product Moderation Queue"
-        description="Review AI confidence metrics and approve or reject catalog additions."
+        title={t("admin.moderation.title")}
+        description={t("admin.moderation.description")}
       />
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline/10 neomorph-raised">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search product or seller..." />
-        <FilterDropdown value={status} onChange={setStatus} label="Status" options={statusOptions} />
+        <SearchInput value={search} onChange={setSearch} placeholder={t("admin.moderation.searchPlaceholder")} />
+        <FilterDropdown value={status} onChange={setStatus} label={t("admin.moderation.statusFilter")} options={statusOptions} />
       </div>
 
       {queue.length === 0 ? (
-        <EmptyState title="Moderation queue clear" description="All submitted products have been reviewed!" icon={ShieldCheck} />
+        <EmptyState title={t("admin.moderation.emptyTitle")} description={t("admin.moderation.emptyDesc")} icon={ShieldCheck} />
       ) : (
         <DataTable columns={columns} data={queue} />
       )}
@@ -201,9 +203,9 @@ export default function ModerationQueue() {
       <ConfirmDialog
         isOpen={approveConfirmOpen}
         onClose={() => setApproveConfirmOpen(false)}
-        title="Approve Catalog Product"
-        message={`Approve '${activeProduct?.productTitle}' and publish it live?`}
-        confirmText="Approve & Publish"
+        title={t("admin.moderation.confirmApproveTitle")}
+        message={t("admin.moderation.confirmApproveMsg", { title: activeProduct?.productTitle })}
+        confirmText={t("admin.moderation.confirmApproveBtn")}
         variant="success"
         onConfirm={() => handleApprove(activeProduct?.id)}
       />

@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Sliders, Bell, Globe, Moon } from "lucide-react";
+import { Sliders, Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SectionHeader from "../Shared/SectionHeader";
 import { useToast } from "../Shared/ToastContext";
 
 export default function PreferencesSection() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [commissionRate, setCommissionRate] = useState("12");
   const [autoApproveScore, setAutoApproveScore] = useState("90");
@@ -12,18 +14,22 @@ export default function PreferencesSection() {
 
   const handleSave = (e) => {
     e.preventDefault();
-    showToast("Preferences & marketplace policies saved!", "success");
+    showToast(t("admin.settings.prefSavedToast"), "success");
   };
 
   return (
     <form onSubmit={handleSave} className="space-y-6">
       <div className="rounded-2xl bg-surface p-6 border border-outline/10 neomorph-raised space-y-4">
-        <SectionHeader title="Marketplace Configuration" subtitle="Set platform commission rates & automation thresholds" icon={Sliders} />
+        <SectionHeader
+          title={t("admin.settings.prefMarketplaceTitle")}
+          subtitle={t("admin.settings.prefMarketplaceSub")}
+          icon={Sliders}
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-              Default Seller Commission Rate (%)
+              {t("admin.settings.defaultCommRate")}
             </label>
             <input
               type="number"
@@ -34,7 +40,7 @@ export default function PreferencesSection() {
           </div>
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-              AI Auto-Approve Score Threshold (%)
+              {t("admin.settings.autoApproveScore")}
             </label>
             <input
               type="number"
@@ -47,13 +53,17 @@ export default function PreferencesSection() {
       </div>
 
       <div className="rounded-2xl bg-surface p-6 border border-outline/10 neomorph-raised space-y-4">
-        <SectionHeader title="System Notifications & Controls" subtitle="Enable automatic system alerts" icon={Bell} />
+        <SectionHeader
+          title={t("admin.settings.prefNotificationsTitle")}
+          subtitle={t("admin.settings.prefNotificationsSub")}
+          icon={Bell}
+        />
 
         <div className="space-y-4">
           <label className="flex items-center justify-between cursor-pointer">
             <div>
-              <p className="font-semibold text-sm text-on-surface">Email Alerts for Moderation Queue</p>
-              <p className="text-xs text-on-surface-variant">Notify admins when AI flags low-confidence products.</p>
+              <p className="font-semibold text-sm text-on-surface">{t("admin.settings.emailAlertsLabel")}</p>
+              <p className="text-xs text-on-surface-variant">{t("admin.settings.emailAlertsSub")}</p>
             </div>
             <input
               type="checkbox"
@@ -65,8 +75,8 @@ export default function PreferencesSection() {
 
           <label className="flex items-center justify-between cursor-pointer border-t border-outline/10 pt-4">
             <div>
-              <p className="font-semibold text-sm text-on-surface">Platform Maintenance Mode</p>
-              <p className="text-xs text-on-surface-variant">Restrict new seller submissions temporarily.</p>
+              <p className="font-semibold text-sm text-on-surface">{t("admin.settings.maintModeLabel")}</p>
+              <p className="text-xs text-on-surface-variant">{t("admin.settings.maintModeSub")}</p>
             </div>
             <input
               type="checkbox"
@@ -82,7 +92,7 @@ export default function PreferencesSection() {
             type="submit"
             className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all"
           >
-            Save Preferences
+            {t("admin.settings.savePrefBtn")}
           </button>
         </div>
       </div>

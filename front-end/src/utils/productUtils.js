@@ -103,19 +103,206 @@ export const getProductId = (product) => {
   return "";
 };
 
+/**
+ * Clean product titles by stripping promotional marketing slogan prefixes.
+ */
+export const cleanProductTitle = (rawTitle) => {
+  if (!rawTitle || typeof rawTitle !== 'string') return '';
+  let cleaned = rawTitle.trim();
+  
+  // Remove promotional boilerplate phrases at start of title
+  cleaned = cleaned.replace(/^(Enjoy free delivery|Free shipping|Buy now and pay later|Get \d+% off|Special offer|Limited time offer)[^.]*\.\s*/i, '');
+  cleaned = cleaned.replace(/^(Enjoy free delivery|Free shipping|Buy now and pay later)[^.]*\s+/i, '');
+  
+  // Clean up remaining double quotes or leading/trailing punctuation if leftover
+  cleaned = cleaned.replace(/^["'\s.,-]+/, '').replace(/["'\s.,-]+$/, '');
+
+  if (cleaned.length > 90) {
+    const short = cleaned.slice(0, 85);
+    const lastSpace = short.lastIndexOf(' ');
+    cleaned = (lastSpace > 30 ? short.slice(0, lastSpace) : short) + '…';
+  }
+  return cleaned;
+};
+
+/**
+ * Format and translate category strings dynamically based on i18n instance.
+ */
+export const formatCategoryName = (categoryStr, t) => {
+  if (!categoryStr) return "";
+  const key = String(categoryStr)
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\-_]+/g, "");
+
+  const categoryKeyMap = {
+    airconditioner: "air_conditioner",
+    ac: "air_conditioner",
+    armchair: "armchair",
+    accentchair: "armchair",
+    bed: "bed",
+    masterbed: "bed",
+    bookshelf: "bookshelf",
+    bookcase: "bookshelf",
+    coffeetable: "coffee_table",
+    curtains: "curtains",
+    drapes: "curtains",
+    desk: "desk",
+    officedesk: "desk",
+    deskchair: "desk_chair",
+    officechair: "desk_chair",
+    diningchair: "dining_chair",
+    diningtable: "dining_table",
+    dresser: "dresser",
+    floorlamp: "floor_lamp",
+    nightstand: "nightstand",
+    bedsidetable: "nightstand",
+    rug: "rug",
+    carpet: "rug",
+    sidetable: "side_table",
+    endtable: "side_table",
+    sofa: "sofa",
+    couch: "sofa",
+    tv: "tv",
+    television: "tv",
+    tvunit: "tv_unit",
+    tvstand: "tv_unit",
+    mediaconsole: "tv_unit",
+    wallart: "wall_art",
+    painting: "wall_art",
+    wardrobe: "wardrobe",
+    armoire: "wardrobe",
+    mirror: "mirror",
+    plant: "plant",
+    pendantlight: "pendant_light",
+    chandelier: "pendant_light",
+    vase: "vase",
+    cushion: "cushion",
+    pillow: "cushion",
+    storageunit: "storage_unit",
+    cabinet: "storage_unit",
+    shoerack: "shoe_rack",
+    consoletable: "console_table",
+    ottoman: "ottoman",
+    electronics: "electronics",
+    decor: "decor",
+    furniture: "furniture"
+  };
+
+  const canonicalKey = categoryKeyMap[key] || String(categoryStr).toLowerCase().replace(/[\s\-]+/g, "_");
+
+  const arDict = {
+    air_conditioner: "مكيف هواء",
+    armchair: "كرسي فوتيه",
+    bed: "سرير",
+    bookshelf: "خزانة كتب",
+    coffee_table: "طاولة قهوة",
+    curtains: "ستائر",
+    desk: "مكتب",
+    desk_chair: "كرسي مكتب",
+    dining_chair: "كرسي سفرة",
+    dining_table: "طاولة سفرة",
+    dresser: "تسريحة",
+    floor_lamp: "أباجورة أرضية",
+    nightstand: "كومودينو",
+    rug: "سجادة",
+    side_table: "طاولة جانبية",
+    sofa: "أريكة",
+    tv: "تلفزيون",
+    tv_unit: "طاولة تلفزيون",
+    wall_art: "لوحة جدارية",
+    wardrobe: "دولاب ملابس",
+    mirror: "مرآة",
+    plant: "نبات زينة",
+    pendant_light: "نجفة / إضاءة معلقة",
+    vase: "زهريّة",
+    cushion: "وسادة",
+    storage_unit: "وحدة تخزين",
+    shoe_rack: "جزامة",
+    console_table: "كونسول",
+    ottoman: "بوف",
+    electronics: "الأجهزة الإلكترونية",
+    decor: "الديكور والزينة",
+    furniture: "الأثاث والمفروشات"
+  };
+
+  const enDict = {
+    air_conditioner: "Air Conditioner",
+    armchair: "Armchair",
+    bed: "Bed",
+    bookshelf: "Bookshelf",
+    coffee_table: "Coffee Table",
+    curtains: "Curtains",
+    desk: "Desk",
+    desk_chair: "Desk Chair",
+    dining_chair: "Dining Chair",
+    dining_table: "Dining Table",
+    dresser: "Dresser",
+    floor_lamp: "Floor Lamp",
+    nightstand: "Nightstand",
+    rug: "Rug",
+    side_table: "Side Table",
+    sofa: "Sofa",
+    tv: "TV",
+    tv_unit: "TV Unit",
+    wall_art: "Wall Art",
+    wardrobe: "Wardrobe",
+    mirror: "Mirror",
+    plant: "Plant",
+    pendant_light: "Pendant Light",
+    vase: "Vase",
+    cushion: "Cushion",
+    storage_unit: "Storage Unit",
+    shoe_rack: "Shoe Rack",
+    console_table: "Console Table",
+    ottoman: "Ottoman",
+    electronics: "Electronics",
+    decor: "Decor",
+    furniture: "Furniture"
+  };
+
+  // Determine active language
+  const lang = t?.language || t?.i18n?.language || (typeof document !== "undefined" && document.documentElement ? document.documentElement.lang || (document.documentElement.dir === "rtl" ? "ar" : "en") : "en");
+  const isAr = lang && String(lang).toLowerCase().startsWith("ar");
+
+  if (typeof t === "function") {
+    const keysToTry = [
+      `categories.${canonicalKey}`,
+      `admin.categories.${canonicalKey}`,
+      `dashboard.categories.${canonicalKey}`
+    ];
+
+    for (const k of keysToTry) {
+      const res = t(k, { defaultValue: "" });
+      if (res && res !== k) return res;
+    }
+  }
+
+  if (isAr && arDict[canonicalKey]) {
+    return arDict[canonicalKey];
+  }
+  if (!isAr && enDict[canonicalKey]) {
+    return enDict[canonicalKey];
+  }
+
+  return String(categoryStr).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 export const parseProductDetails = (product, activeCategory = "Furniture") => {
   if (!product) return {};
   const pData = product.productData || product;
 
   const id = getProductId(product);
   
-  const title =
+  const rawTitle =
     pData.basic?.name ||
     pData.title ||
     pData.name ||
     product.title ||
     product.name ||
     `${activeCategory.replace("_", " ")} Item`;
+
+  const title = cleanProductTitle(rawTitle);
 
   const brand =
     pData.basic?.brand ||

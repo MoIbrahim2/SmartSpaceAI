@@ -1,10 +1,13 @@
 import { Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SectionHeader from "../Shared/SectionHeader";
 
 export default function ActivityFeed({ activities = [] }) {
+  const { t } = useTranslation();
+
   return (
     <div className="rounded-2xl bg-surface p-5 border border-outline/10 neomorph-raised space-y-4">
-      <SectionHeader title="Recent Platform Activity" icon={Clock} />
+      <SectionHeader title={t("admin.dashboard.recentActivity")} icon={Clock} />
       <div className="space-y-4">
         {activities.map((act) => (
           <div key={act.id} className="flex gap-3 text-sm">

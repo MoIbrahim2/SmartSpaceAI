@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SectionHeader from "../Shared/SectionHeader";
 
 export default function NotificationsWidget({ items = [] }) {
+  const { t } = useTranslation();
   const [list, setList] = useState(items);
 
   const markAllRead = () => {
@@ -12,7 +14,7 @@ export default function NotificationsWidget({ items = [] }) {
   return (
     <div className="rounded-2xl bg-surface p-5 border border-outline/10 neomorph-raised space-y-4">
       <SectionHeader
-        title="Latest Notifications"
+        title={t("admin.dashboard.latestNotifications")}
         icon={Bell}
         action={
           <button
@@ -20,7 +22,7 @@ export default function NotificationsWidget({ items = [] }) {
             className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
           >
             <CheckCheck className="size-3.5" />
-            <span>Mark all read</span>
+            <span>{t("admin.dashboard.markAllRead")}</span>
           </button>
         }
       />
@@ -30,7 +32,7 @@ export default function NotificationsWidget({ items = [] }) {
           <div
             key={item.id}
             className={`p-3 rounded-xl border border-outline/10 transition-all ${
-              item.read ? "bg-surface-bright/40 opacity-70" : "bg-surface-bright border-l-4 border-l-primary"
+              item.read ? "bg-surface-bright/40 opacity-70" : "bg-surface-bright border-l-4 rtl:border-r-4 rtl:border-l-0 border-l-primary rtl:border-r-primary"
             }`}
           >
             <div className="flex items-center justify-between">

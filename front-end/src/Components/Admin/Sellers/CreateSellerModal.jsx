@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Modal from "../Shared/Modal";
 
 export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -61,7 +63,7 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Register New Seller">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t("admin.sellers.createModalTitle")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="rounded-xl bg-error/10 border border-error/20 p-3 text-xs font-semibold text-error">
@@ -72,7 +74,7 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-              First Name *
+              {t("admin.sellers.firstNameReq")}
             </label>
             <input
               required
@@ -86,7 +88,7 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-              Last Name / Store *
+              {t("admin.sellers.lastNameReq")}
             </label>
             <input
               required
@@ -101,7 +103,7 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-            Contact Email *
+            {t("admin.sellers.emailReq")}
           </label>
           <input
             required
@@ -115,7 +117,7 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
 
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-            Commission Rate (%)
+            {t("admin.sellers.commRate")}
           </label>
           <input
             type="number"
@@ -134,14 +136,14 @@ export default function CreateSellerModal({ isOpen, onClose, onCreate }) {
             disabled={submitting}
             className="rounded-xl px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface border border-outline/20 disabled:opacity-50"
           >
-            Cancel
+            {t("admin.shared.cancel")}
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white neo-shadow hover:bg-primary/90 transition-all disabled:opacity-50"
           >
-            {submitting ? "Registering..." : "Create Seller"}
+            {submitting ? t("admin.sellers.creatingBtn") : t("admin.sellers.createBtn")}
           </button>
         </div>
       </form>

@@ -1,14 +1,16 @@
 import { TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SectionHeader from "../Shared/SectionHeader";
 
 export default function RevenueChart({ data = [] }) {
+  const { t } = useTranslation();
   const maxRevenue = Math.max(...data.map((d) => d.revenue), 1);
 
   return (
     <div className="rounded-2xl bg-surface p-5 border border-outline/10 neomorph-raised space-y-4">
       <SectionHeader
-        title="Revenue & Growth Trend"
-        subtitle="Monthly gross marketplace revenue overview"
+        title={t("admin.dashboard.revenueTrend")}
+        subtitle={t("admin.dashboard.revenueSubtitle")}
         icon={TrendingUp}
       />
 

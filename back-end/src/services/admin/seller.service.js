@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const User = require('../../models/user.model');
 const Product = require('../../models/product.model');
 const Order = require('../../models/order.model');
+const BuyRequest = require('../../models/buyRequest.model');
 const emailService = require('../email.service');
 const { generateOtp } = require('../../helpers/otp.helper');
 const ApiError = require('../../errors/ApiError');
@@ -81,18 +82,32 @@ const createSeller = async (sellerData) => {
  * Fetch paginated list of sellers with standard REST query parameters
  * Parameters: ?page=1&limit=10&search=term&sort=createdAt&order=desc
  * @param {Object} query
- * @returns {Promise<Object>} Sellers list with pagination metadata
+ * @returns {Promise<Object>} Sellers list with pagination metadata and 100% computed metrics
  */
 const getSellers = async (query = {}) => {
   const filter = { role: ROLES.SELLER };
 
-  // Search filter across name and email
+  // Status filter mapping
+  if (query.status && query.status !== 'All' && query.status !== 'ALL') {
+    if (query.status === 'Verified' || query.status === 'ACTIVE') {
+      filter.status = 'ACTIVE';
+    } else if (query.status.includes('Pending') || query.status === 'PENDING_ACTIVATION') {
+      filter.status = 'PENDING_ACTIVATION';
+    } else if (query.status === 'SUSPENDED') {
+      filter.status = 'SUSPENDED';
+    } else {
+      filter.status = query.status;
+    }
+  }
+
+  // Search filter across name, store name, and email
   if (query.search) {
     const escapedSearch = query.search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     const searchRegex = new RegExp(escapedSearch, 'i');
     filter.$or = [
       { 'profile.firstName': searchRegex },
       { 'profile.lastName': searchRegex },
+      { 'sellerProfile.businessName': searchRegex },
       { 'authentication.email': searchRegex }
     ];
   }
@@ -107,10 +122,70 @@ const getSellers = async (query = {}) => {
   const sortDirection = (query.order || query.sortOrder || 'desc').toLowerCase() === 'asc' ? 1 : -1;
   const sort = { [sortField]: sortDirection };
 
-  const [sellers, total] = await Promise.all([
+  const [sellersRaw, total] = await Promise.all([
     User.find(filter).sort(sort).skip(skip).limit(limit),
     User.countDocuments(filter)
   ]);
+
+  // Compute live MongoDB statistics for each seller
+  const sellers = await Promise.all(
+    sellersRaw.map(async (seller) => {
+      const sellerId = seller._id;
+
+      // 1. Calculate real product count from Product collection
+      const productsCount = await Product.countDocuments({
+        $or: [{ sellerId }, { 'source.sellerId': sellerId }]
+      });
+
+      // 2. Calculate real total sales from Order collection
+      const orderSalesAgg = await Order.aggregate([
+        { $match: { sellerId, status: { $nin: ['CANCELLED', 'REJECTED'] } } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+      ]);
+      const orderSales = orderSalesAgg[0]?.total || 0;
+
+      // 3. Calculate real total sales from BuyRequest collection
+      const buyReqSalesAgg = await BuyRequest.aggregate([
+        { $match: { sellerId, status: { $nin: ['REJECTED'] } } },
+        { $group: { _id: null, total: { $sum: '$grossTotalAmount' } } }
+      ]);
+      const buyReqSales = buyReqSalesAgg[0]?.total || 0;
+
+      const totalSalesAmount = orderSales + buyReqSales;
+
+      // 4. Resolve commission percentage
+      const commissionRate = seller.base_commission_percentage ?? 
+        (seller.sellerProfile?.commissionRate ? Math.round(seller.sellerProfile.commissionRate * 100) : 10);
+
+      // 5. Resolve display name and email
+      const firstName = seller.profile?.firstName || '';
+      const lastName = seller.profile?.lastName || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+      const displayName = fullName || seller.sellerProfile?.businessName || seller.authentication?.email || 'Seller';
+      const email = seller.authentication?.email || '';
+
+      const sellerObj = seller.toObject();
+
+      return {
+        ...sellerObj,
+        id: seller._id,
+        _id: seller._id,
+        name: displayName,
+        email,
+        productsCount,
+        totalSalesAmount,
+        commissionRate,
+        baseCommissionPercentage: commissionRate,
+        base_commission_percentage: commissionRate,
+        status: seller.status || 'ACTIVE',
+        sellerMetrics: {
+          productsCount,
+          totalSalesAmount,
+          baseCommissionPercentage: commissionRate
+        }
+      };
+    })
+  );
 
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -140,17 +215,23 @@ const getSellerById = async (sellerId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'seller.not_found');
   }
 
-  // Compute live statistics for this seller
-  const [totalProducts, totalOrders, totalSalesAgg] = await Promise.all([
-    Product.countDocuments({ sellerId: seller._id }),
+  // Compute live statistics for this seller across Product, Order, and BuyRequest
+  const [totalProducts, totalOrdersCount, totalBuyReqCount, orderSalesAgg, buyReqSalesAgg] = await Promise.all([
+    Product.countDocuments({ $or: [{ sellerId: seller._id }, { 'source.sellerId': seller._id }] }),
     Order.countDocuments({ sellerId: seller._id }),
+    BuyRequest.countDocuments({ sellerId: seller._id }),
     Order.aggregate([
       { $match: { sellerId: seller._id, status: { $nin: ['CANCELLED', 'REJECTED'] } } },
       { $group: { _id: null, totalSales: { $sum: '$totalAmount' } } }
+    ]),
+    BuyRequest.aggregate([
+      { $match: { sellerId: seller._id, status: { $nin: ['REJECTED'] } } },
+      { $group: { _id: null, totalSales: { $sum: '$grossTotalAmount' } } }
     ])
   ]);
 
-  const totalSales = totalSalesAgg.length > 0 ? totalSalesAgg[0].totalSales : 0;
+  const totalSales = (orderSalesAgg[0]?.totalSales || 0) + (buyReqSalesAgg[0]?.totalSales || 0);
+  const totalOrders = totalOrdersCount + totalBuyReqCount;
   const sellerObj = seller.toObject();
 
   return {
