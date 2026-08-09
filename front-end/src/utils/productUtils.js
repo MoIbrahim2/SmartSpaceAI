@@ -449,11 +449,19 @@ export const getExternalStoreUrl = (product) => {
     }
   }
 
-  // If this is an internal SmartSpace seller product with no external retail marketplace, return null so it uses internal cart
-  const hasSellerId = !!(pData.sellerId || product.sellerId);
-  const isSmartSpaceBrand = brand.includes("smartspace") || marketplace.includes("smartspace") || (!marketplace && !brand);
+  // If this is an internal seller product (has seller ID), return null so it uses internal cart
+  const hasSellerId = !!(
+    pData.sellerId ||
+    product.sellerId ||
+    pData.seller_id ||
+    product.seller_id ||
+    pData.source?.sellerId ||
+    product.source?.sellerId ||
+    pData.source?.seller_id ||
+    product.source?.seller_id
+  );
 
-  if (hasSellerId && isSmartSpaceBrand && (!rawUrl || rawUrl.includes("smartspace.ai") || rawUrl.includes("DUMMY_"))) {
+  if (hasSellerId) {
     return null;
   }
 

@@ -337,7 +337,18 @@ const RoomDetail = () => {
                               Details
                             </button>
 
-                            {externalUrl ? (
+                            {parsed.isInternal ? (
+                              <button
+                                onClick={() => {
+                                  addToCart(pData);
+                                  setIsDrawerOpen(true);
+                                }}
+                                className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold flex items-center justify-center gap-1 transition-all shadow-md active:scale-95"
+                              >
+                                <Icon name="add_shopping_cart" size={13} />
+                                Add Cart
+                              </button>
+                            ) : externalUrl ? (
                               <a
                                 href={externalUrl}
                                 target="_blank"
