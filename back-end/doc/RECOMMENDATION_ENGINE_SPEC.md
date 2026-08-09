@@ -578,7 +578,7 @@ class RecommendationEngineService {
     });
 
     return {
-      cheaper: cheaper.sort((a,b) => b.score - a.score).slice(0, 3),
+      cheaper: cheaper.sort((a,b) => b.score - a.score).slice(0, 15),
       balanced: balanced.sort((a,b) => b.score - a.score).slice(0, 3),
       premium: premium.sort((a,b) => b.score - a.score).slice(0, 3)
     };

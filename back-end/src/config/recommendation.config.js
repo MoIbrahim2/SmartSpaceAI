@@ -21,13 +21,14 @@ const SCORING_WEIGHTS = {
 // ─── Tier Thresholds ────────────────────────────────────────
 // As ratios of price / unitTargetBudget
 const TIER_THRESHOLDS = {
-  cheaperMax: 0.85,       // price < 0.85 * unitTarget  → CHEAPER
-  balancedMax: 1.15,      // 0.85 <= ratio <= 1.15      → BALANCED
-  premiumMax: 1.35,       // 1.15 < ratio <= 1.35       → PREMIUM
+  cheaperMax: 0.45,       // price < 0.85 * unitTarget  → CHEAPER
+  balancedMax: 0.75,      // 0.85 <= ratio <= 1.15      → BALANCED
+  premiumMax: 1.00,       // 1.15 < ratio <= 1.35       → PREMIUM
 };
 
 // Maximum candidates per tier in final output
 const MAX_PER_TIER = 3;
+const MAX_CHEAPER_PER_TIER = 15;
 
 // Tier fallback priority (first available wins)
 const TIER_FALLBACK_ORDER = ['BALANCED', 'CHEAPER', 'PREMIUM'];
@@ -193,6 +194,7 @@ module.exports = {
   SCORING_WEIGHTS,
   TIER_THRESHOLDS,
   MAX_PER_TIER,
+  MAX_CHEAPER_PER_TIER,
   TIER_FALLBACK_ORDER,
   SEMANTIC_ALIASES,
   DIMENSION_ISSUE_SEVERITY,

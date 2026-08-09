@@ -19,6 +19,7 @@ const { fetchCandidates } = require('./candidateGenerator');
 const { scoreAndRankCandidates } = require('./productScorer');
 const { classifyTiers, selectRecommendation, selectRecommendations } = require('./tierClassifier');
 const { optimizeBudget } = require('./budgetOptimizer');
+const { MAX_PER_TIER, MAX_CHEAPER_PER_TIER } = require('../../config/recommendation.config');
 const Product = require('../../models/product.model');
 
 /**
@@ -309,9 +310,9 @@ const formatCategoryOutput = (categoryResult) => {
     recommendation: categoryResult.recommendedProduct,
     recommendations: categoryResult.recommendedProducts || [categoryResult.recommendedProduct].filter(Boolean),
     alternatives: {
-      cheaper: (categoryResult.tieredAlternatives?.cheaper || []).slice(0, 3),
-      balanced: (categoryResult.tieredAlternatives?.balanced || []).slice(0, 3),
-      premium: (categoryResult.tieredAlternatives?.premium || []).slice(0, 3),
+      cheaper: (categoryResult.tieredAlternatives?.cheaper || []).slice(0, MAX_CHEAPER_PER_TIER),
+      balanced: (categoryResult.tieredAlternatives?.balanced || []).slice(0, MAX_PER_TIER),
+      premium: (categoryResult.tieredAlternatives?.premium || []).slice(0, MAX_PER_TIER),
     },
     notices,
   };
