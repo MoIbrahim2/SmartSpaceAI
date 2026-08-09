@@ -24,7 +24,8 @@ const storage = multer.diskStorage({
     } else if (file.fieldname === 'images') {
       subfolder = 'generations';
     } else if (file.fieldname === 'image') {
-      subfolder = 'room-layouts';
+      const isSellerProduct = (req.baseUrl && req.baseUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('products'));
+      subfolder = isSellerProduct ? 'products' : 'room-layouts';
     }
     const targetDir = path.join(uploadDir, subfolder);
     if (!fs.existsSync(targetDir)) {
@@ -45,7 +46,8 @@ const storage = multer.diskStorage({
     } else if (file.fieldname === 'images') {
       prefix = 'generation';
     } else if (file.fieldname === 'image') {
-      prefix = 'room-layout';
+      const isSellerProduct = (req.baseUrl && req.baseUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('products'));
+      prefix = isSellerProduct ? 'product' : 'room-layout';
     }
     cb(null, `${prefix}-${uniqueSuffix}${ext}`);
   }
@@ -53,10 +55,11 @@ const storage = multer.diskStorage({
 
 // Filter out non-image files
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file type. Only images are allowed.'), false);
+    cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.'), false);
   }
 };
 
@@ -74,6 +77,7 @@ const uploadCoverImage = upload.single('coverImage');
 const uploadRoomSourceImages = upload.array('sourceImages', 10);
 const uploadGenerationImages = upload.array('images', 10);
 const uploadRoomLayoutImage = upload.single('image');
+const uploadProductImage = upload.single('image');
 
 module.exports = {
   uploadProfileImage,
@@ -81,5 +85,6 @@ module.exports = {
   uploadRoomSourceImages,
   uploadGenerationImages,
   uploadRoomLayoutImage,
+  uploadProductImage,
   upload
 };

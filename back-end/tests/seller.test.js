@@ -100,7 +100,8 @@ describe('Seller Services', () => {
       }));
 
       const productData = { basic: { name: 'Comfy Sofa' } };
-      const result = await sellerService.createSellerProduct(mockSellerId, productData);
+      const mockFile = { filename: 'test.jpg' };
+      const result = await sellerService.createSellerProduct(mockSellerId, productData, mockFile);
 
       expect(mockSave).toHaveBeenCalled();
       expect(validateSellerProductSubmission).toHaveBeenCalledWith(mockProductId);

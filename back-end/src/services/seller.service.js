@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const Product = require('../models/product.model');
 const BuyRequest = require('../models/buyRequest.model');
 const User = require('../models/user.model');
@@ -45,42 +47,62 @@ const getSellerProduct = async (sellerId, productId) => {
  * Create a new seller product, and trigger AI vision validation.
  * @param {string} sellerId
  * @param {Object} productData
+ * @param {Object} [file] Uploaded image file from multer
  * @returns {Promise<Object>} Created product
  */
-const createSellerProduct = async (sellerId, productData) => {
-  // Ensure the user actually exists and is a seller
-  const seller = await User.findById(sellerId);
-  if (!seller || (seller.role || '').toUpperCase() !== ROLES.SELLER) {
-    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'user.unauthorized_seller_role');
-  }
-
-  if (seller.status === 'PENDING_ACTIVATION') {
-    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'user.seller_not_activated');
-  }
-
-  if (seller.status === 'SUSPENDED') {
-    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.suspended');
-  }
-
-  const product = new Product({
-    ...productData,
-    sellerId,
-    processing: {
-      status: 'PENDING_AI_VALIDATION',
-      confidence: null,
-      detectedObject: null,
-      issues: []
+const createSellerProduct = async (sellerId, productData, file) => {
+  try {
+    // Ensure the user actually exists and is a seller
+    const seller = await User.findById(sellerId);
+    if (!seller || (seller.role || '').toUpperCase() !== ROLES.SELLER) {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'user.unauthorized_seller_role');
     }
-  });
 
-  await product.save();
+    if (seller.status === 'PENDING_ACTIVATION') {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'user.seller_not_activated');
+    }
 
-  // Run the AI vision pipeline asynchronously
-  validateSellerProductSubmission(product._id).catch(err => {
-    console.error(`[Seller Service] Asynchronous product AI validation error for ${product._id}:`, err);
-  });
+    if (seller.status === 'SUSPENDED') {
+      throw new ApiError(HTTP_STATUS.FORBIDDEN, 'auth.suspended');
+    }
 
-  return product;
+    let images = [];
+    if (file) {
+      images = [{ url: `uploads/products/${file.filename}`, isPrimary: true }];
+    } else if (Array.isArray(productData.images) && productData.images.length > 0) {
+      images = productData.images;
+    }
+
+    if (images.length === 0) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Product image file is required.');
+    }
+
+    const product = new Product({
+      ...productData,
+      images,
+      sellerId,
+      processing: {
+        status: 'PENDING_AI_VALIDATION',
+        confidence: null,
+        detectedObject: null,
+        issues: []
+      }
+    });
+
+    await product.save();
+
+    // Run the AI vision pipeline asynchronously
+    validateSellerProductSubmission(product._id).catch(err => {
+      console.error(`[Seller Service] Asynchronous product AI validation error for ${product._id}:`, err);
+    });
+
+    return product;
+  } catch (err) {
+    if (file && file.path && fs.existsSync(file.path)) {
+      fs.unlink(file.path, () => {});
+    }
+    throw err;
+  }
 };
 
 /**
@@ -88,59 +110,82 @@ const createSellerProduct = async (sellerId, productData) => {
  * @param {string} sellerId
  * @param {string} productId
  * @param {Object} updateData
+ * @param {Object} [file] Uploaded image file from multer
  * @returns {Promise<Object>} Updated product
  */
-const updateSellerProduct = async (sellerId, productId, updateData) => {
-  const product = await Product.findOne({ _id: productId, sellerId });
-  if (!product) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Product not found or not authorized');
-  }
+const updateSellerProduct = async (sellerId, productId, updateData, file) => {
+  try {
+    const product = await Product.findOne({ _id: productId, sellerId });
+    if (!product) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Product not found or not authorized');
+    }
 
-  // Determine if a re-validation is required
-  // AI validation is re-run if name, description, categories, materials, colors, dimensions, or images are modified
-  let triggerValidation = false;
-  if (updateData.basic || updateData.classification || updateData.images || updateData.dimensions) {
-    triggerValidation = true;
-  }
+    let oldImagePath = null;
+    let triggerValidation = false;
 
-  // Update properties selectively
-  if (updateData.basic) {
-    product.basic = { ...product.basic, ...updateData.basic };
-  }
-  if (updateData.classification) {
-    product.classification = { ...product.classification, ...updateData.classification };
-  }
-  if (updateData.pricing) {
-    product.pricing = { ...product.pricing, ...updateData.pricing };
-  }
-  if (updateData.dimensions) {
-    product.dimensions = { ...product.dimensions, ...updateData.dimensions };
-  }
-  if (updateData.images) {
-    product.images = updateData.images;
-  }
-  if (updateData.availability) {
-    product.availability = { ...product.availability, ...updateData.availability };
-  }
+    if (updateData.basic || updateData.classification || updateData.dimensions || file || updateData.images) {
+      triggerValidation = true;
+    }
 
-  if (triggerValidation) {
-    product.processing = {
-      status: 'PENDING_AI_VALIDATION',
-      confidence: null,
-      detectedObject: null,
-      issues: []
-    };
+    if (file) {
+      const oldUrl = product.images?.[0]?.url;
+      if (oldUrl && (oldUrl.startsWith('uploads/') || oldUrl.startsWith('/uploads/'))) {
+        const relativePath = oldUrl.replace(/^\//, '');
+        oldImagePath = path.join(process.cwd(), relativePath);
+      }
+      product.images = [{ url: `uploads/products/${file.filename}`, isPrimary: true }];
+    } else if (updateData.images && Array.isArray(updateData.images) && updateData.images.length > 0) {
+      product.images = updateData.images;
+    }
+
+    // Update properties selectively
+    if (updateData.basic) {
+      product.basic = { ...product.basic, ...updateData.basic };
+    }
+    if (updateData.classification) {
+      product.classification = { ...product.classification, ...updateData.classification };
+    }
+    if (updateData.pricing) {
+      product.pricing = { ...product.pricing, ...updateData.pricing };
+    }
+    if (updateData.dimensions) {
+      product.dimensions = { ...product.dimensions, ...updateData.dimensions };
+    }
+    if (updateData.availability) {
+      product.availability = { ...product.availability, ...updateData.availability };
+    }
+
+    if (triggerValidation) {
+      product.processing = {
+        status: 'PENDING_AI_VALIDATION',
+        confidence: null,
+        detectedObject: null,
+        issues: []
+      };
+    }
+
+    await product.save();
+
+    // After successful save, clean up old image if a new image was uploaded
+    if (oldImagePath && fs.existsSync(oldImagePath)) {
+      fs.unlink(oldImagePath, (err) => {
+        if (err) console.error(`[Seller Service] Failed to delete old product image: ${err.message}`);
+      });
+    }
+
+    if (triggerValidation) {
+      validateSellerProductSubmission(product._id).catch(err => {
+        console.error(`[Seller Service] Asynchronous product AI re-validation error for ${product._id}:`, err);
+      });
+    }
+
+    return product;
+  } catch (err) {
+    if (file && file.path && fs.existsSync(file.path)) {
+      fs.unlink(file.path, () => {});
+    }
+    throw err;
   }
-
-  await product.save();
-
-  if (triggerValidation) {
-    validateSellerProductSubmission(product._id).catch(err => {
-      console.error(`[Seller Service] Asynchronous product AI re-validation error for ${product._id}:`, err);
-    });
-  }
-
-  return product;
 };
 
 /**
@@ -165,7 +210,17 @@ const deleteSellerProduct = async (sellerId, productId) => {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cannot delete product with active pending or processing orders');
   }
 
+  const oldUrl = product.images?.[0]?.url;
   await Product.deleteOne({ _id: productId });
+
+  if (oldUrl && (oldUrl.startsWith('uploads/') || oldUrl.startsWith('/uploads/'))) {
+    const relativePath = oldUrl.replace(/^\//, '');
+    const localPath = path.join(process.cwd(), relativePath);
+    if (fs.existsSync(localPath)) {
+      fs.unlink(localPath, () => {});
+    }
+  }
+
   return true;
 };
 

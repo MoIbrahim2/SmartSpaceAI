@@ -10,34 +10,44 @@ export const getUniqueFallbackImage = (_product, _category = "") => {
   return NO_IMAGE_PLACEHOLDER;
 };
 
+const normalizeImageUrl = (url) => {
+  if (typeof url !== 'string' || !url.trim()) return '';
+  const trimmed = url.trim();
+  if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/')) {
+    const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    return `http://localhost:5000${cleanPath}`;
+  }
+  return trimmed;
+};
+
 export const getProductImage = (product, category = "") => {
   if (!product) return "";
   const pData = product.productData || product;
 
   // 1. Direct primaryImage string or object
-  if (typeof pData.primaryImage === 'string' && pData.primaryImage.trim()) return pData.primaryImage.trim();
-  if (pData.primaryImage?.url && typeof pData.primaryImage.url === 'string' && pData.primaryImage.url.trim()) return pData.primaryImage.url.trim();
+  if (typeof pData.primaryImage === 'string' && pData.primaryImage.trim()) return normalizeImageUrl(pData.primaryImage);
+  if (pData.primaryImage?.url && typeof pData.primaryImage.url === 'string' && pData.primaryImage.url.trim()) return normalizeImageUrl(pData.primaryImage.url);
 
   // 2. Direct URL strings
-  if (typeof pData.imageUrl === 'string' && pData.imageUrl.trim()) return pData.imageUrl.trim();
-  if (typeof pData.img === 'string' && pData.img.trim()) return pData.img.trim();
-  if (typeof pData.mainImageUrl === 'string' && pData.mainImageUrl.trim()) return pData.mainImageUrl.trim();
-  if (typeof pData.image === 'string' && pData.image.trim()) return pData.image.trim();
-  if (typeof pData.image_url === 'string' && pData.image_url.trim()) return pData.image_url.trim();
+  if (typeof pData.imageUrl === 'string' && pData.imageUrl.trim()) return normalizeImageUrl(pData.imageUrl);
+  if (typeof pData.img === 'string' && pData.img.trim()) return normalizeImageUrl(pData.img);
+  if (typeof pData.mainImageUrl === 'string' && pData.mainImageUrl.trim()) return normalizeImageUrl(pData.mainImageUrl);
+  if (typeof pData.image === 'string' && pData.image.trim()) return normalizeImageUrl(pData.image);
+  if (typeof pData.image_url === 'string' && pData.image_url.trim()) return normalizeImageUrl(pData.image_url);
 
   // 3. Images Array (e.g. from MongoDB product schema: [{ url: "...", isPrimary: true }])
   const images = pData.images || (pData.productData && pData.productData.images);
   if (Array.isArray(images) && images.length > 0) {
     const primary = images.find((i) => i && (i.isPrimary || i.primary));
     if (primary) {
-      if (typeof primary === 'string' && primary.trim()) return primary.trim();
-      if (primary.url && primary.url.trim()) return primary.url.trim();
-      if (primary.src && primary.src.trim()) return primary.src.trim();
+      if (typeof primary === 'string' && primary.trim()) return normalizeImageUrl(primary);
+      if (primary.url && primary.url.trim()) return normalizeImageUrl(primary.url);
+      if (primary.src && primary.src.trim()) return normalizeImageUrl(primary.src);
     }
     const first = images[0];
-    if (typeof first === 'string' && first.trim()) return first.trim();
-    if (first && first.url && first.url.trim()) return first.url.trim();
-    if (first && first.src && first.src.trim()) return first.src.trim();
+    if (typeof first === 'string' && first.trim()) return normalizeImageUrl(first);
+    if (first && first.url && first.url.trim()) return normalizeImageUrl(first.url);
+    if (first && first.src && first.src.trim()) return normalizeImageUrl(first.src);
   }
 
   // 4. Fallback check for nested productData
