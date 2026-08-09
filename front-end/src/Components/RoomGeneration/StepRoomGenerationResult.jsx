@@ -378,10 +378,10 @@ const StepRoomGenerationResult = ({
         </div>
       )}
 
-      {/* Main Generated Image Preview */}
-      <div className="flex-grow bg-slate-950/80 rounded-2xl neomorph-inset overflow-hidden flex items-center justify-center min-h-[460px] max-h-[75vh] p-4 mb-6 relative group border border-outline-variant/10">
+      {/* Main Generated Image Preview - Uses object-contain so it NEVER crops! */}
+      <div className="flex-grow bg-white rounded-2xl overflow-hidden flex items-center justify-center min-h-[460px] max-h-[75vh] p-4 mb-6 relative group border border-outline-variant/20 shadow-sm">
         {isGenerating ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/90 z-20 p-6 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 z-20 p-6 text-center">
             <div className="relative w-20 h-20 mb-6">
               <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping"></div>
               <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
@@ -427,7 +427,7 @@ const StepRoomGenerationResult = ({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center text-center p-8">
-            <div className="w-20 h-20 rounded-full bg-surface-variant/30 flex items-center justify-center mb-4 text-primary">
+            <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-4 text-amber-500">
               <Icon name="auto_awesome" size={40} />
             </div>
             <h3 className="font-headline font-bold text-xl text-on-surface mb-2">
