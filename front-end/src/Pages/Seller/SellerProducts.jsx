@@ -75,24 +75,40 @@ export default function SellerProducts() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+
   // Dialog state
   const [deleteId, setDeleteId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [page, searchTerm, statusFilter]);
 
   async function fetchProducts() {
     try {
       setLoading(true);
-      const res = await getSellerProducts();
+      const params = {
+        page,
+        limit,
+        search: searchTerm.trim() || undefined,
+        status: statusFilter !== "ALL" ? statusFilter : undefined
+      };
+      const res = await getSellerProducts(params);
       if (res?.success) {
-        setProducts(res.data || []);
+        if (res.data?.products) {
+          setProducts(res.data.products || []);
+          setPagination(res.data.pagination || { total: res.data.products.length, page, limit, totalPages: 1 });
+        } else if (Array.isArray(res.data)) {
+          setProducts(res.data);
+          setPagination({ total: res.data.length, page: 1, limit: res.data.length || 10, totalPages: 1 });
+        }
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -101,26 +117,6 @@ export default function SellerProducts() {
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    let result = products;
-
-    if (searchTerm.trim() !== "") {
-      const q = searchTerm.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.basic?.name?.toLowerCase().includes(q) ||
-          p.basic?.sku?.toLowerCase().includes(q) ||
-          p.classification?.canonicalCategory?.toLowerCase().includes(q)
-      );
-    }
-
-    if (statusFilter !== "ALL") {
-      result = result.filter((p) => p.processing?.status === statusFilter);
-    }
-
-    setFilteredProducts(result);
-  }, [products, searchTerm, statusFilter]);
 
   const handleDeleteConfirm = async () => {
     if (!deleteId) return;
@@ -305,7 +301,10 @@ export default function SellerProducts() {
             type="text"
             placeholder={t("seller.products.searchPlaceholder")}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-xl bg-background pl-9 pr-4 rtl:pr-9 rtl:pl-4 py-2 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none border border-outline/20 focus:ring-2 focus:ring-primary/40 transition-all"
           />
         </div>
@@ -315,7 +314,10 @@ export default function SellerProducts() {
           <FilterDropdown
             label={t("seller.products.filterAiValidation")}
             value={statusFilter}
-            onChange={setStatusFilter}
+            onChange={(val) => {
+              setStatusFilter(val);
+              setPage(1);
+            }}
             options={statusOptions}
           />
         </div>
@@ -328,7 +330,15 @@ export default function SellerProducts() {
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <DataTable columns={columns} data={filteredProducts} />
+          <DataTable
+            columns={columns}
+            data={products}
+            manualPagination={true}
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            totalRecords={pagination.total}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
         )}
       </div>
 

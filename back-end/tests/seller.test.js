@@ -28,24 +28,42 @@ describe('Seller Services', () => {
 
   // ─── listSellerProducts ────────────────────────────────────
   describe('listSellerProducts', () => {
-    test('should fetch and return products filtered by seller ID', async () => {
+    test('should fetch and return products filtered by seller ID with pagination', async () => {
       const mockProducts = [
         { _id: mockProductId, basic: { name: 'Modern Chair' }, sellerId: mockSellerId }
       ];
       
+      Product.countDocuments.mockResolvedValue(1);
       Product.find.mockReturnValue({
-        sort: jest.fn().mockResolvedValue(mockProducts)
+        sort: jest.fn().mockReturnValue({
+          skip: jest.fn().mockReturnValue({
+            limit: jest.fn().mockResolvedValue(mockProducts)
+          })
+        })
       });
 
-      const result = await sellerService.listSellerProducts(mockSellerId);
+      const result = await sellerService.listSellerProducts(mockSellerId, { page: 1, limit: 10 });
       
       expect(Product.find).toHaveBeenCalledWith({ sellerId: mockSellerId });
-      expect(result).toEqual(mockProducts);
+      expect(result).toEqual({
+        products: mockProducts,
+        pagination: {
+          total: 1,
+          page: 1,
+          limit: 10,
+          totalPages: 1
+        }
+      });
     });
 
     test('should apply optional filters for status and search query', async () => {
+      Product.countDocuments.mockResolvedValue(0);
       Product.find.mockReturnValue({
-        sort: jest.fn().mockResolvedValue([])
+        sort: jest.fn().mockReturnValue({
+          skip: jest.fn().mockReturnValue({
+            limit: jest.fn().mockResolvedValue([])
+          })
+        })
       });
 
       await sellerService.listSellerProducts(mockSellerId, {
