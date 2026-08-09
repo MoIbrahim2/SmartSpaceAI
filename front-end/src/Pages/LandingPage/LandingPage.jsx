@@ -308,11 +308,8 @@ const LandingPage = () => {
       <header className={`main-header ${isScrolled ? "scrolled" : ""}`} id="header">
         <div className="nav-container">
           {/* Logo */}
-          <div className="logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <span className="logo-main">
-              SmartSpace<span>.ai</span>
-            </span>
-            <span className="logo-sub">{t("common.logoSub")}</span>
+          <div className="logo cursor-pointer flex items-center" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-12 md:h-14 w-auto object-contain rounded-xl" />
           </div>
 
           {/* Mobile Overlay */}
@@ -325,8 +322,8 @@ const LandingPage = () => {
           <div className={`nav-wrapper ${isMobileMenuOpen ? "mobile-open" : ""}`}>
             {/* Mobile Header (Hidden on Desktop) */}
             <div className="mobile-drawer-header">
-              <div className="logo" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setIsMobileMenuOpen(false); }}>
-                <span className="logo-main">SmartSpace<span>.ai</span></span>
+              <div className="logo cursor-pointer flex items-center" onClick={() => { window.scrollTo({ top: 0, behavior: "smooth" }); setIsMobileMenuOpen(false); }}>
+                <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-10 w-auto object-contain rounded-xl" />
               </div>
               <button className="mobile-drawer-close" onClick={() => setIsMobileMenuOpen(false)}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -598,7 +595,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="person" size={18} />
-                      <span>My Profile</span>
+                      <span>{t("common.myProfile")}</span>
                     </Link>
 
                     <Link
@@ -617,7 +614,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="dashboard" size={18} />
-                      <span>Dashboard</span>
+                      <span>{t("common.dashboard")}</span>
                     </Link>
 
                     <Link
@@ -636,7 +633,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="settings" size={18} />
-                      <span>Settings</span>
+                      <span>{t("common.settings")}</span>
                     </Link>
 
                     <button
@@ -661,7 +658,7 @@ const LandingPage = () => {
                       }}
                     >
                       <Icon name="logout" size={18} />
-                      <span>Logout</span>
+                      <span>{t("common.logout")}</span>
                     </button>
                   </div>
                 )}
@@ -1588,7 +1585,9 @@ const LandingPage = () => {
         <div className="container">
           <div className="landing-footer-grid">
             <div className="landing-footer-brand">
-              <div className="landing-footer-logo">SmartSpace AI</div>
+              <div className="landing-footer-logo">
+                <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-14 w-auto object-contain rounded-xl" />
+              </div>
               <p>
                 {t("landing.footerDesc")}
               </p>

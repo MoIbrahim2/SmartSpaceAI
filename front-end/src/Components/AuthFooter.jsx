@@ -8,8 +8,8 @@ const AuthFooter = () => {
     <footer className="w-full border-t border-surface-container bg-surface px-6 py-12 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] md:px-12">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 md:grid-cols-4">
         <div className="col-span-1 md:col-span-2">
-          <div className="mb-4 text-2xl font-headline font-extrabold text-primary">
-            SmartSpace AI
+          <div className="mb-4">
+            <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-12 w-auto object-contain rounded-xl" />
           </div>
           <p className="max-w-xs text-sm font-medium text-on-surface-variant">
             {t("landing.footerDesc")}

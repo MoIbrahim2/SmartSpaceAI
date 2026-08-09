@@ -52,16 +52,8 @@ const StudioHeader = () => {
   return (
     <header className="sticky top-0 z-50 mb-4 bg-surface-bright px-6 py-4 neo-shadow md:px-20">
       <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/home")}>
-          <div className="flex items-center justify-center rounded-lg bg-primary p-2 text-white neo-shadow">
-            <svg className="size-6 text-white" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M42.1739 20.1739L27.8261 5.82609C29.1366 7.13663 28.3989 10.1876 26.2002 13.7654C24.8538 15.9564 22.9595 18.3449 20.6522 20.6522C18.3449 22.9595 15.9564 24.8538 13.7654 26.2002C10.1876 28.3989 7.13663 29.1366 5.82609 27.8261L20.1739 42.1739C21.4845 43.4845 24.5355 42.7467 28.1133 40.548C30.3042 39.2016 32.6927 37.3073 35 35C37.3073 32.6927 39.2016 30.3042 40.548 28.1133C42.7467 24.5355 43.4845 21.4845 42.1739 20.1739Z"
-                fill="currentColor"
-              />
-            </svg>
-          </div>
-          <h1 className="text-xl font-bold tracking-tight text-on-surface">SmartSpace</h1>
+        <div className="cursor-pointer flex items-center" onClick={() => navigate("/home")}>
+          <img src="/img/logo-smart.png" alt="SmartSpace Logo" className="h-12 w-auto object-contain rounded-xl" />
         </div>
         <div className="flex items-center gap-6 md:gap-8">
           <nav className="hidden md:flex items-center space-x-6 rtl:space-x-reverse">

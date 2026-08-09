@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
-import AuthFooter from "../../Components/AuthFooter";
 import AuthHeader from "../../Components/AuthHeader";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -15,21 +14,6 @@ const Register = () => {
   const handleGoogleLogin = () => {
     window.location.href = `${BASE_URL}/auth/google`;
   };
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    const wasDark = document.documentElement.classList.contains("dark");
-    localStorage.setItem("theme", "light");
-    document.documentElement.classList.remove("dark");
-    return () => {
-      if (savedTheme) {
-        localStorage.setItem("theme", savedTheme);
-      } else {
-        localStorage.removeItem("theme");
-      }
-      if (wasDark) document.documentElement.classList.add("dark");
-    };
-  }, []);
 
   if (!authLoading && user) {
     return <Navigate to="/home" replace />;
@@ -74,7 +58,6 @@ const Register = () => {
         if (typeof first === "string") {
           setError(first);
         } else if (first?.message) {
-          // setError(message);
           setError(first.message);
         } else if (message) {
           setError(message);
@@ -92,50 +75,101 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden selection:bg-primary selection:text-white">
-      <AuthHeader />
-      <main className="flex min-h-screen w-full flex-col pt-20 md:flex-row">
-        <section className="relative flex min-h-[300px] w-full items-center justify-center overflow-hidden md:w-1/2 md:min-h-[calc(100vh-5rem)] md:h-auto">
-          <div
-            className="absolute inset-0 z-0 scale-105 bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAECV86QIDbLqCj-StzHK5q__v117f5ZgBsJ4uhI4u6On-yr5QvLPhY52-wbXn4gveHo4K-UY6Gi8gh4yUjPDJYKAHabrGeU1OVW0dX6PFBwCxCLlqDy7ciP_OO5iDLnZsQ24V3Nk7p4o59o799Swytsdd8pGXnimbumr9HGMpDyqo5ENaJG0piSHp0dSGQfNyILR6cnSryRDJmcsOkh3rJNjj3insrpjFaycxbVK0quAl2VqA7d8Jt')",
-            }}
-          >
-            <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
-          </div>
-          <div className="relative z-10 px-6 text-center py-20">
-            <h1 className="text-4xl font-headline font-extrabold tracking-tight text-white drop-shadow-2xl md:text-6xl">
-              {t("common.logoMain")}
-            </h1>
-            <p className="mx-auto mt-4 max-w-md text-lg font-medium text-white/90 drop-shadow-lg">
-              {t("landing.heroLead")}
-            </p>
-          </div>
-        </section>
+    <div className="relative flex min-h-screen w-full flex-col justify-between overflow-x-hidden text-[#1c1917] selection:bg-[#a67443] selection:text-white font-body">
+      {/* High-Resolution Interior Design Background with Balanced Medium Lighting Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-500"
+        style={{ backgroundImage: `url('/img/office.png')` }}
+      >
+        <div className="absolute inset-0 bg-black/25 bg-gradient-to-r from-black/55 via-black/20 to-black/35 rtl:bg-gradient-to-l backdrop-blur-[0.5px]" />
+      </div>
 
-        <section className="flex w-full flex-col items-center justify-center bg-surface p-8 md:w-1/2 md:p-16 lg:p-24">
-          <div className="w-full max-w-md">
-            <header className="mb-10 pb-2 text-center md:text-left rtl:md:text-right">
-              <h2 className="text-3xl font-headline font-semibold text-on-surface">{t("auth.createAccount")}</h2>
-              <p className="mt-2 font-medium text-on-surface-variant">
+      {/* Navigation Header */}
+      <AuthHeader />
+
+      {/* Main Content Layout */}
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-6 pt-24 pb-8 md:px-12 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
+        
+        {/* Left Side: Headline, Description & 3 Feature Badges */}
+        <div className="mb-8 max-w-xl text-white lg:mb-0 lg:w-1/2">
+          {/* Badge Pill */}
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/15 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-md">
+            <Icon name="auto_awesome" size={14} className="text-amber-300" />
+            <span>{t("landing.aiPoweredBadge")}</span>
+          </div>
+
+          <h1 className="text-3xl font-headline font-extrabold tracking-tight text-white drop-shadow-md md:text-5xl lg:text-6xl leading-[1.15]">
+            {t("landing.welcomeTo")} <br />
+            <span className="text-white">Smart</span>
+            <span className="text-[#cda37f]">Space AI</span>
+          </h1>
+
+          <p className="mt-4 max-w-md text-sm font-medium text-white/85 drop-shadow md:text-base leading-relaxed">
+            {t("landing.heroLead")}
+          </p>
+
+          {/* 3 Feature Badges */}
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {/* Feature 1 */}
+            <div className="flex flex-col items-start gap-1.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="auto_awesome" size={20} />
+              </div>
+              <h4 className="text-xs font-bold text-white">{t("landing.aiPoweredTitle")}</h4>
+              <p className="text-xs font-medium text-white/70 leading-normal max-w-[130px]">
+                {t("landing.aiPoweredDesc")}
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="flex flex-col items-start gap-1.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="view_in_ar" size={20} />
+              </div>
+              <h4 className="text-xs font-bold text-white">{t("landing.tabVirtualStaging")}</h4>
+              <p className="text-xs font-medium text-white/70 leading-normal max-w-[130px]">
+                {t("landing.virtualStagingDesc")}
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="flex flex-col items-start gap-1.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="bolt" size={20} />
+              </div>
+              <h4 className="text-xs font-bold text-white">{t("landing.oneClickTitle")}</h4>
+              <p className="text-xs font-medium text-white/70 leading-normal max-w-[130px]">
+                {t("landing.oneClickDesc")}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Clean, Modern & Balanced Signup Card */}
+        <div className="w-full max-w-[460px] lg:w-1/2 lg:ml-auto rtl:lg:mr-auto rtl:lg:ml-0">
+          <div className="w-full rounded-3xl bg-[#f5f0ea] dark:bg-[#181614] p-7 sm:p-8 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/10 text-[#1c1917] dark:text-white transition-all">
+            <header className="mb-6 text-left rtl:text-right">
+              <h2 className="text-2xl font-headline font-bold text-[#1c1917] dark:text-white tracking-tight">{t("auth.createAccount")}</h2>
+              <p className="mt-1 text-xs font-medium text-[#78716c] dark:text-white/70">
                 {t("auth.joinVisionaries")}
               </p>
             </header>
 
             {error && (
-              <div className="mb-6 rounded-xl bg-error/10 px-5 py-3 text-sm font-medium text-error">
+              <div className="mb-5 rounded-xl bg-red-500/15 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-300 border border-red-500/30">
                 {error}
               </div>
             )}
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-firstname">{t("auth.firstName")}</label>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              {/* First Name & Last Name */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col gap-1.5">
+                  <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider" htmlFor="reg-firstname">
+                    {t("auth.firstName")}
+                  </label>
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface px-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="John"
                     type="text"
                     autoComplete="given-name"
@@ -146,10 +180,12 @@ const Register = () => {
                     required
                   />
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-lastname">{t("auth.lastName")}</label>
+                <div className="flex flex-col gap-1.5">
+                  <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider" htmlFor="reg-lastname">
+                    {t("auth.lastName")}
+                  </label>
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface px-5 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="Doe"
                     type="text"
                     autoComplete="family-name"
@@ -162,12 +198,15 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-email">{t("auth.emailAddress")}</label>
-                <div className="relative flex items-center">
-                  <Icon name="mail" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
+              {/* Email Address */}
+              <div className="flex flex-col gap-1.5">
+                <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider" htmlFor="reg-email">
+                  {t("auth.emailAddress")}
+                </label>
+                <div className="group relative flex items-center">
+                  <Icon name="mail" className="absolute left-3.5 rtl:left-auto rtl:right-3.5 text-[#78716c] dark:text-white/50 transition-colors group-focus-within:text-[#a67443] dark:group-focus-within:text-amber-400" size={18} />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="john.doe@example.com"
                     type="email"
                     autoComplete="email"
@@ -180,12 +219,15 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-dob">{t("auth.dateOfBirth")}</label>
-                <div className="relative flex items-center">
-                  <Icon name="calendar_today" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
+              {/* Date of Birth */}
+              <div className="flex flex-col gap-1.5">
+                <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider" htmlFor="reg-dob">
+                  {t("auth.dateOfBirth")}
+                </label>
+                <div className="group relative flex items-center">
+                  <Icon name="calendar_today" className="absolute left-3.5 rtl:left-auto rtl:right-3.5 text-[#78716c] dark:text-white/50 transition-colors group-focus-within:text-[#a67443] dark:group-focus-within:text-amber-400" size={18} />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     type="date"
                     autoComplete="bday"
                     name="dateOfBirth"
@@ -197,12 +239,15 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-password">{t("auth.password")}</label>
-                <div className="relative flex items-center">
-                  <Icon name="lock" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
+              {/* Password */}
+              <div className="flex flex-col gap-1.5">
+                <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider" htmlFor="reg-password">
+                  {t("auth.password")}
+                </label>
+                <div className="group relative flex items-center">
+                  <Icon name="lock" className="absolute left-3.5 rtl:left-auto rtl:right-3.5 text-[#78716c] dark:text-white/50 transition-colors group-focus-within:text-[#a67443] dark:group-focus-within:text-amber-400" size={18} />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="••••••••"
                     type="password"
                     autoComplete="new-password"
@@ -213,17 +258,17 @@ const Register = () => {
                     required
                   />
                 </div>
-                <p className="px-2 text-xs text-on-surface-variant/70">
-                  {t("auth.passwordHint", { defaultValue: "Must be at least 8 characters, include an uppercase letter, a lowercase letter, and a number." })}
-                </p>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="px-2 text-sm font-semibold text-on-surface-variant" htmlFor="reg-confirm">{t("auth.confirmPassword")}</label>
-                <div className="relative flex items-center">
-                  <Icon name="shield" className="absolute left-5 rtl:left-auto rtl:right-5 text-outline" />
+              {/* Confirm Password */}
+              <div className="flex flex-col gap-1.5">
+                <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider" htmlFor="reg-confirm">
+                  {t("auth.confirmPassword")}
+                </label>
+                <div className="group relative flex items-center">
+                  <Icon name="shield" className="absolute left-3.5 rtl:left-auto rtl:right-3.5 text-[#78716c] dark:text-white/50 transition-colors group-focus-within:text-[#a67443] dark:group-focus-within:text-amber-400" size={18} />
                   <input
-                    className="h-12 w-full rounded-full border-none bg-surface pl-14 pr-5 rtl:pl-5 rtl:pr-14 text-on-surface outline-none transition-all placeholder:text-outline/50 focus:ring-2 focus:ring-primary/20 neo-inset"
+                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="••••••••"
                     type="password"
                     autoComplete="new-password"
@@ -236,65 +281,77 @@ const Register = () => {
                 </div>
               </div>
 
-              <label className="flex cursor-pointer items-center gap-3 px-2">
+              {/* Terms Agreement Checkbox */}
+              <label className="flex cursor-pointer items-center gap-2.5 px-1 pt-1">
                 <input
                   type="checkbox"
                   className="peer sr-only"
                   checked={agree}
                   onChange={() => setAgree((value) => !value)}
                 />
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-surface neo-inset peer-checked:bg-primary/10">
-                  {agree && <Icon name="check" className="font-bold text-primary" />}
+                <div className="flex h-4.5 w-4.5 items-center justify-center rounded-md border border-[#a8a29e] dark:border-white/30 bg-[#eae3d9] dark:bg-white/10 transition-all peer-checked:border-[#a67443] dark:peer-checked:border-amber-500 peer-checked:bg-[#a67443] dark:peer-checked:bg-amber-500 peer-checked:text-white">
+                  {agree && <Icon name="check" size={13} className="font-bold" />}
                 </div>
-                <span className="text-sm font-medium text-on-surface-variant">
+                <span className="select-none text-xs font-bold text-[#44403c] dark:text-white/90">
                   {t("auth.agreeToTerms")}
                 </span>
               </label>
 
+              {/* Submit Button */}
               <button
-                className="mt-4 flex h-14 w-full items-center justify-center gap-2 rounded-full bg-surface text-lg font-bold text-primary transition-all neo-raised neo-button-active disabled:opacity-50"
+                className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base tracking-wide shadow-md shadow-[#a67443]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                 type="submit"
                 disabled={loading}
               >
                 {loading ? t("auth.creatingAccount") : t("auth.createAccount")}
-                {!loading && <Icon name="arrow_forward" className="rtl:rotate-180" />}
+                {!loading && <Icon name="arrow_forward" className="rtl:rotate-180" size={18} />}
               </button>
             </form>
 
-            <footer className="mt-10 text-center">
-              <p className="text-sm font-medium text-on-surface-variant">
-                {t("auth.alreadyHaveAccount")}
-                <Link className="ml-1 rtl:mr-1 font-bold text-primary transition-all hover:underline" to="/login">
-                  {t("common.logIn")}
-                </Link>
-              </p>
-            </footer>
-          </div>
+            {/* Divider */}
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-[1px] flex-1 bg-[#d6d3d1] dark:bg-white/15" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#a8a29e] dark:text-white/50">
+                OR CONTINUE WITH
+              </span>
+              <div className="h-[1px] flex-1 bg-[#d6d3d1] dark:bg-white/15" />
+            </div>
 
-          <div className="mt-12 flex w-full max-w-md items-center gap-4">
-            <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
-            <span className="px-2 text-xs font-semibold uppercase tracking-wider text-outline">
-              {t("auth.orContinueWith")}
-            </span>
-            <div className="h-[2px] flex-1 bg-surface-container neo-inset" />
-          </div>
-
-          <div className="mt-8 flex w-full max-w-md justify-center">
+            {/* Google Signup Button */}
             <button
-              className="group flex h-12 w-full items-center justify-center gap-3 rounded-full bg-surface transition-all neo-raised neo-button-active"
+              className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#e7e5e4] dark:border-white/20 bg-white dark:bg-white/10 hover:bg-stone-50 dark:hover:bg-white/15 text-[#1c1917] dark:text-white font-semibold text-sm shadow-sm transition-all active:scale-[0.99]"
               type="button"
               onClick={handleGoogleLogin}
             >
-              <img
-                alt="Google"
-                className="h-5 w-5 transition-all group-hover:scale-110"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0iZ08QqXPT_57FQNabTR52r9m5yVAETYLB0RtwDtn6V6O1HcmkLmfwO33RTfR-ww1icUtLBpIUp6o-E1JHGGxVKtEmLgIwq18Zj27ymfSVyR9O85cCyGEwARHECx0x75vRCW59e0Pw3JpQwxKgLJ9ti5Vi2Rg6bIZbtQBLg6Atifa25EcViRpkabbM-6dFmhapwDhA1it1g_4Lyjz0hjZkniz8xj1cE-PWyenL_vWOzZPZirWRy9y"
-              />
-              <span className="text-sm font-semibold text-on-surface">{t("auth.google")}</span>
+              <svg 
+                className="w-5 h-5 min-w-[20px] min-h-[20px] max-w-[20px] max-h-[20px] shrink-0 transition-transform group-hover:scale-110 inline-block align-middle" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24"
+              >
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>{t("auth.google")}</span>
             </button>
+
+            {/* Log In Link */}
+            <p className="mt-5 text-center text-xs font-medium text-[#78716c] dark:text-white/70">
+              {t("auth.alreadyHaveAccount")}
+              <Link className="ml-1 rtl:mr-1 font-bold text-[#a67443] dark:text-amber-400 hover:underline transition-colors" to="/login">
+                {t("common.logIn")}
+              </Link>
+            </p>
           </div>
-        </section>
+        </div>
       </main>
+
+      {/* Simple Clean Page Footer Copyright */}
+      <footer className="relative z-10 text-center pb-5 text-xs font-medium text-white/60 drop-shadow">
+        © 2024 SmartSpace AI. All rights reserved.
+      </footer>
     </div>
   );
 };
