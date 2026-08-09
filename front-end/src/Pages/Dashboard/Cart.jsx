@@ -19,7 +19,7 @@ const Cart = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("stripe"); // 'stripe' or 'cod'
+  const [paymentMethod] = useState("request");
 
   const [shippingAddress, setShippingAddress] = useState({
     name: user ? `${user.firstName || ""} ${user.lastName || ""}`.trim() : "",
@@ -74,12 +74,6 @@ const Cart = () => {
 
       if (data.success) {
         clearCart();
-        if (paymentMethod === "stripe" && data.data.checkoutUrl) {
-          // Redirect user to Stripe Checkout Session URL
-          window.location.href = data.data.checkoutUrl;
-          return;
-        }
-
         navigate("/orders", { state: { orderSuccess: true } });
       }
     } catch (err) {
@@ -314,29 +308,29 @@ const Cart = () => {
               </div>
             </div>
 
-            {/* Payment Method Selector (Stripe Exclusive) */}
+            {/* Direct Request to Seller (No Online Payment Required) */}
             <div className="pt-4 border-t border-outline-variant/20">
               <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-3">
-                Payment Method
+                Order Process
               </label>
 
               <div className="p-4 rounded-2xl flex items-center justify-between border border-primary/40 bg-primary/10 text-primary shadow-md">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-md">
-                    <Icon name="credit_card" size={20} />
+                    <Icon name="send" size={20} />
                   </div>
                   <div>
-                    <span className="font-bold text-sm text-on-surface block">Stripe Card & Online Payment</span>
-                    <span className="text-xs text-on-surface-variant">256-bit SSL encrypted & secure checkout</span>
+                    <span className="font-bold text-sm text-on-surface block">Direct Request to Seller</span>
+                    <span className="text-xs text-on-surface-variant">No online payment required. Request sent directly to seller.</span>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-600 text-white uppercase tracking-wider">
-                  Stripe Only
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-primary text-white uppercase tracking-wider">
+                  Direct Request
                 </span>
               </div>
             </div>
 
-            {/* Order Summary & Pay Button */}
+            {/* Order Summary & Send Request Button */}
             <div className="neomorph-inset p-4 rounded-2xl flex flex-col gap-2 mt-2">
               <div className="flex justify-between text-xs text-on-surface-variant">
                 <span>Total Batches (Sellers)</span>
@@ -360,14 +354,12 @@ const Cart = () => {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <Icon name="refresh" className="animate-spin" size={20} />
-                  <span>Processing Checkout...</span>
+                  <span>Sending Request to Seller...</span>
                 </div>
               ) : (
                 <>
-                  <Icon name={paymentMethod === "stripe" ? "lock" : "check_circle"} size={20} />
-                  <span>
-                    {paymentMethod === "stripe" ? "Proceed to Stripe Payment" : "Place Orders (Cash on Delivery)"}
-                  </span>
+                  <Icon name="send" size={20} />
+                  <span>Send Request to Seller</span>
                 </>
               )}
             </button>

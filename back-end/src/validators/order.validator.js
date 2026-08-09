@@ -23,7 +23,7 @@ const checkoutSchema = Joi.object({
       street: Joi.string().required().trim()
     }).required()
   }).required(),
-  paymentMethod: Joi.string().valid('stripe', 'cod').default('stripe')
+  paymentMethod: Joi.string().valid('request', 'stripe', 'cod').default('request')
 });
 
 module.exports = {

@@ -15,7 +15,7 @@ const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SEC
  * @returns {Promise<Object>}
  */
 const checkout = async (buyerId, payload) => {
-  const { items, customer, paymentMethod = 'stripe' } = payload;
+  const { items, customer, paymentMethod = 'request' } = payload;
 
   if (!items || items.length === 0) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Cart must contain at least one item');
@@ -32,11 +32,14 @@ const checkout = async (buyerId, payload) => {
       product = await Product.findOne({ 'basic.name': item.name });
     }
 
-    const price = Number(item.price) || product?.pricing?.currentPrice || product?.price || 0;
+    const itemPriceNum = Number(item.price);
+    const price = (!isNaN(itemPriceNum) && itemPriceNum >= 0)
+      ? itemPriceNum
+      : (product?.pricing?.currentPrice || product?.price || 0);
     const name = item.name || product?.basic?.name || 'Furniture Item';
     const image = item.image || product?.images?.[0]?.url || product?.images?.[0] || null;
 
-    if (price <= 0) {
+    if (price < 0 || isNaN(price)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Invalid product price for ${name}`);
     }
 
