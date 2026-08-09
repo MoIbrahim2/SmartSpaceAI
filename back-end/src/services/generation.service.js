@@ -548,6 +548,9 @@ const generateRoomImage = async (userId, generationId) => {
 
     const userPrompt = generation.userPrompt || generation.prompt || '';
 
+    const maskDataBase64 = generation.spatialGuardrail?.maskDataBase64 || null;
+    const maskImageUrl = generation.spatialGuardrail?.maskImageUrl || null;
+
     const imageResult = await aiService.generateRoomCompositeImage({
       roomImageUrl,
       selectedProducts: generation.selectedProducts || [],
@@ -557,6 +560,8 @@ const generateRoomImage = async (userId, generationId) => {
       roomType,
       generationType: generation.generationType || 'CREATE_FROM_SCRATCH',
       resolution: generation.resolution || { width: 1280, height: 720 },
+      maskDataBase64,
+      maskImageUrl,
     });
 
     const generatedImageObj = {
@@ -668,6 +673,73 @@ const getLatestGenerationForRoom = async (userId, roomId) => {
   return generation;
 };
 
+/**
+ * Refine an existing generated room image based on a spatial prompt.
+ * @param {string} userId
+ * @param {string} generationId
+ * @param {Object} payload - { prompt, resolution }
+ * @returns {Promise<Object>} Updated generation record
+ */
+const refineRoomImage = async (userId, generationId, payload) => {
+  const generation = await Generation.findById(generationId);
+  if (!generation) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'generation.not_found');
+  }
+  if (generation.ownerId.toString() !== userId.toString()) {
+    throw new ApiError(HTTP_STATUS.FORBIDDEN, 'generation.forbidden');
+  }
+
+  const previousImageUrl = generation.generatedImage?.url;
+  if (!previousImageUrl) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'No previous generated image exists to refine.');
+  }
+
+  const prompt = payload.prompt?.trim();
+  if (!prompt) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Refinement prompt is required.');
+  }
+
+  generation.status = 'PROCESSING';
+  await generation.save();
+
+  try {
+    const resolution = generation.resolution || { width: 1280, height: 720 };
+
+    const imageResult = await aiService.refineRoomImage({
+      previousImageUrl,
+      prompt,
+      resolution
+    });
+
+    const generatedImageObj = {
+      url: imageResult.url,
+      promptUsed: imageResult.promptUsed,
+      modelUsed: imageResult.modelUsed,
+      generatedAt: new Date()
+    };
+
+    generation.generatedImage = generatedImageObj;
+    generation.status = 'COMPLETED';
+    generation.isGenerated = true;
+    generation.completedAt = new Date();
+
+    if (!generation.images) generation.images = [];
+    generation.images.push({
+      url: imageResult.url,
+      promptUsed: imageResult.promptUsed,
+      generatedAt: new Date()
+    });
+
+    await generation.save();
+    return generation;
+  } catch (err) {
+    generation.status = 'FAILED';
+    await generation.save();
+    console.error('[GenerationService] Refine room image failed:', err.message);
+    throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, `Failed to refine room image: ${err.message}`);
+  }
+};
+
 module.exports = {
   createGeneration,
   extractUserPreferences,
@@ -677,7 +749,9 @@ module.exports = {
   deleteGeneration,
   saveSelectedProducts,
   generateRoomImage,
+  refineRoomImage,
   saveUserPrompt,
   saveResolution,
   getLatestGenerationForRoom
 };
+

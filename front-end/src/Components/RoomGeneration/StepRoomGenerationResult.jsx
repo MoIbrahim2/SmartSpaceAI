@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Icon from "../Icon";
 import { API_HOST } from "../../api";
+import { refineRoomImage } from "../../api/GenerationApi";
 import { parseProductDetails, getExternalStoreUrl, formatCategoryName } from "../../utils/productUtils";
+
 import { useCart } from "../../context/CartContext";
 
 const RESOLUTION_CREDIT_COSTS = {
@@ -26,12 +28,14 @@ const StepRoomGenerationResult = ({
   selectedProducts = [],
   isGenerating = false,
   handleRegenerate,
+  handleRefine,
   onFinish,
   resolution = "1080p",
   setResolution,
   userCredits = 0,
   onCreditsError,
   roomData = null,
+  spatialResult = null,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -40,7 +44,19 @@ const StepRoomGenerationResult = ({
   const [addedNotice, setAddedNotice] = useState("");
   const [creditError, setCreditError] = useState("");
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [viewMode, setViewMode] = useState("rendered"); // "rendered" | "widened" | "original"
+  const [viewMode, setViewMode] = useState("rendered"); // "rendered" | "mask" | "widened" | "original"
+
+  // Refinement prompt state
+  const [refinementPrompt, setRefinementPrompt] = useState("");
+  const [isRefining, setIsRefining] = useState(false);
+  const [refineError, setRefineError] = useState("");
+
+  // Zoom & Pan state for 2D Layout Mask view
+
+  const [zoomScale, setZoomScale] = useState(1);
+  const [panPos, setPanPos] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [startPan, setStartPan] = useState({ x: 0, y: 0 });
 
   const safeResString = typeof resolution === "string" 
     ? resolution 
@@ -57,17 +73,77 @@ const StepRoomGenerationResult = ({
   const finalImgUrl = getImageUrl(generatedImage?.url) || null;
   const widenedImgUrl = getImageUrl(roomData?.widenedImageUrl) || null;
   const originalImgUrl = getImageUrl(roomData?.sourceImages?.[0]?.url) || null;
+  const maskImgUrl = 
+    spatialResult?.maskDataBase64 || 
+    roomData?.spatialGuardrail?.maskDataBase64 || 
+    generatedImage?.spatialGuardrail?.maskDataBase64 || 
+    getImageUrl(
+      spatialResult?.maskImageUrl || 
+      roomData?.spatialGuardrail?.maskImageUrl || 
+      generatedImage?.spatialGuardrail?.maskImageUrl
+    ) || null;
 
   // Determine active image URL to render based on viewMode
   let activeDisplayUrl = finalImgUrl;
   let activeBadgeLabel = t("dashboard.smartspaceAIRenderBadge", "SmartSpace AI Render");
-  if (viewMode === "widened" && widenedImgUrl) {
+  if (viewMode === "mask" && maskImgUrl) {
+    activeDisplayUrl = maskImgUrl;
+    activeBadgeLabel = t("dashboard.semantic2DMaskBadge", "2D Layout Semantic Mask");
+  } else if (viewMode === "widened" && widenedImgUrl) {
     activeDisplayUrl = widenedImgUrl;
     activeBadgeLabel = t("dashboard.widenedEmptyRoomBadge", "Widened Empty Room (AI Lens)");
   } else if (viewMode === "original" && originalImgUrl) {
     activeDisplayUrl = originalImgUrl;
     activeBadgeLabel = t("dashboard.originalUploadedBadge", "Original Uploaded Empty Room");
   }
+
+  // Zoom / Pan handlers for Mask View
+  const handleZoomIn = () => setZoomScale((prev) => Math.min(prev + 0.5, 4));
+  const handleZoomOut = () => {
+    setZoomScale((prev) => {
+      const next = Math.max(prev - 0.5, 1);
+      if (next === 1) setPanPos({ x: 0, y: 0 });
+      return next;
+    });
+  };
+  const handleResetZoom = () => {
+    setZoomScale(1);
+    setPanPos({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = (e) => {
+    if (viewMode === "mask") {
+      e.preventDefault();
+      setIsPanning(true);
+      setStartPan({ x: e.clientX - panPos.x, y: e.clientY - panPos.y });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (isPanning && viewMode === "mask") {
+      e.preventDefault();
+      setPanPos({
+        x: e.clientX - startPan.x,
+        y: e.clientY - startPan.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => setIsPanning(false);
+
+  const handleWheel = (e) => {
+    if (viewMode === "mask") {
+      if (e.deltaY < 0) {
+        setZoomScale((prev) => Math.min(prev + 0.25, 4));
+      } else {
+        setZoomScale((prev) => {
+          const next = Math.max(prev - 0.25, 1);
+          if (next === 1) setPanPos({ x: 0, y: 0 });
+          return next;
+        });
+      }
+    }
+  };
 
   const currentCost = RESOLUTION_CREDIT_COSTS[selectedRes] || 12;
   const hasEnoughCredits = userCredits >= currentCost;
@@ -97,7 +173,43 @@ const StepRoomGenerationResult = ({
     }
   };
 
+  const handleRefineClick = async () => {
+    if (!refinementPrompt.trim()) return;
+    if (!hasEnoughCredits) {
+      setRefineError(
+        t("dashboard.insufficientCreditsMsg", {
+          cost: currentCost,
+          userCredits,
+          defaultValue: `Insufficient credits! You need ${currentCost} credits but only have ${userCredits}. Please top up.`
+        })
+      );
+      if (onCreditsError) onCreditsError();
+      return;
+    }
+    setRefineError("");
+    setIsRefining(true);
+    try {
+      if (handleRefine) {
+        await handleRefine(refinementPrompt.trim(), selectedRes);
+      } else {
+        const targetGenId = generatedImage?._id || generatedImage?.generationId || roomData?._id;
+        if (targetGenId) {
+          await refineRoomImage(targetGenId, { prompt: refinementPrompt.trim(), resolution: selectedRes });
+        }
+      }
+      setViewMode("rendered");
+      setAddedNotice(t("dashboard.refineSuccessNotice", "Room layout refined successfully!"));
+      setTimeout(() => setAddedNotice(""), 3500);
+    } catch (err) {
+      console.error("Refinement failed:", err);
+      setRefineError(err.response?.data?.message || err.message || "Failed to refine room layout.");
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
   const displayRes = (typeof selectedRes === "string" ? selectedRes : "1080p").toUpperCase();
+
 
   const handleAddToCart = (prod) => {
     addToCart(prod);
@@ -297,12 +409,15 @@ const StepRoomGenerationResult = ({
         </div>
       </div>
 
-      {/* View Switcher Tabs (Furnished Render vs Widened Empty Room) */}
+      {/* View Switcher Tabs (Furnished Render vs 2D Mask vs Widened Empty Room) */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 p-1.5 rounded-2xl bg-surface-bright/30 neomorph-inset">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => setViewMode("rendered")}
+            onClick={() => {
+              setViewMode("rendered");
+              handleResetZoom();
+            }}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
               viewMode === "rendered"
                 ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20"
@@ -316,7 +431,10 @@ const StepRoomGenerationResult = ({
           {widenedImgUrl && (
             <button
               type="button"
-              onClick={() => setViewMode("widened")}
+              onClick={() => {
+                setViewMode("widened");
+                handleResetZoom();
+              }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                 viewMode === "widened"
                   ? "bg-amber-600 text-white shadow-md"
@@ -331,7 +449,10 @@ const StepRoomGenerationResult = ({
           {originalImgUrl && (
             <button
               type="button"
-              onClick={() => setViewMode("original")}
+              onClick={() => {
+                setViewMode("original");
+                handleResetZoom();
+              }}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                 viewMode === "original"
                   ? "bg-gray-700 text-white shadow-md"
@@ -379,7 +500,7 @@ const StepRoomGenerationResult = ({
       )}
 
       {/* Main Generated Image Preview - Uses object-contain so it NEVER crops! */}
-      <div className="flex-grow bg-white rounded-2xl overflow-hidden flex items-center justify-center min-h-[460px] max-h-[75vh] p-4 mb-6 relative group border border-outline-variant/20 shadow-sm">
+      <div className="flex-grow bg-white rounded-2xl overflow-hidden flex items-center justify-center min-h-[460px] max-h-[75vh] p-4 mb-4 relative group border border-outline-variant/20 shadow-sm select-none">
         {isGenerating ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 z-20 p-6 text-center">
             <div className="relative w-20 h-20 mb-6">
@@ -402,17 +523,74 @@ const StepRoomGenerationResult = ({
           </div>
         ) : activeDisplayUrl ? (
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+            {/* Mask Mode Controls Overlay */}
+            {viewMode === "mask" && (
+              <>
+                <div className="absolute top-4 left-4 z-30 px-3 py-1.5 rounded-xl bg-purple-900/80 backdrop-blur-md text-white text-[11px] font-medium flex items-center gap-1.5 border border-purple-400/30 shadow-lg">
+                  <Icon name="drag_pan" size={14} className="text-purple-300" />
+                  <span>{t("dashboard.panMaskHint", "Scroll to zoom • Click & drag to pan")}</span>
+                </div>
+
+                <div className="absolute top-4 right-4 z-30 flex items-center gap-1 bg-black/80 backdrop-blur-md p-1.5 rounded-xl border border-white/20 shadow-xl pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={handleZoomIn}
+                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all"
+                    title="Zoom In"
+                  >
+                    <Icon name="add" size={16} />
+                  </button>
+                  <span className="text-[11px] font-bold text-white px-1.5 min-w-[36px] text-center">
+                    {Math.round(zoomScale * 100)}%
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleZoomOut}
+                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all"
+                    title="Zoom Out"
+                  >
+                    <Icon name="remove" size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResetZoom}
+                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all ml-1"
+                    title="Reset Zoom & Pan"
+                  >
+                    <Icon name="fit_screen" size={16} />
+                  </button>
+                </div>
+              </>
+            )}
+
             <img
               alt={activeBadgeLabel}
-              className="max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition-transform duration-300 group-hover:scale-[1.01] cursor-pointer"
+              className={`max-w-full max-h-[70vh] w-auto h-auto object-contain rounded-xl shadow-2xl transition-transform ${
+                viewMode === "mask" ? (isPanning ? "cursor-grabbing" : "cursor-grab") : "cursor-pointer group-hover:scale-[1.01]"
+              }`}
+              style={
+                viewMode === "mask"
+                  ? {
+                      transform: `scale(${zoomScale}) translate(${panPos.x / zoomScale}px, ${panPos.y / zoomScale}px)`,
+                      transition: isPanning ? "none" : "transform 0.15s ease-out"
+                    }
+                  : {}
+              }
               src={activeDisplayUrl}
-              onClick={() => setIsLightboxOpen(true)}
+              onClick={() => {
+                if (viewMode !== "mask") setIsLightboxOpen(true);
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onWheel={handleWheel}
             />
 
             {/* Badge & Quick Action Toolbar */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none z-20">
               <div className="px-3.5 py-2 rounded-xl bg-black/75 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/20 shadow-lg pointer-events-auto">
-                <Icon name="auto_awesome" size={14} className="text-amber-400" />
+                <Icon name={viewMode === "mask" ? "grid_view" : "auto_awesome"} size={14} className={viewMode === "mask" ? "text-purple-400" : "text-amber-400"} />
                 <span>{activeBadgeLabel} ({displayRes})</span>
               </div>
 
@@ -456,6 +634,138 @@ const StepRoomGenerationResult = ({
           </div>
         )}
       </div>
+
+      {/* ─── Spatial Refinement & Prompt Manipulation Box ─── */}
+      {finalImgUrl && (
+        <div className="mb-6 p-5 rounded-2xl bg-gradient-to-br from-surface-bright/40 to-background neomorph-raised border border-amber-500/30 animate-fade-in">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center">
+                <Icon name="auto_awesome" size={18} />
+              </div>
+              <div>
+                <h4 className="font-headline font-bold text-sm text-on-surface">
+                  {t("dashboard.refineLayoutTitle", "Refine Furniture Placement & Spatial Layout")}
+                </h4>
+                <p className="text-[11px] text-on-surface-variant">
+                  {t("dashboard.refineLayoutDesc", "Type spatial prompt instructions to relocate, adjust, or shift furniture in the generated image.")}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/20">
+              <Icon name="toll" size={14} />
+              <span>{currentCost} {t("dashboard.credits", "credits")}</span>
+            </div>
+          </div>
+
+          <div className="relative mb-3">
+            <textarea
+              rows={2}
+              value={refinementPrompt}
+              onChange={(e) => setRefinementPrompt(e.target.value)}
+              disabled={isGenerating || isRefining}
+              placeholder={t(
+                "dashboard.refinePlaceholder",
+                "e.g., Move the sofa closer to the left wall, shift nightstand beside the bed, rotate coffee table 90 degrees..."
+              )}
+              className="w-full px-4 py-3 rounded-xl bg-background border border-outline-variant/30 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none transition-all disabled:opacity-50 shadow-inner"
+            />
+          </div>
+
+          {refineError && (
+            <div className="mb-3 px-4 py-2 rounded-xl bg-error/10 text-error text-xs font-semibold flex items-center gap-2 border border-error/20">
+              <Icon name="error" size={16} />
+              <span>{refineError}</span>
+            </div>
+          )}
+
+          <div className="flex justify-end items-center gap-3">
+            <button
+              type="button"
+              onClick={handleRefineClick}
+              disabled={isGenerating || isRefining || !refinementPrompt.trim()}
+              className={`px-6 py-2.5 rounded-xl font-headline font-bold text-xs shadow-md transition-all flex items-center gap-2 ${
+                hasEnoughCredits && refinementPrompt.trim()
+                  ? "bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 text-white hover:from-amber-600 hover:to-yellow-700 shadow-amber-500/25 active:scale-95 cursor-pointer"
+                  : "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              {isRefining ? (
+                <>
+                  <Icon name="sync" size={16} className="animate-spin" />
+                  <span>{t("dashboard.refiningImage", "Refining Layout...")}</span>
+                </>
+              ) : (
+                <>
+                  <Icon name="auto_awesome" size={16} />
+                  <span>{t("dashboard.regenerateWithPrompt", "Regenerate with Spatial Refinement")}</span>
+                  <span className="opacity-90">• ({currentCost} cr)</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+
+      {/* 2D Layout Semantic Legend (Visible in Mask Mode) */}
+      {viewMode === "mask" && (
+        <div className="mb-6 p-4 rounded-2xl bg-surface-bright/20 neomorph-inset border border-purple-500/20 animate-fade-in">
+          <div className="flex items-center gap-2 mb-3">
+            <Icon name="palette" size={18} className="text-purple-500" />
+            <span className="text-xs font-bold text-on-surface uppercase tracking-wider">
+              {t("dashboard.semanticLegendTitle", "2D Semantic Segmentation Color Map")}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#805AD5]" />
+              <span className="font-semibold text-on-surface">Bed</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#2B6CB0]" />
+              <span className="font-semibold text-on-surface">Sofa / Seating</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#C53030]" />
+              <span className="font-semibold text-on-surface">TV Console</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#2F855A]" />
+              <span className="font-semibold text-on-surface">Table</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#319795]" />
+              <span className="font-semibold text-on-surface">Coffee Table</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#ED8936]" />
+              <span className="font-semibold text-on-surface">Nightstand</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#D69E2E]" />
+              <span className="font-semibold text-on-surface">Wardrobe</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#38A169]" />
+              <span className="font-semibold text-on-surface">Desk</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#DD6B20]" />
+              <span className="font-semibold text-on-surface">Chair</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-white/40">
+              <span className="w-3 h-3 rounded-full bg-[#FFFFFF] border border-gray-400" />
+              <span className="font-semibold text-on-surface">Door Clearance Zone</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-background border border-outline-variant/20">
+              <span className="w-3 h-3 rounded-full bg-[#00FFFF]" />
+              <span className="font-semibold text-on-surface">Window Clearance Zone</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Fullscreen Lightbox Modal */}
       {isLightboxOpen && activeDisplayUrl && (

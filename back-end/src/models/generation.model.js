@@ -107,7 +107,21 @@ const generationSchema = new mongoose.Schema({
     width_cm: { type: Number },
     height_cm: { type: Number },
     budget_egp: { type: Number },
-    room_image_path: { type: String }
+    room_image_path: { type: String },
+    doors: [{
+      x: { type: Number },
+      y: { type: Number },
+      width: { type: Number },
+      height: { type: Number },
+      wall: { type: String }
+    }],
+    windows: [{
+      x: { type: Number },
+      y: { type: Number },
+      width: { type: Number },
+      height: { type: Number },
+      wall: { type: String }
+    }]
   },
   generatedImage: {
     url: { type: String },
@@ -119,6 +133,8 @@ const generationSchema = new mongoose.Schema({
     isApplicable: { type: Boolean, default: null },
     productsHash: { type: String, default: null },
     naturalLanguagePrompt: { type: String, default: '' },
+    maskDataBase64: { type: String, default: null },
+    maskImageUrl: { type: String, default: null },
     layoutDiagram: {
       roomDimensions: {
         length: { type: Number },

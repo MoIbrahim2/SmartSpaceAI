@@ -40,6 +40,7 @@ router.post('/:id/save-prompt', protect, generationController.saveUserPrompt);
 router.post('/:id/save-resolution', protect, generationController.saveResolution);
 router.post('/:id/save-products', protect, generationController.saveSelectedProducts);
 router.post('/:id/generate-image', protect, aiLimiter, generationController.generateRoomImage);
+router.post('/:id/refine', protect, aiLimiter, generationController.refineRoomImage);
 router.post('/', protect, uploadGenerationImages, parseGenerationBody, validate(createGenerationSchema), generationController.createGeneration);
 router.patch('/:id', protect, uploadGenerationImages, parseGenerationBody, validate(updateGenerationSchema), generationController.updateGeneration);
 router.delete('/:id', protect, generationController.deleteGeneration);

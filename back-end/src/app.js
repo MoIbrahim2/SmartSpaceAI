@@ -53,8 +53,9 @@ app.use(cookieParser());
 // Compress response bodies
 app.use(compression());
 
-// Serve uploads folder statically so profile images can be retrieved
+// Serve uploads and public folders statically so profile images and room assets can be retrieved
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/public', express.static(path.join(__dirname, '../public')));
 
 // Fallback OAuth redirects for callbacks without /api prefix
 app.get('/auth/google/callback', (req, res) => {

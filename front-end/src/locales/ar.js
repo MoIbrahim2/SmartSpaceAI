@@ -474,6 +474,13 @@ const ar = {
     preferencesExtracted: "التوصيات جاهزة!",
     extractingPreferences: "فهم تعليمات وتفضيلات تصميمك",
     extractionHint: "يقوم سمارت سبيس بتحليل طلبك ومطابقة أفضل التوصيات للأثاث والديكور.",
+    refineLayoutTitle: "تعديل أماكن الأثاث والتوزيع المكاني",
+    refineLayoutDesc: "اكتب تعليمات مكانية لنقل أو تعديل أو تحريك قطع الأثاث في الصورة المولدة.",
+    refinePlaceholder: "مثال: انقل الكنبة ناحية الحيطة الشمال، حرك الكومودينو جنب السرير، انقل الشاشة جنب الدولاب...",
+    refinementPromptEmpty: "يرجى كتابة تعليمات التعديل الوصفية لنقل قطع الأثاث.",
+    refiningImage: "جاري تعديل التوزيع المكاني...",
+    regenerateWithPrompt: "إعادة التوليد بتعديل المكان",
+    refineSuccessNotice: "تم تعديل توزيع الأثاث في الغرفة بنجاح!",
 
     // 2D Spatial Guardrails
     calculatingFloorplanTitle: "حساب التخطيط ثنائي الأبعاد للغرفة والمساحات المتاحة...",

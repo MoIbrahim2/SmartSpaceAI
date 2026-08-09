@@ -9,10 +9,12 @@ import {
   extractPreferences,
   saveSelectedProducts,
   generateRoomImage,
+  refineRoomImage,
   getLatestGenerationForRoom,
   saveResolution,
   validateSpatial
 } from "../../api";
+
 import { getProductId, cleanProductTitle } from "../../utils/productUtils";
 import { useAuth } from "../../context/AuthContext";
 
@@ -590,9 +592,6 @@ const RoomGeneration = () => {
       return;
     }
 
-    // Reset previous image render result so updated product selections (e.g. adding a Rug) generate fresh output
-    setGeneratedImageResult(null);
-
     // Show spatial overlay immediately
     console.log("[Spatial Guardrail UI] Setting spatialValidating = true overlay.");
     setSpatialValidating(true);
@@ -808,7 +807,48 @@ const RoomGeneration = () => {
     }
   };
 
+  /**
+   * Refine generated image with spatial manipulation prompt
+   */
+  const handleRefineImage = async (refinementPrompt, targetResolution) => {
+    if (!generationId) return;
+    const resToUse = targetResolution || resolution;
+    setIsGeneratingImage(true);
+    try {
+      const { data } = await refineRoomImage(generationId, {
+        prompt: refinementPrompt,
+        resolution: resToUse
+      });
+      if (data.success && data.data.generation?.generatedImage) {
+        setGeneratedImageResult(data.data.generation.generatedImage);
+      }
+      if (data.data?.remainingCredits !== undefined) {
+        setUserCredits(data.data.remainingCredits);
+      }
+      const freshCredits = await refreshCredits();
+      if (freshCredits !== null) {
+        setUserCredits(freshCredits);
+      }
+      return data;
+    } catch (err) {
+      console.error("Refine image API error:", err);
+      if (err.response?.status === 402) {
+        setError(err.response?.data?.message || "Insufficient credits. Please top up to continue.");
+      } else {
+        setError(err.response?.data?.message || "Image refinement failed. Please try again.");
+      }
+      const freshCredits = await refreshCredits();
+      if (freshCredits !== null) {
+        setUserCredits(freshCredits);
+      }
+      throw err;
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const handleFinishRoomGeneration = () => {
+
     const targetApartmentId = searchParams.get("apartmentId") || roomData?.apartmentId || roomData?.apartment;
     if (urlRoomId && targetApartmentId) {
       navigate(`/apartments/${targetApartmentId}/rooms/${urlRoomId}`);
@@ -1081,13 +1121,16 @@ const RoomGeneration = () => {
                 selectedProducts={selectedProductObjs}
                 isGenerating={isGeneratingImage}
                 handleRegenerate={triggerImageGeneration}
+                handleRefine={handleRefineImage}
                 onFinish={handleFinishRoomGeneration}
                 resolution={resolution}
                 setResolution={setResolution}
                 userCredits={userCredits}
                 roomData={roomData}
+                spatialResult={spatialResult}
               />
             )}
+
           </section>
         </main>
       )}
