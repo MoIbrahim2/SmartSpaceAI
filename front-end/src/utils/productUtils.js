@@ -85,6 +85,12 @@ export const getProductId = (product) => {
     product._id,
     product.sellerId,
     pData.sellerId,
+    product.seller_id,
+    pData.seller_id,
+    product.source?.sellerId,
+    pData.source?.sellerId,
+    product.source?.seller_id,
+    pData.source?.seller_id,
   ];
 
   for (const c of candidates) {
@@ -355,8 +361,19 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
   const material = (classification.materials && classification.materials[0]) || pData.material || "Wood & Fabric";
   const color = (classification.colors && classification.colors[0]) || pData.color || "Neutral";
 
-  // An internal product is one without an external store URL that belongs to a registered seller
-  const isInternal = !externalUrl && !!(pData.sellerId || product.sellerId);
+  // An internal product is one that belongs to a registered seller (has a seller ID)
+  const resolvedSellerId =
+    pData.sellerId ||
+    product.sellerId ||
+    pData.seller_id ||
+    product.seller_id ||
+    pData.source?.sellerId ||
+    product.source?.sellerId ||
+    pData.source?.seller_id ||
+    product.source?.seller_id ||
+    null;
+
+  const isInternal = !!resolvedSellerId;
 
   return {
     id,
@@ -369,7 +386,7 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
     fallbackImg,
     storeUrl,
     isInternal,
-    sellerId: pData.sellerId || product.sellerId || null,
+    sellerId: resolvedSellerId,
     dimensions: { width, length, height },
     attributes: { style, material, color },
     raw: product
@@ -501,8 +518,15 @@ export const getExternalStoreUrl = (product) => {
  */
 export const isInternalProduct = (product) => {
   if (!product) return false;
-  const externalUrl = getExternalStoreUrl(product);
-  if (externalUrl) return false; // External products have external URL, not internal cart
   const pData = product.productData || product;
-  return !!(pData.sellerId || product.sellerId);
+  return !!(
+    pData.sellerId ||
+    product.sellerId ||
+    pData.seller_id ||
+    product.seller_id ||
+    pData.source?.sellerId ||
+    product.source?.sellerId ||
+    pData.source?.seller_id ||
+    product.source?.seller_id
+  );
 };
