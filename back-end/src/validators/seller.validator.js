@@ -26,10 +26,10 @@ const createProductSchema = Joi.object({
   }).required(),
   images: Joi.array().items(
     Joi.object({
-      url: Joi.string().uri().required(),
+      url: Joi.string().optional(),
       isPrimary: Joi.boolean().default(false)
     })
-  ).min(1).required(),
+  ).optional(),
   availability: Joi.object({
     inStock: Joi.boolean().default(true),
     stockStatus: Joi.string().trim().optional(),
@@ -63,10 +63,10 @@ const updateProductSchema = Joi.object({
   }).optional(),
   images: Joi.array().items(
     Joi.object({
-      url: Joi.string().uri().optional(),
+      url: Joi.string().optional(),
       isPrimary: Joi.boolean().optional()
     })
-  ).min(1).optional(),
+  ).optional(),
   availability: Joi.object({
     inStock: Joi.boolean().optional(),
     stockStatus: Joi.string().trim().optional(),

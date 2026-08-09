@@ -15,7 +15,7 @@ const getProducts = asyncHandler(async (req, res) => {
  * Create a new product as a seller
  */
 const createProduct = asyncHandler(async (req, res) => {
-  const product = await sellerService.createSellerProduct(req.user._id, req.body);
+  const product = await sellerService.createSellerProduct(req.user._id, req.body, req.file);
   return sendSuccess(res, 'seller.product_created', product, HTTP_STATUS.CREATED);
 });
 
@@ -31,7 +31,7 @@ const getProduct = asyncHandler(async (req, res) => {
  * Update a seller product
  */
 const updateProduct = asyncHandler(async (req, res) => {
-  const product = await sellerService.updateSellerProduct(req.user._id, req.params.id, req.body);
+  const product = await sellerService.updateSellerProduct(req.user._id, req.params.id, req.body, req.file);
   return sendSuccess(res, 'seller.product_updated', product, HTTP_STATUS.OK);
 });
 

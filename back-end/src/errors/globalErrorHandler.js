@@ -55,6 +55,15 @@ const globalErrorHandler = (err, req, res, next) => {
     error = new ApiError(HTTP_STATUS.UNAUTHORIZED, 'auth.invalid_token', [], err.stack);
   }
 
+  // Handle Multer Errors
+  if (err.name === 'MulterError') {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      error = new ApiError(HTTP_STATUS.BAD_REQUEST, 'File size exceeds maximum limit of 5MB', [], err.stack);
+    } else {
+      error = new ApiError(HTTP_STATUS.BAD_REQUEST, err.message, [], err.stack);
+    }
+  }
+
   // If not already an ApiError, make it one
   if (!(error instanceof ApiError)) {
     const statusCode = error.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;

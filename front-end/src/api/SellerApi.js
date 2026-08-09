@@ -11,12 +11,16 @@ export const getSellerProduct = async (id) => {
 };
 
 export const createSellerProduct = async (productData) => {
-  const res = await api.post("/seller/products", productData);
+  const isFormData = productData instanceof FormData;
+  const config = isFormData ? { headers: { "Content-Type": "multipart/form-data" } } : {};
+  const res = await api.post("/seller/products", productData, config);
   return res.data;
 };
 
 export const updateSellerProduct = async (id, productData) => {
-  const res = await api.patch(`/seller/products/${id}`, productData);
+  const isFormData = productData instanceof FormData;
+  const config = isFormData ? { headers: { "Content-Type": "multipart/form-data" } } : {};
+  const res = await api.patch(`/seller/products/${id}`, productData, config);
   return res.data;
 };
 

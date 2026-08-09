@@ -24,7 +24,8 @@ const storage = multer.diskStorage({
     } else if (file.fieldname === 'images') {
       subfolder = 'generations';
     } else if (file.fieldname === 'image') {
-      subfolder = 'room-layouts';
+      const isSellerProduct = (req.baseUrl && req.baseUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('products'));
+      subfolder = isSellerProduct ? 'products' : 'room-layouts';
     }
     const targetDir = path.join(uploadDir, subfolder);
     if (!fs.existsSync(targetDir)) {
@@ -45,7 +46,8 @@ const storage = multer.diskStorage({
     } else if (file.fieldname === 'images') {
       prefix = 'generation';
     } else if (file.fieldname === 'image') {
-      prefix = 'room-layout';
+      const isSellerProduct = (req.baseUrl && req.baseUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('seller')) || (req.originalUrl && req.originalUrl.includes('products'));
+      prefix = isSellerProduct ? 'product' : 'room-layout';
     }
     cb(null, `${prefix}-${uniqueSuffix}${ext}`);
   }
@@ -55,29 +57,14 @@ const ALLOWED_EXTENSIONS = ['jpeg', 'jpg', 'png', 'bmp', 'webp'];
 
 // Filter out non-image files and enforce allowed file extensions (First Guard)
 const fileFilter = (req, file, cb) => {
-  const ext = path.extname(file.originalname || '').toLowerCase().replace('.', '');
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
 
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return cb(
-      new ApiError(
-        HTTP_STATUS.BAD_REQUEST,
-        'Invalid file extension. Only jpeg, jpg, png, bmp, and webp images are allowed.'
-      ),
-      false
-    );
+  if (allowedMimeTypes.includes(file.mimetype) || ALLOWED_EXTENSIONS.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.'), false);
   }
-
-  if (!file.mimetype || !file.mimetype.startsWith('image/')) {
-    return cb(
-      new ApiError(
-        HTTP_STATUS.BAD_REQUEST,
-        'Invalid file type. Only image files are allowed.'
-      ),
-      false
-    );
-  }
-
-  cb(null, true);
 };
 
 // Initialize multer
@@ -94,6 +81,7 @@ const uploadCoverImage = upload.single('coverImage');
 const uploadRoomSourceImages = upload.array('sourceImages', 10);
 const uploadGenerationImages = upload.array('images', 10);
 const uploadRoomLayoutImage = upload.single('image');
+const uploadProductImage = upload.single('image');
 
 module.exports = {
   uploadProfileImage,
@@ -101,6 +89,6 @@ module.exports = {
   uploadRoomSourceImages,
   uploadGenerationImages,
   uploadRoomLayoutImage,
-  upload,
-  fileFilter
+  uploadProductImage,
+  upload
 };

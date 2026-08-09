@@ -11,17 +11,34 @@ const {
 
 const ROLES = require('../constants/roles');
 
+const { uploadProductImage } = require('../middlewares/upload.middleware');
+
+const parseFormJsonData = (req, res, next) => {
+  if (req.body) {
+    ['basic', 'classification', 'pricing', 'dimensions', 'availability', 'images'].forEach((field) => {
+      if (typeof req.body[field] === 'string') {
+        try {
+          req.body[field] = JSON.parse(req.body[field]);
+        } catch (e) {
+          // Keep original value if not JSON
+        }
+      }
+    });
+  }
+  next();
+};
+
 // All seller routes require authentication and seller role verification
 router.use(protect, protect.restrictTo(ROLES.SELLER, ROLES.ADMIN));
 
 // Inventory management routes
 router.route('/products')
   .get(sellerController.getProducts)
-  .post(validate(createProductSchema), sellerController.createProduct);
+  .post(uploadProductImage, parseFormJsonData, validate(createProductSchema), sellerController.createProduct);
 
 router.route('/products/:id')
   .get(sellerController.getProduct)
-  .patch(validate(updateProductSchema), sellerController.updateProduct)
+  .patch(uploadProductImage, parseFormJsonData, validate(updateProductSchema), sellerController.updateProduct)
   .delete(sellerController.deleteProduct);
 
 // Fulfillment routes

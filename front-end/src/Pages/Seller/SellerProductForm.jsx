@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Sparkles, Upload, Image as ImageIcon, Trash2, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import { getSellerProduct, createSellerProduct, updateSellerProduct } from "../../api/SellerApi";
@@ -16,6 +16,11 @@ export default function SellerProductForm() {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [aiValidating, setAiValidating] = useState(false);
+
+  // Image file upload state
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -35,7 +40,6 @@ export default function SellerProductForm() {
     length: "",
     quantity: 10,
     inStock: true,
-    imageUrl: "",
   });
 
   useEffect(() => {
@@ -63,8 +67,12 @@ export default function SellerProductForm() {
               length: prod.dimensions?.length || "",
               quantity: prod.availability?.quantity || 10,
               inStock: prod.availability?.inStock ?? true,
-              imageUrl: prod.images?.[0]?.url || "",
             });
+
+            const existingImage = prod.images?.[0]?.url || "";
+            if (existingImage) {
+              setPreviewUrl(existingImage);
+            }
           } else {
             showToast(t("seller.productForm.notFound"), "error");
             navigate("/seller/products");
@@ -96,6 +104,70 @@ export default function SellerProductForm() {
     });
   };
 
+  const validateAndSelectFile = (file) => {
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      showToast(t("seller.productForm.invalidFileType"), "error");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast(t("seller.productForm.fileSizeExceeded"), "error");
+      return;
+    }
+
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      validateAndSelectFile(file);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      validateAndSelectFile(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setPreviewUrl("");
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "";
+    const mb = bytes / (1024 * 1024);
+    return `${mb.toFixed(2)} MB`;
+  };
+
+  const resolveImageDisplayUrl = (url) => {
+    if (!url) return "";
+    if (url.startsWith("blob:") || url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+      return url;
+    }
+    const cleanPath = url.startsWith("/") ? url : `/${url}`;
+    return `http://localhost:5000${cleanPath}`;
+  };
+
   const nextStep = () => {
     setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
@@ -107,53 +179,65 @@ export default function SellerProductForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Simple validation (mirrors backend createProductSchema)
-    if (!formData.name || !formData.price || !formData.imageUrl) {
+    // Validation
+    if (!formData.name || !formData.price) {
       showToast(t("seller.productForm.fillRequiredWarning"), "warning");
       return;
     }
+
+    if (!selectedFile && !previewUrl) {
+      showToast(t("seller.productForm.fillRequiredWarning"), "warning");
+      return;
+    }
+
     if ((formData.description || "").trim().length < 10) {
       showToast(t("seller.productForm.descLengthWarning"), "warning");
       return;
     }
+
     if (!formData.width || !formData.height || !formData.length) {
       showToast(t("seller.productForm.dimensionsWarning"), "warning");
       return;
     }
 
-    const payload = {
-      basic: {
-        name: formData.name,
-        sku: formData.sku || `SEL-${formData.category.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
-        brand: formData.brand,
-        description: formData.description,
-      },
-      classification: {
-        canonicalCategory: formData.category,
-        roomTypes: formData.roomTypes,
-        styles: formData.styles,
-        materials: formData.materials,
-        colors: formData.colors,
-      },
-      pricing: {
-        currentPrice: parseFloat(formData.price),
-        currency: formData.currency,
-      },
-      dimensions: {
-        width: parseFloat(formData.width) || 0,
-        height: parseFloat(formData.height) || 0,
-        length: parseFloat(formData.length) || 0,
-        dimensionUnit: "cm",
-      },
-      images: [
-        { url: formData.imageUrl, isPrimary: true }
-      ],
-      availability: {
-        inStock: formData.quantity > 0,
-        quantity: parseInt(formData.quantity) || 0,
-        stockStatus: formData.quantity > 0 ? "IN_STOCK" : "OUT_OF_STOCK",
-      }
-    };
+    const payload = new FormData();
+    
+    payload.append("basic", JSON.stringify({
+      name: formData.name,
+      sku: formData.sku || `SEL-${formData.category.substring(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`,
+      brand: formData.brand,
+      description: formData.description,
+    }));
+
+    payload.append("classification", JSON.stringify({
+      canonicalCategory: formData.category,
+      roomTypes: formData.roomTypes,
+      styles: formData.styles,
+      materials: formData.materials,
+      colors: formData.colors,
+    }));
+
+    payload.append("pricing", JSON.stringify({
+      currentPrice: parseFloat(formData.price),
+      currency: formData.currency,
+    }));
+
+    payload.append("dimensions", JSON.stringify({
+      width: parseFloat(formData.width) || 0,
+      height: parseFloat(formData.height) || 0,
+      length: parseFloat(formData.length) || 0,
+      dimensionUnit: "cm",
+    }));
+
+    payload.append("availability", JSON.stringify({
+      inStock: formData.quantity > 0,
+      quantity: parseInt(formData.quantity) || 0,
+      stockStatus: formData.quantity > 0 ? "IN_STOCK" : "OUT_OF_STOCK",
+    }));
+
+    if (selectedFile) {
+      payload.append("image", selectedFile);
+    }
 
     try {
       setAiValidating(true);
@@ -167,7 +251,8 @@ export default function SellerProductForm() {
       navigate("/seller/products");
     } catch (error) {
       console.error("Submit error:", error);
-      showToast(t("seller.productForm.submitError"), "error");
+      const errorMessage = error?.response?.data?.message || t("seller.productForm.submitError");
+      showToast(errorMessage, "error");
     } finally {
       setAiValidating(false);
     }
@@ -504,35 +589,107 @@ export default function SellerProductForm() {
 
         {/* STEP 4: MEDIA UPLOADS */}
         {currentStep === 4 && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h3 className="text-lg font-bold text-on-surface border-b border-outline/10 pb-2">{t("seller.productForm.step4Heading")}</h3>
             
-            <div className="space-y-1">
-              <label className="text-sm font-bold text-on-surface-variant">{t("seller.productForm.imageUrlLabel")}</label>
-              <input
-                type="url"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleTextChange}
-                placeholder={t("seller.productForm.imageUrlPlaceholder")}
-                className="w-full rounded-xl bg-background border border-outline/20 p-3 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                required
-              />
-            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-on-surface-variant block">
+                {t("seller.productForm.imageUploadLabel")}
+              </label>
 
-            {formData.imageUrl && (
-              <div className="mt-4 flex flex-col items-center justify-center p-4 border border-outline/10 bg-background rounded-2xl neo-inset max-w-md mx-auto">
-                <p className="text-xs text-on-surface-variant mb-2 font-bold">{t("seller.productForm.imagePreview")}</p>
-                <img
-                  src={formData.imageUrl}
-                  alt="Product preview"
-                  className="max-h-60 rounded-xl object-contain border border-outline/25 bg-surface"
-                  onError={(e) => {
-                    e.target.src = "/img/no-product-image.svg";
-                  }}
-                />
-              </div>
-            )}
+              {/* Drag and Drop Zone */}
+              {!previewUrl ? (
+                <div
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  className={`relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
+                    isDragOver
+                      ? "border-primary bg-primary/5 scale-[1.01]"
+                      : "border-outline/30 bg-background hover:border-primary/50 hover:bg-surface"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                  <div className="p-4 rounded-full bg-primary/10 text-primary mb-3">
+                    <Upload className="size-8" />
+                  </div>
+                  <p className="text-sm font-bold text-on-surface mb-1">
+                    {t("seller.productForm.imageUploadHint")}
+                  </p>
+                  <p className="text-xs text-on-surface-variant/60 font-medium">
+                    JPEG, PNG, WebP — Max 5MB
+                  </p>
+                </div>
+              ) : (
+                /* Preview Container */
+                <div className="relative flex flex-col md:flex-row items-center gap-6 p-5 border border-outline/15 bg-background rounded-2xl neo-inset">
+                  <div className="relative shrink-0 overflow-hidden rounded-xl border border-outline/20 bg-surface shadow-sm max-w-[240px]">
+                    <img
+                      src={resolveImageDisplayUrl(previewUrl)}
+                      alt="Product Preview"
+                      className="h-48 w-48 object-cover rounded-xl"
+                      onError={(e) => {
+                        e.target.src = "/img/no-product-image.svg";
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex-1 space-y-3 text-center md:text-start">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-bold">
+                      <CheckCircle2 className="size-4" />
+                      <span>Ready for Submission</span>
+                    </div>
+
+                    {selectedFile ? (
+                      <div className="space-y-1">
+                        <p className="text-sm font-extrabold text-on-surface truncate max-w-xs">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-xs text-on-surface-variant font-medium">
+                          Size: {formatFileSize(selectedFile.size)} • {selectedFile.type}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <p className="text-sm font-extrabold text-on-surface">
+                          Current Catalog Image
+                        </p>
+                        <p className="text-xs text-on-surface-variant font-medium">
+                          File currently associated with this product
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-2">
+                      <label className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-outline/20 text-on-surface font-bold text-xs hover:bg-background cursor-pointer transition-all shadow-sm">
+                        <Upload className="size-3.5" />
+                        <span>{t("seller.productForm.changeImage")}</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={handleFileChange}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-600 border border-red-500/20 font-bold text-xs hover:bg-red-500/20 transition-all"
+                      >
+                        <Trash2 className="size-3.5" />
+                        <span>{t("seller.productForm.removeImage")}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
