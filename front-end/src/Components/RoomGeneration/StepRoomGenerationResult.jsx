@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Icon from "../Icon";
 import { API_HOST } from "../../api";
-import { parseProductDetails, getExternalStoreUrl } from "../../utils/productUtils";
+import { parseProductDetails, getExternalStoreUrl, formatCategoryName } from "../../utils/productUtils";
 import { useCart } from "../../context/CartContext";
 
 const RESOLUTION_CREDIT_COSTS = {
@@ -206,7 +206,7 @@ const StepRoomGenerationResult = ({
                   />
                   <div className="overflow-hidden">
                     <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">
-                      {p.category || "Item"}
+                      {formatCategoryName(p.category || "Item", t)}
                     </span>
                     <span className="text-xs font-bold text-on-surface line-clamp-1">
                       {title}

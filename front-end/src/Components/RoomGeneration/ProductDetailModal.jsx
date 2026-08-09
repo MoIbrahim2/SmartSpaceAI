@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
-import { parseProductDetails, getProductId, getExternalStoreUrl } from "../../utils/productUtils";
+import { parseProductDetails, getProductId, getExternalStoreUrl, formatCategoryName } from "../../utils/productUtils";
 import { useCart } from "../../context/CartContext";
 
 const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelected, onToggleSelect, onIncrement, onDecrement, formatCurrency }) => {
@@ -83,7 +83,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
             <div className="flex flex-col gap-2 pt-2 border-t border-outline-variant/20">
               <div className="flex justify-between text-xs text-on-surface-variant">
                 <span>{t("dashboard.categoryLabel", "Category")}</span>
-                <span className="font-semibold text-on-surface capitalize">{product.category || "Furniture"}</span>
+                <span className="font-semibold text-on-surface capitalize">{formatCategoryName(product.category || "Furniture", t)}</span>
               </div>
               <div className="flex justify-between text-xs text-on-surface-variant">
                 <span>{t("dashboard.styleLabel", "Style")}</span>

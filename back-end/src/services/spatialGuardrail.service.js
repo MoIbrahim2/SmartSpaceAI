@@ -29,7 +29,15 @@ const normalizeProductsForSpatial = (selectedProducts) => {
     let h = Math.round(Number(dims.height || dims.h || 80));
 
     const category = p.category || pData.classification?.canonicalCategory || pData.category || 'Furniture';
-    const title = pData.basic?.name || pData.name || pData.title || category || 'Unknown';
+    const rawTitle = pData.basic?.name || pData.name || pData.title || category || 'Unknown';
+    let title = String(rawTitle).trim()
+      .replace(/^(Enjoy free delivery|Free shipping|Buy now and pay later|Get \d+% off|Special offer|Limited time offer)[^.]*\.\s*/i, '')
+      .replace(/^(Enjoy free delivery|Free shipping|Buy now and pay later)[^.]*\s+/i, '');
+    if (title.length > 90) {
+      const short = title.slice(0, 85);
+      const lastSpace = short.lastIndexOf(' ');
+      title = (lastSpace > 30 ? short.slice(0, lastSpace) : short) + '…';
+    }
     const catLower = category.toLowerCase();
     const titleLower = title.toLowerCase();
 

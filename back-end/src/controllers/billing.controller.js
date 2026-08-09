@@ -52,8 +52,18 @@ const stripeWebhook = async (req, res) => {
   res.status(200).json({ received: true });
 };
 
+/**
+ * Verify checkout session and fulfill credits immediately (dev/fail-safe fallback)
+ */
+const verifySession = asyncHandler(async (req, res) => {
+  const { sessionId } = req.body;
+  const result = await billingService.verifyCheckoutSession(req.user._id, sessionId);
+  return sendSuccess(res, 'billing.session_verified', result, HTTP_STATUS.OK);
+});
+
 module.exports = {
   createCheckout,
   getHistory,
-  stripeWebhook
+  stripeWebhook,
+  verifySession
 };

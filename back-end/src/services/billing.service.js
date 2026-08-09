@@ -163,8 +163,74 @@ const handleWebhookEvent = async (event) => {
   }
 };
 
+/**
+ * Verify a Stripe checkout session directly with Stripe API and fulfill credits.
+ * Acts as a fail-safe fallback for local development or missed webhooks.
+ * @param {string} userId - Authenticated user ID
+ * @param {string} sessionId - Stripe checkout session ID (cs_...)
+ * @returns {Promise<Object>}
+ */
+const verifyCheckoutSession = async (userId, sessionId) => {
+  if (!sessionId) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'billing.missing_session_id');
+  }
+
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (!session) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'billing.session_not_found');
+  }
+
+  if (session.payment_status !== 'paid') {
+    return { paid: false, status: session.payment_status };
+  }
+
+  const creditsAdded = parseInt(session.metadata?.creditsAdded, 10);
+  const sessionUserId = session.metadata?.userId || userId;
+
+  let payment = await PaymentHistory.findOne({ stripeSessionId: sessionId });
+
+  if (payment && payment.status === 'completed') {
+    const updatedUser = await User.findById(sessionUserId);
+    return { paid: true, credits: updatedUser ? updatedUser.credits : 0, user: updatedUser, alreadyProcessed: true };
+  }
+
+  if (!payment) {
+    payment = new PaymentHistory({
+      userId: sessionUserId,
+      stripeSessionId: sessionId,
+      amountPaid: session.amount_total,
+      currency: session.currency || 'egp',
+      creditsAdded: isNaN(creditsAdded) ? 0 : creditsAdded,
+      status: 'pending'
+    });
+  }
+
+  payment.status = 'completed';
+  payment.completedAt = new Date();
+  await payment.save();
+
+  let updatedUser = null;
+  if (sessionUserId && !isNaN(creditsAdded) && creditsAdded > 0) {
+    updatedUser = await User.findByIdAndUpdate(
+      sessionUserId,
+      { $inc: { credits: creditsAdded } },
+      { new: true }
+    );
+    console.log(`VerifySession Fallback: Added ${creditsAdded} credits to user ${sessionUserId}`);
+  } else {
+    updatedUser = await User.findById(sessionUserId);
+  }
+
+  return {
+    paid: true,
+    credits: updatedUser ? updatedUser.credits : 0,
+    user: updatedUser
+  };
+};
+
 module.exports = {
   createCheckoutSession,
   getPaymentHistory,
-  handleWebhookEvent
+  handleWebhookEvent,
+  verifyCheckoutSession
 };

@@ -13,8 +13,80 @@ import {
   saveResolution,
   validateSpatial
 } from "../../api";
-import { getProductId } from "../../utils/productUtils";
+import { getProductId, cleanProductTitle } from "../../utils/productUtils";
 import { useAuth } from "../../context/AuthContext";
+
+// Helper to translate spatial guardrail backend violation messages to Arabic
+const translateSpatialDescription = (description, t, lang) => {
+  if (!description || typeof description !== "string") return "";
+
+  const isAr = lang && lang.startsWith("ar");
+  if (!isAr) return description;
+
+  const desc = description.trim();
+
+  // Pattern 1: Physical space capacity exceeded
+  const pat1 = /Physical space capacity exceeded:\s*Selected furniture footprint \(([\d.]+)m² raw \/ ([\d.]+)m² required with walkways\) cannot physically fit inside this ([\d.]+)[x×]([\d.]+)cm room \(([\d.]+)m²\) without overlapping items or blocking walkways\./i;
+  const m1 = desc.match(pat1);
+  if (m1) {
+    const [, raw, req, w, l, area] = m1;
+    return `تم تجاوز سعة المساحة الفعلية: المساحة المطلوبة للأثاث (${raw} م² صافي / ${req} م² مع ممرات الحركة) لا تتسع داخل هذه الغرفة بأبعاد ${w}×${l} سم (${area} م²) دون تداخل القطع أو إعاقة ممرات الحركة.`;
+  }
+
+  // Pattern 2: Total furniture footprint exceeds
+  const pat2 = /Total furniture footprint \(([\d.]+)m²\) exceeds maximum recommended floor capacity \(([\d.]+)m²\) for this ([\d.]+)[x×]([\d.]+)cm room\./i;
+  const m2 = desc.match(pat2);
+  if (m2) {
+    const [, footprint, max, length, width] = m2;
+    return `إجمالي المساحة التي يشغلها الأثاث (${footprint} م²) يتجاوز الحد الأقصى الموصى به للمساحة (${max} م²) لهذه الغرفة بأبعاد ${length}×${width} سم.`;
+  }
+
+  // Pattern 3: Insufficient floor area for "X"
+  const pat3 = /Insufficient floor area for "([^"]+)". Item extends past room boundary \(([\d.]+)cm\)\./i;
+  const m3 = desc.match(pat3);
+  if (m3) {
+    const [, itemTitle, boundary] = m3;
+    return `المساحة غير كافية لـ "${cleanProductTitle(itemTitle)}". القطعة تتجاوز حدود الغرفة (${boundary} سم).`;
+  }
+
+  // Pattern 4: Walkway clearance blockage
+  const pat4 = /Walkway clearance blockage:\s*Placing "([^"]+)" near "([^"]+)" leaves only ([\d.]+)cm clearance \(minimum required: ([\d.]+)cm\)\./i;
+  const m4 = desc.match(pat4);
+  if (m4) {
+    const [, item1, item2, clearance, req] = m4;
+    return `انسداد ممر الحركة: وضع "${cleanProductTitle(item1)}" بالقرب من "${cleanProductTitle(item2)}" يترك مسافة قدرها ${clearance} سم فقط (الحد الأدنى المطلوب: ${req} سم).`;
+  }
+
+  // Pattern 5: Door blockage
+  const pat5 = /Door swing clearance blockage:\s*"([^"]+)" blocks room entry door\./i;
+  const m5 = desc.match(pat5);
+  if (m5) {
+    const [, item] = m5;
+    return `إعاقة حركة الباب: القطعة "${cleanProductTitle(item)}" تسبب انسداداً عند مدخل باب الغرفة.`;
+  }
+
+  // Pattern 6: Window blockage
+  const pat6 = /Window blockage:\s*"([^"]+)" height \(([\d.]+)cm\) obstructs window\./i;
+  const m6 = desc.match(pat6);
+  if (m6) {
+    const [, item, height] = m6;
+    return `إعاقة النافذة: ارتفاع القطعة "${cleanProductTitle(item)}" (${height} سم) يعيق النافذة.`;
+  }
+
+  // Fallback for custom text from backend model
+  if (desc.includes("Physical space capacity exceeded")) {
+    return desc
+      .replace("Physical space capacity exceeded", "تم تجاوز سعة المساحة الفعلية")
+      .replace("Selected furniture footprint", "مساحة الأثاث المحددة")
+      .replace("raw", "صافي")
+      .replace("required with walkways", "المطلوبة مع الممرات")
+      .replace("cannot physically fit inside this", "لا تتسع داخل هذه الغرفة بأبعاد")
+      .replace("room", "الغرفة")
+      .replace("without overlapping items or blocking walkways", "دون تداخل القطع أو إعاقة ممرات الحركة");
+  }
+
+  return desc;
+};
 
 // Import step sub-components
 import Stepper from "../../Components/RoomGeneration/Stepper";
@@ -34,7 +106,7 @@ const preferenceMessages = [
 ];
 
 const RoomGeneration = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, refreshCredits } = useAuth();
@@ -870,7 +942,7 @@ const RoomGeneration = () => {
                           {translatedType}
                         </span>
                         <p className="text-sm text-on-surface mt-1 leading-relaxed">
-                          {violation.description}
+                          {translateSpatialDescription(violation.description, t, i18n.language)}
                         </p>
                       </div>
                     </div>
@@ -892,7 +964,8 @@ const RoomGeneration = () => {
                 <div className="flex flex-wrap gap-2">
                   {spatialResult.suggestedRemovals.map((productId) => {
                     const product = allProductsList.find((p) => getProductId(p) === productId);
-                    const title = product?.basic?.name || product?.name || product?.title || productId;
+                    const rawTitle = product?.basic?.name || product?.name || product?.title || productId;
+                    const title = cleanProductTitle(rawTitle);
                     return (
                       <button
                         key={productId}

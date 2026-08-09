@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import Icon from "../Icon";
 import ProductDetailModal from "./ProductDetailModal";
 import BudgetWarningModal from "./BudgetWarningModal";
-import { parseProductDetails, getProductId, getExternalStoreUrl } from "../../utils/productUtils";
+import { parseProductDetails, getProductId, getExternalStoreUrl, formatCategoryName } from "../../utils/productUtils";
 import { useCart } from "../../context/CartContext";
 
 const StepSelectProducts = ({
@@ -106,7 +106,7 @@ const StepSelectProducts = ({
     const validation = validateCategorySelections();
     if (!validation.valid) {
       console.warn("[StepSelectProducts] ⚠️ Category selection incomplete:", validation);
-      const catDisplayName = validation.categoryName.replace("_", " ");
+      const catDisplayName = formatCategoryName(validation.categoryName, t);
       setValidationError(
         t("dashboard.selectionIncompleteError", {
           required: validation.required,
@@ -184,7 +184,7 @@ const StepSelectProducts = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="font-headline font-bold text-lg text-on-surface flex items-center gap-2 capitalize">
             <Icon name="category" className="text-primary" size={20} />
-            <span>{t("dashboard.categoryHeader", { category: activeCategory.replace("_", " "), defaultValue: `Category: ${activeCategory.replace("_", " ")}` })}</span>
+            <span>{t("dashboard.categoryHeader", { category: formatCategoryName(activeCategory, t), defaultValue: `Category: ${formatCategoryName(activeCategory, t)}` })}</span>
             <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${
               isOptionalActiveCategory
                 ? "bg-stone-500/10 text-stone-500 dark:text-stone-400"
@@ -232,9 +232,10 @@ const StepSelectProducts = ({
               const reqCount = categoryCounts[cat] ?? 0;
               const catProductIds = new Set(catProds.map((p) => getProductId(p)));
               const selCount = addedProducts.filter((id) => catProductIds.has(id)).length;
+              const catLabel = formatCategoryName(cat, t);
               return (
                 <option key={cat} value={cat}>
-                  {cat.replace("_", " ")} ({reqCount === 0 ? `${selCount} selected • Optional` : `${selCount}/${reqCount} selected`})
+                  {catLabel} ({reqCount === 0 ? t("dashboard.selectedOptional", { selected: selCount, defaultValue: `${selCount} Selected (Optional)` }) : `${selCount}/${reqCount}`})
                 </option>
               );
             })}
@@ -265,7 +266,7 @@ const StepSelectProducts = ({
                     : "neomorph-raised text-on-surface-variant hover:text-primary hover:scale-[1.02]"
                 }`}
               >
-                <span className="capitalize">{category.replace("_", " ")}</span>
+                <span className="capitalize">{formatCategoryName(category, t)}</span>
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     isComplete

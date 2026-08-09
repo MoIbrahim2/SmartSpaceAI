@@ -11,6 +11,9 @@ router.post('/create-checkout', protect, validate(createCheckoutSchema), billing
 // GET /api/billing/history (Protected)
 router.get('/history', protect, billingController.getHistory);
 
+// POST /api/billing/verify-session (Protected — dev/fallback verification)
+router.post('/verify-session', protect, billingController.verifySession);
+
 // POST /api/billing/webhook (Unprotected — verified via Stripe signature)
 // NOTE: Raw body parsing is applied at the app level for this route
 router.post('/webhook', billingController.stripeWebhook);

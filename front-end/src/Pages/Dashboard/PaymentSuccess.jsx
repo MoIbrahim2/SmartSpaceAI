@@ -1,54 +1,81 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getProfile } from "../../api";
+import { verifyCheckoutSession } from "../../api/BillingApi";
 import { useTranslation } from "react-i18next";
 import Icon from "../../Components/Icon";
 
 const PaymentSuccess = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setUser } = useAuth();
   const [status, setStatus] = useState("verifying"); // verifying | success | failed
+
+  const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
     let attempts = 0;
     const maxAttempts = 8;
     const pollInterval = 2000;
 
-    const pollCredits = async () => {
-      attempts++;
-      try {
-        const { data } = await getProfile();
-        if (data.success && data.data) {
-          const updatedUser = data.data.user || data.data;
-          // Update user in context and localStorage
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-          setUser(updatedUser);
-          setStatus("success");
+    const verifyAndPoll = async () => {
+      // 1. Immediate Session Verification Fallback (dev & prod fail-safe)
+      if (sessionId) {
+        try {
+          const res = await verifyCheckoutSession(sessionId);
+          if (res.data && res.data.data && res.data.data.paid) {
+            const updatedUser = res.data.data.user;
+            if (updatedUser) {
+              localStorage.setItem("user", JSON.stringify(updatedUser));
+              setUser(updatedUser);
+            }
+            setStatus("success");
+            setTimeout(() => {
+              navigate("/credits", { replace: true });
+            }, 2500);
+            return;
+          }
+        } catch (err) {
+          console.warn("Direct session verification attempt error:", err);
+        }
+      }
 
-          // Redirect to credits page after a short delay
+      // 2. Fallback polling getProfile()
+      const pollCredits = async () => {
+        attempts++;
+        try {
+          const { data } = await getProfile();
+          if (data.success && data.data) {
+            const updatedUser = data.data.user || data.data;
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            setStatus("success");
+            setTimeout(() => {
+              navigate("/credits", { replace: true });
+            }, 2500);
+            return;
+          }
+        } catch {
+          // Ignore errors, keep polling
+        }
+
+        if (attempts < maxAttempts) {
+          setTimeout(pollCredits, pollInterval);
+        } else {
+          setStatus("success");
           setTimeout(() => {
             navigate("/credits", { replace: true });
-          }, 2500);
-          return;
+          }, 2000);
         }
-      } catch {
-        // Ignore errors, keep polling
-      }
+      };
 
-      if (attempts < maxAttempts) {
-        setTimeout(pollCredits, pollInterval);
-      } else {
-        setStatus("success");
-        setTimeout(() => {
-          navigate("/credits", { replace: true });
-        }, 2000);
-      }
+      pollCredits();
     };
 
-    pollCredits();
-  }, [navigate, setUser]);
+    verifyAndPoll();
+  }, [navigate, setUser, sessionId]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-bright">
