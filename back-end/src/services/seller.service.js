@@ -85,7 +85,7 @@ const createSellerProduct = async (sellerId, productData, file) => {
 
     let images = [];
     if (file) {
-      images = [{ url: `uploads/products/${file.filename}`, isPrimary: true }];
+      images = [{ url: `/uploads/products/${file.filename}`, isPrimary: true }];
     } else if (Array.isArray(productData.images) && productData.images.length > 0) {
       images = productData.images;
     }
@@ -150,7 +150,7 @@ const updateSellerProduct = async (sellerId, productId, updateData, file) => {
         const relativePath = oldUrl.replace(/^\//, '');
         oldImagePath = path.join(process.cwd(), relativePath);
       }
-      product.images = [{ url: `uploads/products/${file.filename}`, isPrimary: true }];
+      product.images = [{ url: `/uploads/products/${file.filename}`, isPrimary: true }];
     } else if (updateData.images && Array.isArray(updateData.images) && updateData.images.length > 0) {
       product.images = updateData.images;
     }
