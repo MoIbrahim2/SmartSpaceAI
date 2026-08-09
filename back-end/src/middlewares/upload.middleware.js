@@ -51,13 +51,33 @@ const storage = multer.diskStorage({
   }
 });
 
-// Filter out non-image files
+const ALLOWED_EXTENSIONS = ['jpeg', 'jpg', 'png', 'bmp', 'webp'];
+
+// Filter out non-image files and enforce allowed file extensions (First Guard)
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file type. Only images are allowed.'), false);
+  const ext = path.extname(file.originalname || '').toLowerCase().replace('.', '');
+
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return cb(
+      new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Invalid file extension. Only jpeg, jpg, png, bmp, and webp images are allowed.'
+      ),
+      false
+    );
   }
+
+  if (!file.mimetype || !file.mimetype.startsWith('image/')) {
+    return cb(
+      new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Invalid file type. Only image files are allowed.'
+      ),
+      false
+    );
+  }
+
+  cb(null, true);
 };
 
 // Initialize multer
@@ -81,5 +101,6 @@ module.exports = {
   uploadRoomSourceImages,
   uploadGenerationImages,
   uploadRoomLayoutImage,
-  upload
+  upload,
+  fileFilter
 };
