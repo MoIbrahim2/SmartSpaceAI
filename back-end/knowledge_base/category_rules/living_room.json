@@ -605,7 +605,7 @@
       },
       "budget": {
         "defaultPercentage": 6,
-        "minPercentage": 3,
+        "minPercentage": 1,
         "maxPercentage": 10
       },
       "sizeRules": [
