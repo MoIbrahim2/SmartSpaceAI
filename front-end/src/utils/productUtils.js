@@ -1,7 +1,4 @@
-/**
- * Helper utility to parse MongoDB product documents and API recommendation objects.
- * Normalizes title, brand, price, images, description, dimensions, and styling properties.
- */
+import { API_HOST } from "../api/axios";
 
 /** Path to the generic "no image" placeholder SVG */
 export const NO_IMAGE_PLACEHOLDER = "/img/no-product-image.svg";
@@ -10,14 +7,23 @@ export const getUniqueFallbackImage = (_product, _category = "") => {
   return NO_IMAGE_PLACEHOLDER;
 };
 
-const normalizeImageUrl = (url) => {
-  if (typeof url !== 'string' || !url.trim()) return '';
-  const trimmed = url.trim();
-  if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/')) {
+export const normalizeImageUrl = (url) => {
+  if (!url) return '';
+  let rawUrl = typeof url === 'object' ? (url.url || url.src || '') : url;
+  if (typeof rawUrl !== 'string' || !rawUrl.trim()) return '';
+
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+
+  if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/') || trimmed.startsWith('public/') || trimmed.startsWith('/public/')) {
     const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    return `http://localhost:5000${cleanPath}`;
+    if (API_HOST) {
+      return `${API_HOST.replace(/\/$/, '')}${cleanPath}`;
+    }
+    return cleanPath;
   }
-  return trimmed;
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
 };
 
 export const getProductImage = (product, category = "") => {
@@ -85,6 +91,12 @@ export const getProductId = (product) => {
     product._id,
     product.sellerId,
     pData.sellerId,
+    product.seller_id,
+    pData.seller_id,
+    product.source?.sellerId,
+    pData.source?.sellerId,
+    product.source?.seller_id,
+    pData.source?.seller_id,
   ];
 
   for (const c of candidates) {
@@ -355,8 +367,19 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
   const material = (classification.materials && classification.materials[0]) || pData.material || "Wood & Fabric";
   const color = (classification.colors && classification.colors[0]) || pData.color || "Neutral";
 
-  // An internal product is one without an external store URL that belongs to a registered seller
-  const isInternal = !externalUrl && !!(pData.sellerId || product.sellerId);
+  // An internal product is one that belongs to a registered seller (has a seller ID)
+  const resolvedSellerId =
+    pData.sellerId ||
+    product.sellerId ||
+    pData.seller_id ||
+    product.seller_id ||
+    pData.source?.sellerId ||
+    product.source?.sellerId ||
+    pData.source?.seller_id ||
+    product.source?.seller_id ||
+    null;
+
+  const isInternal = !!resolvedSellerId;
 
   return {
     id,
@@ -369,7 +392,7 @@ export const parseProductDetails = (product, activeCategory = "Furniture") => {
     fallbackImg,
     storeUrl,
     isInternal,
-    sellerId: pData.sellerId || product.sellerId || null,
+    sellerId: resolvedSellerId,
     dimensions: { width, length, height },
     attributes: { style, material, color },
     raw: product
@@ -432,11 +455,19 @@ export const getExternalStoreUrl = (product) => {
     }
   }
 
-  // If this is an internal SmartSpace seller product with no external retail marketplace, return null so it uses internal cart
-  const hasSellerId = !!(pData.sellerId || product.sellerId);
-  const isSmartSpaceBrand = brand.includes("smartspace") || marketplace.includes("smartspace") || (!marketplace && !brand);
+  // If this is an internal seller product (has seller ID), return null so it uses internal cart
+  const hasSellerId = !!(
+    pData.sellerId ||
+    product.sellerId ||
+    pData.seller_id ||
+    product.seller_id ||
+    pData.source?.sellerId ||
+    product.source?.sellerId ||
+    pData.source?.seller_id ||
+    product.source?.seller_id
+  );
 
-  if (hasSellerId && isSmartSpaceBrand && (!rawUrl || rawUrl.includes("smartspace.ai") || rawUrl.includes("DUMMY_"))) {
+  if (hasSellerId) {
     return null;
   }
 
@@ -501,8 +532,15 @@ export const getExternalStoreUrl = (product) => {
  */
 export const isInternalProduct = (product) => {
   if (!product) return false;
-  const externalUrl = getExternalStoreUrl(product);
-  if (externalUrl) return false; // External products have external URL, not internal cart
   const pData = product.productData || product;
-  return !!(pData.sellerId || product.sellerId);
+  return !!(
+    pData.sellerId ||
+    product.sellerId ||
+    pData.seller_id ||
+    product.seller_id ||
+    pData.source?.sellerId ||
+    product.source?.sellerId ||
+    pData.source?.seller_id ||
+    product.source?.seller_id
+  );
 };

@@ -131,17 +131,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
 
         {/* Footer Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-outline-variant/20">
-          {externalUrl ? (
-            <a
-              href={externalUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-3.5 px-5 rounded-xl font-headline font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all flex items-center justify-center gap-2 text-sm shadow-md"
-            >
-              <Icon name="open_in_new" size={18} />
-              {t("dashboard.buyFromStore", { brand, defaultValue: `Buy from Store (${brand})` })}
-            </a>
-          ) : isInternal && (
+          {isInternal ? (
             <button
               onClick={() => {
                 addToCart(product);
@@ -151,7 +141,17 @@ const ProductDetailModal = ({ product, isOpen, onClose, selectedQty = 0, isSelec
               <Icon name="shopping_cart" size={18} />
               {t("dashboard.addToCart", "Add to SmartSpace Cart")}
             </button>
-          )}
+          ) : externalUrl ? (
+            <a
+              href={externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-3.5 px-5 rounded-xl font-headline font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all flex items-center justify-center gap-2 text-sm shadow-md"
+            >
+              <Icon name="open_in_new" size={18} />
+              {t("dashboard.buyFromStore", { brand, defaultValue: `Buy from Store (${brand})` })}
+            </a>
+          ) : null}
 
           {selectedQty > 0 ? (
             <div className="flex-1 flex items-center justify-between gap-3 p-2 rounded-xl bg-background border border-primary/30 neomorph-raised">

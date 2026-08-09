@@ -221,11 +221,12 @@ The layout MUST make logical sense for human use and ergonomics. You must identi
    - If there are two identical support items (e.g., 2 nightstands, 2 end tables), they MUST perfectly flank the anchor symmetrically on the left and right.
    - FLANKING MATH: Left Item Center X = (Anchor X) - (Anchor Width / 2) - (Item Width / 2). Right Item Center X = (Anchor X) + (Anchor Width / 2) + (Item Width / 2). They must share the anchor's Y coordinate.
 
-3. DIRECT LINE OF SIGHT (OPPOSING ALIGNMENTS):
-   - Focal units (e.g., TV Consoles, Media Units, Whiteboards) MUST be placed on the wall directly OPPOSITE the primary seating/sleeping anchor.
-   - The Focal Unit's center axis MUST exactly match the primary anchor's center axis (X or Y) so a human sitting on the sofa or bed looks directly straight at it.
-   - NEVER place a TV/Media unit on the same wall as the sofa/bed, or at an awkward viewing angle.
-   - Place coffee tables exactly in the center space between the Sofa and the TV Unit.
+3. DIRECT LINE OF SIGHT & STANDALONE TV WALL MOUNTING:
+   - Focal units (e.g., TV Consoles, Media Units, TV Screens) MUST be placed on the wall directly OPPOSITE the primary seating/sleeping anchor (Bed or Sofa).
+   - If a Television / TV Screen is present WITHOUT a TV Unit/Console, it MUST be wall-mounted on the wall directly opposite the Bed or Sofa at eye level (Z = 120cm - 150cm).
+   - The TV / Focal Unit's center axis MUST match the primary anchor's center axis (X or Y) so a human lying on the bed or sitting on the sofa looks directly straight at it.
+   - NEVER place a TV on the same wall as the sofa/bed, float it in mid-air without wall mounting, or place it at an awkward viewing angle.
+   - Place coffee tables exactly in the center space between the Sofa and the TV Unit/Screen.
 
 4. TALL STORAGE & BULKY ITEMS:
    - Tall items (Wardrobes, Bookcases, Display Cabinets, Filing Cabinets) must be placed in corners or along secondary side walls.
@@ -312,7 +313,7 @@ Return ONLY the raw JSON object.
  * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
  * @returns {string} User prompt text
  */
-const buildSpatialUserPrompt = (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH') => {
+const buildSpatialUserPrompt = (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH', previousFeedbackHistory = []) => {
   const isEnhance = generationType === 'ENHANCE_ROOM' || generationType === 'ENHANCE_EXISTING';
   const productList = products.map((p, idx) => {
     const pData = p.productData || p;
@@ -344,6 +345,26 @@ const buildSpatialUserPrompt = (roomMetrics, products, generationType = 'CREATE_
     ? roomMetrics.windows.map((w, i) => `  - Window ${i + 1}: wall="${w.wall || 'NORTH'}", position (X=${w.x || 0}cm, Y=${w.y || 0}cm), width=${w.width || 120}cm, height=${w.height || 140}cm`).join('\n')
     : '  - None specified';
 
+  let feedbackSection = '';
+  if (previousFeedbackHistory && previousFeedbackHistory.length > 0) {
+    feedbackSection = `\n\n## 🚨 PREVIOUS ATTEMPT SELF-CORRECTION FEEDBACK (REJECTED BY REALISM CRITIC)
+Your previous layout attempt(s) were REJECTED by the Stage 2 Realism Audit or contained physical conflicts. You MUST self-correct and adjust coordinates in this attempt to resolve all reported issues:
+
+${previousFeedbackHistory.map(fb => `
+### Attempt ${fb.iteration} Rejection Reason:
+- Critic Feedback: "${fb.criticFeedback}"
+- Conflicting Allocations from Attempt ${fb.iteration}: ${JSON.stringify(fb.proposedLayout?.allocations || [])}
+- Detected Violations: ${JSON.stringify(fb.violations || [])}
+`).join('\n')}
+
+CRITICAL SELF-CORRECTION DIRECTIVES FOR THIS RETRY:
+1. Do NOT place two floor-standing items at identical or overlapping coordinates!
+2. Ensure every floor-standing furniture item has distinct, non-overlapping (x_cm, y_cm) center coordinates.
+3. Verify that all items physically fit within room dimensions (${roomMetrics.width}cm W x ${roomMetrics.length}cm L).
+4. Maintain required clearance in front of wardrobes, beds, and doorways.
+5. Re-calculate and return a corrected layout diagram fixing all overlaps mentioned above.`;
+  }
+
   return `## Room Metrics
 - Length: ${roomMetrics.length}cm
 - Width: ${roomMetrics.width}cm
@@ -359,7 +380,7 @@ Windows:
 ${windowsText}
 
 ## Selected Products (${products.length} unique items)
-${productList}
+${productList}${feedbackSection}
 
 Evaluate whether all products fit within this room while respecting structural elements (doors and windows) and ergonomic clearances. Return the JSON result.`;
 };
@@ -561,7 +582,17 @@ const evaluateAlgorithmicSpatialSafety = (roomMetrics, products, generationType 
  * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
  * @returns {Promise<Object>} Parsed spatial guardrail result
  */
-const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH') => {
+/**
+ * Stage 1: Invoke Spatial Generator Model
+ * Performs 2D layout allocation based on room metrics, product dimensions, and previous feedback history.
+ *
+ * @param {Object} roomMetrics - Room dimensions { length, width, height, doors, windows }
+ * @param {Array<Object>} products - Normalized product array
+ * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
+ * @param {Array<Object>} previousFeedbackHistory - Array of past attempt failure feedback
+ * @returns {Promise<Object>} Stage 1 layout result object
+ */
+const invokeSpatialStage1 = async (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH', previousFeedbackHistory = []) => {
   const apiKey = process.env.BEDROCK_API_KEY;
   const primaryModel = process.env.STEP3_MODEL_ID || 'global.anthropic.claude-sonnet-4-5-20250929-v1:0';
   
@@ -572,12 +603,12 @@ const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREAT
   }
 
   if (!apiKey) {
-    console.warn('[SpatialGuardrail] BEDROCK_API_KEY not configured. Falling back to algorithmic engine.');
+    console.warn('[SpatialGuardrail Stage 1] BEDROCK_API_KEY not configured. Falling back to algorithmic engine.');
     return evaluateAlgorithmicSpatialSafety(roomMetrics, products, generationType);
   }
 
   const systemPrompt = buildSpatialSystemPrompt(generationType);
-  const userPrompt = buildSpatialUserPrompt(roomMetrics, products, generationType);
+  const userPrompt = buildSpatialUserPrompt(roomMetrics, products, generationType, previousFeedbackHistory);
 
   const callModelApi = async (targetModel) => {
     return await fetch(endpointUrl, {
@@ -605,22 +636,19 @@ const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREAT
   let response = null;
   let lastErrorMsg = '';
 
-  // Try candidate models with retry attempts
   for (const modelId of candidateModels) {
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        console.log(`[SpatialGuardrail] Invoking model "${modelId}" (attempt ${attempt}) via "${endpointUrl}"...`);
+        console.log(`[SpatialGuardrail Stage 1] Invoking model "${modelId}" (attempt ${attempt}) via "${endpointUrl}"...`);
         response = await callModelApi(modelId);
         if (response.ok) break;
 
         lastErrorMsg = await response.text();
-        console.warn(`[SpatialGuardrail] Model call to "${modelId}" (attempt ${attempt}) returned HTTP ${response.status}: ${lastErrorMsg.slice(0, 150)}`);
-        
-        // Brief wait before retry
+        console.warn(`[SpatialGuardrail Stage 1] Model call to "${modelId}" (attempt ${attempt}) returned HTTP ${response.status}: ${lastErrorMsg.slice(0, 150)}`);
         await new Promise((r) => setTimeout(r, 800));
       } catch (err) {
         lastErrorMsg = err.message;
-        console.warn(`[SpatialGuardrail] Fetch exception invoking "${modelId}": ${err.message}`);
+        console.warn(`[SpatialGuardrail Stage 1] Fetch exception invoking "${modelId}": ${err.message}`);
         await new Promise((r) => setTimeout(r, 800));
       }
     }
@@ -628,21 +656,19 @@ const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREAT
   }
 
   if (!response || !response.ok) {
-    console.error(`[SpatialGuardrail] All external spatial model calls failed. ${lastErrorMsg}`);
-    console.log('[SpatialGuardrail] 🔄 Activating local algorithmic spatial safety engine fallback...');
+    console.error(`[SpatialGuardrail Stage 1] All external spatial model calls failed. ${lastErrorMsg}`);
+    console.log('[SpatialGuardrail Stage 1] 🔄 Activating local algorithmic spatial safety engine fallback...');
     return evaluateAlgorithmicSpatialSafety(roomMetrics, products);
   }
 
   const data = await response.json();
-  console.log('[SpatialGuardrail] Raw API Response:', JSON.stringify(data).slice(0, 400));
+  console.log('[SpatialGuardrail Stage 1] Raw API Response:', JSON.stringify(data).slice(0, 400));
 
   let parsed = null;
 
-  // 1. Direct object check: If the API proxy directly returned the guardrail JSON object
   if (data && typeof data === 'object' && typeof data.isApplicable === 'boolean') {
     parsed = data;
   } else {
-    // 2. Extract content string from all common wrapper keys (ITI API returns output_text)
     let rawContent = 
       data.output_text ||
       data.response || 
@@ -665,13 +691,11 @@ const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREAT
     } else if (typeof rawContent === 'string' && rawContent.trim()) {
       let str = rawContent.trim();
       
-      // Strip markdown code fences if present
       if (str.startsWith('```json')) str = str.slice(7);
       else if (str.startsWith('```')) str = str.slice(3);
       if (str.endsWith('```')) str = str.slice(0, -3);
       str = str.trim();
 
-      // Regex extract first JSON object block
       const jsonMatch = str.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         str = jsonMatch[0];
@@ -680,10 +704,18 @@ const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREAT
       try {
         parsed = JSON.parse(str);
       } catch (err) {
-        console.error('[SpatialGuardrail] Failed to parse extracted JSON string:', str.slice(0, 300));
+        console.error('[SpatialGuardrail Stage 1] Failed to parse extracted JSON string:', str.slice(0, 300));
       }
     }
   }
+
+  if (!parsed || typeof parsed.isApplicable !== 'boolean') {
+    console.error('[SpatialGuardrail Stage 1] Invalid or unparseable AI model response structure. Activating local fallback engine.');
+    return evaluateAlgorithmicSpatialSafety(roomMetrics, products, generationType);
+  }
+
+  return parsed;
+};
 
 /**
  * Stage 2: Spatial Realism Validator (Critic Guardrail)
@@ -697,7 +729,6 @@ const validateRealismWithCriticModel = async (roomMetrics, products, stage1Resul
     endpointUrl = `${baseUrl.replace(/\/$/, '')}/student/chat`;
   }
 
-  // Validator model (Critic model)
   const validatorModel = process.env.VALIDATOR_MODEL_ID || 'deepseek.v3-v1:0';
 
   const criticSystemPrompt = `You are a Practical Interior Layout Reviewer.
@@ -783,44 +814,105 @@ Audit this proposed layout carefully. Is it realistic in real life? Return JSON 
   return { isRealistic: true };
 };
 
-  if (!parsed || typeof parsed.isApplicable !== 'boolean') {
-    console.error('[SpatialGuardrail] Invalid or unparseable AI model response structure. Activating local fallback engine.');
-    return evaluateAlgorithmicSpatialSafety(roomMetrics, products);
-  }
+/**
+ * Main Spatial Model Orchestrator
+ * Executes a 3-iteration self-correction loop between Stage 1 (Generator) and Stage 2 (Critic).
+ *
+ * @param {Object} roomMetrics - { length, width, height, doors, windows } in cm
+ * @param {Array<Object>} products - Normalized product array
+ * @param {string} generationType - 'CREATE_FROM_SCRATCH' or 'ENHANCE_ROOM'
+ * @returns {Promise<Object>} Final parsed spatial guardrail result
+ */
+const invokeSpatialModel = async (roomMetrics, products, generationType = 'CREATE_FROM_SCRATCH') => {
+  const MAX_ITERATIONS = 3;
+  const feedbackHistory = [];
+  let finalResult = null;
 
-  // Stage 1 Result obtained. If applicable, run Stage 2 Critic model validation
-  if (parsed.isApplicable) {
-    const criticResult = await validateRealismWithCriticModel(roomMetrics, products, parsed);
+  for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
+    console.log(`\n=================================================================`);
+    console.log(`[SpatialGuardrail] 🔄 --- SPATIAL GUARDRAIL ITERATION ${iteration}/${MAX_ITERATIONS} ---`);
+    console.log(`=================================================================`);
+
+    // Stage 1: Generator
+    const stage1Result = await invokeSpatialStage1(roomMetrics, products, generationType, feedbackHistory);
+
+    if (!stage1Result || typeof stage1Result.isApplicable !== 'boolean') {
+      console.warn(`[SpatialGuardrail] Iteration ${iteration}: Stage 1 produced unparseable response. Activating fallback engine.`);
+      return evaluateAlgorithmicSpatialSafety(roomMetrics, products, generationType);
+    }
+
+    if (stage1Result.isApplicable === false) {
+      console.warn(`[SpatialGuardrail] ⚠️ Iteration ${iteration}: Stage 1 produced unapplicable layout.`);
+      const stage1Feedback = (stage1Result.spatialViolations || []).map(v => v.description).join('; ') || 'Stage 1 layout unapplicable.';
+      feedbackHistory.push({
+        iteration,
+        criticFeedback: stage1Feedback,
+        proposedLayout: stage1Result.layoutDiagram,
+        violations: stage1Result.spatialViolations || []
+      });
+      finalResult = stage1Result;
+
+      if (iteration < MAX_ITERATIONS) {
+        console.log(`[SpatialGuardrail] 🔁 Self-Correction Triggered (Attempt ${iteration + 1}): Retrying Stage 1 with previous error feedback...`);
+        continue;
+      } else {
+        break;
+      }
+    }
+
+    // Stage 2: Critic Realism Audit
+    const criticResult = await validateRealismWithCriticModel(roomMetrics, products, stage1Result);
     const score = criticResult?.realismScore ?? 100;
     const rejected = criticResult?.isRealistic === false && score < 40;
 
-    if (rejected) {
-      console.warn(`[SpatialGuardrail] ❌ Stage 2 Critic REJECTED layout (score=${score}): ${criticResult.criticism}`);
-      parsed.isApplicable = false;
-      const criticViolations = criticResult.violations?.length
-        ? normalizeSpatialViolations(criticResult.violations)
-        : [{ type: 'WALKWAY_BLOCKAGE', description: `Stage 2 Realism Audit Failed (score ${score}/100): ${criticResult.criticism || 'Layout is physically impossible.'}`, conflictingProductIds: [] }];
-      parsed.spatialViolations = [
-        ...normalizeSpatialViolations(parsed.spatialViolations || []),
-        ...criticViolations
-      ];
-      parsed.suggestedRemovals = Array.from(new Set([
-        ...(parsed.suggestedRemovals || []),
-        ...(Array.isArray(criticResult.suggestedRemovals) ? criticResult.suggestedRemovals.map(String) : [])
-      ]));
+    if (!rejected) {
+      console.log(`[SpatialGuardrail] ✅ Iteration ${iteration}: Stage 2 Critic APPROVED layout (score=${score}): ${criticResult?.criticism || 'OK'}`);
+      stage1Result.isApplicable = true;
+      if (!stage1Result.naturalLanguagePrompt || !stage1Result.naturalLanguagePrompt.trim()) {
+        stage1Result.naturalLanguagePrompt = translateLayoutToPromptDirectives(stage1Result.layoutDiagram);
+      }
+      return stage1Result;
+    }
+
+    // Stage 2 Critic REJECTED the layout
+    const criticismText = criticResult.criticism || 'Layout is physically impossible (overlapping items or boundary clipping).';
+    console.warn(`[SpatialGuardrail] ❌ Stage 2 Critic REJECTED layout on iteration ${iteration} (score=${score}): ${criticismText}`);
+
+    const criticViolations = criticResult.violations?.length
+      ? normalizeSpatialViolations(criticResult.violations)
+      : [{ type: 'WALKWAY_BLOCKAGE', description: `Stage 2 Realism Audit Failed (score ${score}/100): ${criticismText}`, conflictingProductIds: [] }];
+
+    stage1Result.isApplicable = false;
+    stage1Result.spatialViolations = [
+      ...normalizeSpatialViolations(stage1Result.spatialViolations || []),
+      ...criticViolations
+    ];
+    stage1Result.suggestedRemovals = Array.from(new Set([
+      ...(stage1Result.suggestedRemovals || []),
+      ...(Array.isArray(criticResult.suggestedRemovals) ? criticResult.suggestedRemovals.map(String) : [])
+    ]));
+
+    feedbackHistory.push({
+      iteration,
+      criticFeedback: criticismText,
+      proposedLayout: stage1Result.layoutDiagram,
+      violations: stage1Result.spatialViolations
+    });
+
+    finalResult = stage1Result;
+
+    if (iteration < MAX_ITERATIONS) {
+      console.log(`[SpatialGuardrail] 🔁 Self-Correction Triggered: Stage 2 Critic rejected iteration ${iteration}. Retrying Stage 1 for Iteration ${iteration + 1} with feedback...`);
     } else {
-      console.log(`[SpatialGuardrail] ✅ Stage 2 Critic APPROVED layout (score=${score}): ${criticResult?.criticism || 'OK'}`);
+      console.warn(`[SpatialGuardrail] ⛔ Reached 3-iteration self-correction limit without achieving valid layout.`);
     }
   }
 
-  // Ensure naturalLanguagePrompt exists (fallback to translator if DeepSeek omitted it)
-  if (!parsed.naturalLanguagePrompt || typeof parsed.naturalLanguagePrompt !== 'string' || !parsed.naturalLanguagePrompt.trim()) {
-    parsed.naturalLanguagePrompt = translateLayoutToPromptDirectives(parsed.layoutDiagram);
+  if (!finalResult.naturalLanguagePrompt || !finalResult.naturalLanguagePrompt.trim()) {
+    finalResult.naturalLanguagePrompt = translateLayoutToPromptDirectives(finalResult.layoutDiagram);
   }
 
-  console.log(`[SpatialGuardrail] Result: isApplicable=${parsed.isApplicable}, violations=${(parsed.spatialViolations || []).length}, allocations=${parsed.layoutDiagram?.allocations?.length || 0}`);
-
-  return parsed;
+  return finalResult;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -330,7 +330,16 @@ const StepRoomGenerationResult = ({
                 </div>
 
                 <div className="shrink-0">
-                  {externalUrl ? (
+                  {parsed.isInternal ? (
+                    <button
+                      onClick={() => handleAddToCart(p)}
+                      className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+                      title="Add to SmartSpace Cart"
+                    >
+                      <Icon name="add_shopping_cart" size={15} />
+                      <span>{t("dashboard.addCartShort", "Add Cart")}</span>
+                    </button>
+                  ) : externalUrl ? (
                     <a
                       href={externalUrl}
                       target="_blank"

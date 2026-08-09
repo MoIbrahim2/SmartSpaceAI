@@ -77,24 +77,13 @@ const StepSelectProducts = ({
   const activeCatProductIds = new Set(currentCategoryProducts.map((p) => getProductId(p)));
   const selectedInActiveCategoryCount = addedProducts.filter((id) => activeCatProductIds.has(id)).length;
 
-  // Validate category selections: ONLY categories explicitly requested in prompt (reqCount > 0) are required!
+  // Validate category selections: Allow flexible, user-driven item counts (more or less than requested count).
   const validateCategorySelections = () => {
-    for (const cat of categories) {
-      const reqCount = categoryCounts[cat] ?? 0;
-      if (reqCount === 0) continue; // Optional categories never block progress!
-
-      const catProducts = productData[cat] || [];
-      const catProductIds = new Set(catProducts.map((p) => getProductId(p)));
-      const selCount = addedProducts.filter((id) => catProductIds.has(id)).length;
-
-      if (selCount < reqCount) {
-        return {
-          valid: false,
-          categoryName: cat,
-          required: reqCount,
-          selected: selCount
-        };
-      }
+    if (addedProducts.length === 0) {
+      return {
+        valid: false,
+        noProductsSelected: true
+      };
     }
     return { valid: true };
   };
@@ -105,17 +94,12 @@ const StepSelectProducts = ({
 
     const validation = validateCategorySelections();
     if (!validation.valid) {
-      console.warn("[StepSelectProducts] ⚠️ Category selection incomplete:", validation);
-      const catDisplayName = formatCategoryName(validation.categoryName, t);
+      console.warn("[StepSelectProducts] ⚠️ No products selected:", validation);
       setValidationError(
-        t("dashboard.selectionIncompleteError", {
-          required: validation.required,
-          category: catDisplayName,
-          selected: validation.selected,
-          defaultValue: `Please select at least ${validation.required} item(s) for ${catDisplayName} before proceeding (currently selected: ${validation.selected}).`
+        t("dashboard.noProductsSelectedError", {
+          defaultValue: "Please select at least one furniture item before proceeding."
         })
       );
-      setActiveCategory(validation.categoryName);
       return;
     }
 

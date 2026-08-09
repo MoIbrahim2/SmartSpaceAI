@@ -3,11 +3,23 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Pagination from "./Pagination";
 
-export default function DataTable({ columns, data, keyField = "id", pageSize = 5 }) {
+export default function DataTable({
+  columns,
+  data,
+  keyField = "id",
+  pageSize = 5,
+  manualPagination = false,
+  page = 1,
+  totalPages: propTotalPages,
+  totalRecords: propTotalRecords,
+  onPageChange: propOnPageChange
+}) {
   const { t } = useTranslation();
-  const [currentPage, setCurrentPage] = useState(1);
+  const [internalPage, setInternalPage] = useState(1);
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
+
+  const currentPage = manualPagination ? page : internalPage;
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -27,8 +39,17 @@ export default function DataTable({ columns, data, keyField = "id", pageSize = 5
     return 0;
   });
 
-  const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
-  const paginatedData = sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = manualPagination ? (propTotalPages || 1) : Math.max(1, Math.ceil(sortedData.length / pageSize));
+  const totalRecords = manualPagination ? (propTotalRecords ?? sortedData.length) : sortedData.length;
+  const paginatedData = manualPagination ? sortedData : sortedData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handlePageChange = (newPage) => {
+    if (manualPagination && propOnPageChange) {
+      propOnPageChange(newPage);
+    } else {
+      setInternalPage(newPage);
+    }
+  };
 
   return (
     <div className="rounded-2xl bg-surface border border-outline/10 neomorph-raised overflow-hidden">
@@ -90,8 +111,8 @@ export default function DataTable({ columns, data, keyField = "id", pageSize = 5
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        totalRecords={sortedData.length}
-        onPageChange={setCurrentPage}
+        totalRecords={totalRecords}
+        onPageChange={handlePageChange}
       />
     </div>
   );

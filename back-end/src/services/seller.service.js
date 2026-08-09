@@ -9,15 +9,15 @@ const ROLES = require('../constants/roles');
 const { validateSellerProductSubmission } = require('./aiService');
 
 /**
- * List products owned by a seller.
+ * List products owned by a seller with pagination.
  * @param {string} sellerId
- * @param {Object} queryParams
- * @returns {Promise<Array>} Products list
+ * @param {Object} queryParams - { page, limit, status, search }
+ * @returns {Promise<Object>} { products, pagination }
  */
 const listSellerProducts = async (sellerId, queryParams = {}) => {
   const query = { sellerId };
 
-  if (queryParams.status) {
+  if (queryParams.status && queryParams.status !== 'ALL') {
     query['processing.status'] = queryParams.status;
   }
 
@@ -25,8 +25,25 @@ const listSellerProducts = async (sellerId, queryParams = {}) => {
     query['basic.name'] = { $regex: queryParams.search, $options: 'i' };
   }
 
-  // Return products sorted newest first
-  return await Product.find(query).sort({ _id: -1 });
+  const page = Math.max(1, parseInt(queryParams.page, 10) || 1);
+  const limit = Math.max(1, parseInt(queryParams.limit, 10) || 10);
+  const skip = (page - 1) * limit;
+
+  const total = await Product.countDocuments(query);
+  const products = await Product.find(query)
+    .sort({ _id: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  return {
+    products,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
+  };
 };
 
 /**
@@ -68,7 +85,7 @@ const createSellerProduct = async (sellerId, productData, file) => {
 
     let images = [];
     if (file) {
-      images = [{ url: `uploads/products/${file.filename}`, isPrimary: true }];
+      images = [{ url: `/uploads/products/${file.filename}`, isPrimary: true }];
     } else if (Array.isArray(productData.images) && productData.images.length > 0) {
       images = productData.images;
     }
@@ -133,7 +150,7 @@ const updateSellerProduct = async (sellerId, productId, updateData, file) => {
         const relativePath = oldUrl.replace(/^\//, '');
         oldImagePath = path.join(process.cwd(), relativePath);
       }
-      product.images = [{ url: `uploads/products/${file.filename}`, isPrimary: true }];
+      product.images = [{ url: `/uploads/products/${file.filename}`, isPrimary: true }];
     } else if (updateData.images && Array.isArray(updateData.images) && updateData.images.length > 0) {
       product.images = updateData.images;
     }
