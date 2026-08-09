@@ -36,6 +36,7 @@ const LandingPage = () => {
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [profileImgError, setProfileImgError] = useState(false);
 
   const getDashboardPath = (u) => {
     const role = (u?.role || "USER").toUpperCase();
@@ -525,10 +526,10 @@ const LandingPage = () => {
                     height: "40px",
                     borderRadius: "50%",
                     cursor: "pointer",
-                    background: "var(--primary-color, #4F46E5)",
+                    background: "#a67443",
                     color: "#fff",
                     fontWeight: "bold",
-                    border: "2px solid #4F46E5",
+                    border: "2px solid #a67443",
                     overflow: "hidden",
                     display: "flex",
                     alignItems: "center",
@@ -537,10 +538,11 @@ const LandingPage = () => {
                   }}
                   aria-label="User Profile Menu"
                 >
-                  {user.profileImage ? (
+                  {user.profileImage && !profileImgError ? (
                     <img
                       src={user.profileImage}
                       alt="Profile"
+                      onError={() => setProfileImgError(true)}
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (

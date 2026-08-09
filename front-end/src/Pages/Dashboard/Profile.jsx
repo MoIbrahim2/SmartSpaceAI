@@ -158,8 +158,11 @@ const Profile = () => {
                             src={
                               profileImage
                                 ? URL.createObjectURL(profileImage)
-                                : user?.profileImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuDiLUchOQJez1yJGaA_8LNiL93_YXiYpDBZqIm0Lp7dFkEKnSfb1CYDyV_3bENypNDic3lxNErAWmlHwLssd4YjVxFta4M83i720zSao8f07KmA1-x_H0DKBmhBZlVLRNP987IISxMs8FiUJ_lzfsoHe9Kyzs9GG7axLBBZjyiIgVSoYOrtH9gKbaf9LSh7_Y5BkbqmaC7Hb6TrXvWmpDgzm8lU3Kg7CBxMzV_GTrIaNm2siMP1aDRa"
+                                : user?.profileImage || ""
                             }
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
                           />
                         </div>
                       </div>
