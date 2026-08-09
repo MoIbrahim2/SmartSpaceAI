@@ -3,6 +3,7 @@ import Drawer from "../Shared/Drawer";
 import StatusBadge from "../Shared/StatusBadge";
 import { useTranslation } from "react-i18next";
 import { Sparkles, Check, X, Tag, Ruler, Box } from "lucide-react";
+import { normalizeImageUrl } from "../../../utils/productUtils";
 
 export default function ProductDetailsDrawer({ product, isOpen, onClose, onApprove, onReject }) {
   const { t } = useTranslation();
@@ -19,9 +20,12 @@ export default function ProductDetailsDrawer({ product, isOpen, onClose, onAppro
         <div className="space-y-3">
           <div className="h-64 w-full rounded-2xl overflow-hidden bg-surface border border-outline/10 neo-shadow">
             <img
-              src={images[selectedImg] || product.imageUrl}
+              src={normalizeImageUrl(images[selectedImg] || product.imageUrl)}
               alt={product.productTitle}
               className="h-full w-full object-cover"
+              onError={(e) => {
+                e.target.src = "/img/no-product-image.svg";
+              }}
             />
           </div>
           {images.length > 1 && (
@@ -34,7 +38,14 @@ export default function ProductDetailsDrawer({ product, isOpen, onClose, onAppro
                     selectedImg === idx ? "border-primary ring-2 ring-primary/40" : "border-outline/20"
                   }`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={normalizeImageUrl(img)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.target.src = "/img/no-product-image.svg";
+                    }}
+                  />
                 </button>
               ))}
             </div>

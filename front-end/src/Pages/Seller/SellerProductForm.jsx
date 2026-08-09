@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import PageHeader from "../../Components/Admin/Shared/PageHeader";
 import { getSellerProduct, createSellerProduct, updateSellerProduct } from "../../api/SellerApi";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
+import { normalizeImageUrl } from "../../utils/productUtils";
 
 export default function SellerProductForm() {
   const { id } = useParams();
@@ -630,7 +631,7 @@ export default function SellerProductForm() {
                 <div className="relative flex flex-col md:flex-row items-center gap-6 p-5 border border-outline/15 bg-background rounded-2xl neo-inset">
                   <div className="relative shrink-0 overflow-hidden rounded-xl border border-outline/20 bg-surface shadow-sm max-w-[240px]">
                     <img
-                      src={resolveImageDisplayUrl(previewUrl)}
+                      src={normalizeImageUrl(previewUrl)}
                       alt="Product Preview"
                       className="h-48 w-48 object-cover rounded-xl"
                       onError={(e) => {

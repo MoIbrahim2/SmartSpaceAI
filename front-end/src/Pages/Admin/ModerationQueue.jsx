@@ -14,6 +14,7 @@ import RejectReasonModal from "../../Components/Admin/Moderation/RejectReasonMod
 import LoadingState from "../../Components/Admin/LoadingState";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
 import { getModerationItems, updateModerationStatus } from "../../api/AdminApi";
+import { normalizeImageUrl } from "../../utils/productUtils";
 
 export default function ModerationQueue() {
   const { t } = useTranslation();
@@ -77,9 +78,12 @@ export default function ModerationQueue() {
       render: (row) => (
         <div className="flex items-center gap-3">
           <img
-            src={row.imageUrl}
+            src={normalizeImageUrl(row.imageUrl)}
             alt={row.productTitle}
             className="size-12 rounded-xl object-cover border border-outline/20 neo-shadow"
+            onError={(e) => {
+              e.target.src = "/img/no-product-image.svg";
+            }}
           />
           <div>
             <p className="font-bold text-on-surface line-clamp-1">{row.productTitle}</p>

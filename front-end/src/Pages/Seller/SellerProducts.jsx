@@ -9,6 +9,7 @@ import FilterDropdown from "../../Components/Admin/Shared/FilterDropdown";
 import ConfirmDialog from "../../Components/Admin/Shared/ConfirmDialog";
 import { getSellerProducts, deleteSellerProduct } from "../../api/SellerApi";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
+import { getProductImage } from "../../utils/productUtils";
 
 function ValidationReasonPopover({ status, issues, detectedObject }) {
   const { t } = useTranslation();
@@ -158,7 +159,7 @@ export default function SellerProducts() {
       render: (row) => (
         <div className="flex items-center gap-3">
           <img
-            src={row.images?.[0]?.url || "/img/no-product-image.svg"}
+            src={getProductImage(row)}
             alt={row.basic?.name}
             className="size-12 rounded-xl object-cover border border-outline/20 bg-surface"
             onError={(e) => {

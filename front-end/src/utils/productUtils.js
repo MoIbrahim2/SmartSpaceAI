@@ -1,7 +1,4 @@
-/**
- * Helper utility to parse MongoDB product documents and API recommendation objects.
- * Normalizes title, brand, price, images, description, dimensions, and styling properties.
- */
+import { API_HOST } from "../api/axios";
 
 /** Path to the generic "no image" placeholder SVG */
 export const NO_IMAGE_PLACEHOLDER = "/img/no-product-image.svg";
@@ -10,14 +7,23 @@ export const getUniqueFallbackImage = (_product, _category = "") => {
   return NO_IMAGE_PLACEHOLDER;
 };
 
-const normalizeImageUrl = (url) => {
-  if (typeof url !== 'string' || !url.trim()) return '';
-  const trimmed = url.trim();
-  if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/')) {
+export const normalizeImageUrl = (url) => {
+  if (!url) return '';
+  let rawUrl = typeof url === 'object' ? (url.url || url.src || '') : url;
+  if (typeof rawUrl !== 'string' || !rawUrl.trim()) return '';
+
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) return trimmed;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+
+  if (trimmed.startsWith('uploads/') || trimmed.startsWith('/uploads/') || trimmed.startsWith('public/') || trimmed.startsWith('/public/')) {
     const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    return `http://localhost:5000${cleanPath}`;
+    if (API_HOST) {
+      return `${API_HOST.replace(/\/$/, '')}${cleanPath}`;
+    }
+    return cleanPath;
   }
-  return trimmed;
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
 };
 
 export const getProductImage = (product, category = "") => {

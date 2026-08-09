@@ -57,14 +57,18 @@ const ALLOWED_EXTENSIONS = ['jpeg', 'jpg', 'png', 'bmp', 'webp'];
 
 // Filter out non-image files and enforce allowed file extensions (First Guard)
 const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/bmp', 'image/webp'];
+  const ext = path.extname(file.originalname || '').toLowerCase().replace('.', '');
 
-  if (allowedMimeTypes.includes(file.mimetype) || ALLOWED_EXTENSIONS.includes(ext)) {
-    cb(null, true);
-  } else {
-    cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file type. Only JPEG, PNG, and WebP images are allowed.'), false);
+  if (!ext || !ALLOWED_EXTENSIONS.includes(ext)) {
+    return cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file extension. Only image files (JPEG, PNG, BMP, WebP) are allowed.'), false);
   }
+
+  if (!allowedMimeTypes.includes(file.mimetype) && file.mimetype !== 'application/octet-stream') {
+    return cb(new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid file type. Only JPEG, PNG, BMP, and WebP images are allowed.'), false);
+  }
+
+  cb(null, true);
 };
 
 // Initialize multer
@@ -90,5 +94,6 @@ module.exports = {
   uploadGenerationImages,
   uploadRoomLayoutImage,
   uploadProductImage,
-  upload
+  upload,
+  fileFilter
 };
