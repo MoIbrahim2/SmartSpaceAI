@@ -83,7 +83,7 @@ const getOrders = async (query = {}) => {
     filter.userId = query.userId;
   }
 
-  if (query.status) {
+  if (query.status && query.status !== 'All' && query.status !== 'ALL') {
     filter.status = query.status.toUpperCase();
   }
 
@@ -92,6 +92,8 @@ const getOrders = async (query = {}) => {
     const searchRegex = new RegExp(escapedSearch, 'i');
     filter.$or = [
       { orderNumber: searchRegex },
+      { 'customer.name': searchRegex },
+      { 'customer.phone': searchRegex },
       { 'shippingAddress.city': searchRegex },
       { 'items.name': searchRegex }
     ];
@@ -109,8 +111,8 @@ const getOrders = async (query = {}) => {
 
   const [orders, total] = await Promise.all([
     Order.find(filter)
-      .populate('userId', 'profile.firstName profile.lastName authentication.email')
-      .populate('sellerId', 'profile.firstName profile.lastName authentication.email base_commission_percentage')
+      .populate('userId buyerId', 'profile.firstName profile.lastName authentication.email')
+      .populate('sellerId', 'profile.firstName profile.lastName authentication.email sellerProfile.businessName base_commission_percentage')
       .sort(sort)
       .skip(skip)
       .limit(limit),
