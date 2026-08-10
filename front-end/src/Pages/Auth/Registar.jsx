@@ -20,6 +20,7 @@ const Register = () => {
   }
 
   const [agree, setAgree] = useState(false);
+  const [role, setRole] = useState("USER");
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -27,6 +28,10 @@ const Register = () => {
     dateOfBirth: "",
     password: "",
     confirmPassword: "",
+    businessName: "",
+    phone: "",
+    address: "",
+    taxId: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,7 +53,7 @@ const Register = () => {
     }
     setLoading(true);
     try {
-      await signup(form);
+      await signup({ ...form, role });
       navigate(`/verify-email?email=${encodeURIComponent(form.email)}`, { replace: true });
     } catch (err) {
       const errors = err.response?.data?.errors;
@@ -162,6 +167,32 @@ const Register = () => {
             )}
 
             <form className="space-y-4" onSubmit={handleSubmit}>
+              {/* Account Type Selector Toggle */}
+              <div className="flex gap-2 rounded-xl bg-[#eae3d9] dark:bg-white/10 p-1 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setRole("USER")}
+                  className={`flex-1 rounded-lg py-2.5 text-xs font-extrabold uppercase tracking-wider transition-all ${
+                    role === "USER"
+                      ? "bg-[#a67443] text-white shadow-md"
+                      : "text-[#78716c] dark:text-white/70 hover:text-[#1c1917] dark:hover:text-white"
+                  }`}
+                >
+                  👤 Buyer Account
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("SELLER")}
+                  className={`flex-1 rounded-lg py-2.5 text-xs font-extrabold uppercase tracking-wider transition-all ${
+                    role === "SELLER"
+                      ? "bg-[#a67443] text-white shadow-md"
+                      : "text-[#78716c] dark:text-white/70 hover:text-[#1c1917] dark:hover:text-white"
+                  }`}
+                >
+                  🏪 Vendor / Seller
+                </button>
+              </div>
+
               {/* First Name & Last Name */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
@@ -238,6 +269,78 @@ const Register = () => {
                   />
                 </div>
               </div>
+
+              {/* Vendor Specific Credentials */}
+              {role === "SELLER" && (
+                <div className="space-y-4 pt-3 pb-1 border-t border-[#d6d3d1] dark:border-white/15">
+                  <div className="flex items-center gap-2 text-xs font-extrabold uppercase text-[#a67443] dark:text-amber-400">
+                    <Icon name="storefront" size={16} />
+                    <span>Vendor Business Credentials</span>
+                  </div>
+
+                  {/* Business / Store Name */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                      Business / Store Name
+                    </label>
+                    <input
+                      className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                      placeholder="e.g. Modern Cairo Furniture"
+                      type="text"
+                      name="businessName"
+                      value={form.businessName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  {/* Contact Phone & Tax ID */}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                        Contact Phone
+                      </label>
+                      <input
+                        className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                        placeholder="+20 100 123 4567"
+                        type="tel"
+                        name="phone"
+                        value={form.phone}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                        Tax Reg. Number
+                      </label>
+                      <input
+                        className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                        placeholder="EG-987654321"
+                        type="text"
+                        name="taxId"
+                        value={form.taxId}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Physical Store Location */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                      Store Physical Location
+                    </label>
+                    <input
+                      className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                      placeholder="e.g. 15 El-Tahrir St, New Cairo"
+                      type="text"
+                      name="address"
+                      value={form.address}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Password */}
               <div className="flex flex-col gap-1.5">

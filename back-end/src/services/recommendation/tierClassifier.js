@@ -8,6 +8,7 @@
 const {
   TIER_THRESHOLDS,
   MAX_PER_TIER,
+  MAX_CHEAPER_PER_TIER,
   TIER_FALLBACK_ORDER,
 } = require('../../config/recommendation.config');
 
@@ -52,7 +53,7 @@ const classifyTiers = (scoredProducts, unitTargetBudget, resolvedQuantity = 1) =
 
   // Sort each tier by score descending, take top N
   return {
-    cheaper: cheaper.sort((a, b) => b.score - a.score).slice(0, MAX_PER_TIER),
+    cheaper: cheaper.sort((a, b) => b.score - a.score).slice(0, MAX_CHEAPER_PER_TIER),
     balanced: balanced.sort((a, b) => b.score - a.score).slice(0, MAX_PER_TIER),
     premium: premium.sort((a, b) => b.score - a.score).slice(0, MAX_PER_TIER),
   };

@@ -482,6 +482,11 @@ const generateRoomCompositeImage = async ({
         }
 
         // 2. Product Images & Detailed Inventory Directives
+        const MAX_QWEN_IMAGES = 9;
+        const baseImageCount = messageContent.filter(m => m && m.image).length;
+        const maxProductImageSlots = Math.max(0, MAX_QWEN_IMAGES - baseImageCount);
+        let attachedProductImageCount = 0;
+
         for (const p of selectedProducts) {
           const pData = (p.productId && typeof p.productId === 'object' && (p.productId.basic || p.productId.name || p.productId.images))
             ? p.productId
@@ -527,7 +532,7 @@ const generateRoomCompositeImage = async ({
           const attrDetails = [styles, finalColors ? `COLOR/FINISH: ${finalColors.toUpperCase()}` : '', materials ? `MATERIAL: ${materials}` : ''].filter(Boolean).join(' | ');
 
           // Robust product image extraction helper
-          let imgUrl = pData.primaryImage || pData.image_url || pData.image || pData.imageUrl || pData.img || pData.mainImageUrl || p.primaryImage || p.image || p.imageUrl || p.img;
+          let imgUrl = pData.primaryImage || pData.image_url || pData.image || pData.imageUrl || p.primaryImage || p.image || p.imageUrl || p.img;
           if (typeof imgUrl === 'object' && imgUrl) {
             imgUrl = imgUrl.url || imgUrl.src || null;
           }
@@ -540,8 +545,7 @@ const generateRoomCompositeImage = async ({
             }
           }
 
-          // CRITICAL FIX: Convert ALL images to base64 data URIs
-          // Remote URLs often have CORS/hotlink protection causing the model to not see them
+          // Convert images to base64 data URIs
           let productImgSrc = null;
           if (imgUrl && typeof imgUrl === 'string') {
             imgUrl = imgUrl.trim();
@@ -559,7 +563,6 @@ const generateRoomCompositeImage = async ({
             }
 
             if (!productImgSrc && (imgUrl.startsWith('http://') || imgUrl.startsWith('https://'))) {
-              // DOWNLOAD remote image and convert to base64
               try {
                 console.log(`[AI Service] Downloading product image for "${fullTitle}": ${imgUrl}`);
                 const headers = {
@@ -604,11 +607,14 @@ const generateRoomCompositeImage = async ({
 
           console.log(`[AI Service] Product parsed: "${fullTitle}" (${category}) | Has Image: ${Boolean(productImgSrc)} | Attr: ${attrDetails} | Image URL: ${imgUrl || 'N/A'}`);
 
-          if (productImgSrc) {
+          const canAttachImage = Boolean(productImgSrc) && (attachedProductImageCount < maxProductImageSlots);
+
+          if (canAttachImage) {
             messageContent.push({ image: productImgSrc });
+            attachedProductImageCount++;
             const imgTag = `<|image_${imageIndex}|>`;
             productRefList.push(
-              `• Object to Insert: ${imgTag} [Category: ${category.toUpperCase()}]\n` +
+              `• Object to Insert: ${imgTag} [Category: ${category.toUpperCase()}] "${fullTitle}"\n` +
               `  - SUPREME SOURCE OF TRUTH: ${imgTag} (Reference Product Image)\n` +
               `  - ZERO HALLUCINATION (SHAPE & DIMENSIONS): You MUST mathematically copy the exact length, width, and height proportions from ${imgTag}. Do NOT extend or stretch the object. Copy the exact geometry and aspect ratio.\n` +
               `  - ZERO HALLUCINATION (COLOR): Extract the exact RGB color from ${imgTag} and apply it. If it is dark, it must render as dark. NO COLOR BLEEDING from the floor.\n` +
@@ -619,10 +625,10 @@ const generateRoomCompositeImage = async ({
             imageIndex++;
           } else {
             productRefList.push(
-              `• Object to Insert: [Category: ${category.toUpperCase()}]\n` +
+              `• Object to Insert: [Category: ${category.toUpperCase()}] "${fullTitle}"\n` +
               `  - QUANTITY TO RENDER: Exactly ${qty} ${qty > 1 ? 'units' : 'unit'}.\n` +
               `  - PHYSICAL DIMENSIONS: ${dimString || 'Maintain exact proportions'}\n` +
-              `  - VISUAL SPECIFICATIONS: Modern design.`
+              `  - VISUAL SPECIFICATIONS: ${attrDetails || 'Modern design matching selected product specifications.'}`
             );
           }
         }
@@ -764,11 +770,35 @@ ${maskImageRef}
           }
         } else {
           const errorText = await response.text();
-          console.warn(`[AI Service] Qwen API error (${response.status}): ${errorText}`);
+          let errorJson = null;
+          try {
+            errorJson = JSON.parse(errorText);
+          } catch (_) {}
+
+          const rawMsg = errorJson?.message || errorJson?.code || errorText;
+          let userFriendlyMsg = rawMsg;
+          if (typeof rawMsg === 'string') {
+            if (rawMsg.includes('at most 9 image items')) {
+              userFriendlyMsg = 'The AI model supports a maximum of 9 reference images. Product selection image limits have been automatically adjusted.';
+            } else if (response.status === 401 || rawMsg.includes('InvalidApiKey')) {
+              userFriendlyMsg = 'AI Service Authentication Failed. Please verify the Qwen API Key configuration.';
+            } else if (response.status === 429 || rawMsg.includes('QuotaExceeded') || rawMsg.includes('RateLimit')) {
+              userFriendlyMsg = 'AI Service rate limit or quota exceeded. Please try again in a few moments.';
+            } else {
+              userFriendlyMsg = `Qwen API error (HTTP ${response.status}): ${rawMsg}`;
+            }
+          }
+
+          console.warn(`[AI Service] Qwen API error (${response.status}): ${userFriendlyMsg}`);
+          throw new Error(`[AI Service] Qwen API error (${response.status}): ${userFriendlyMsg}`);
         }
       }
     } catch (imgGenErr) {
-      console.warn(`[AI Service] Qwen image generation error (${imgGenErr.message}), falling back to baseline composite generator...`);
+      console.warn(`[AI Service] Qwen image generation error (${imgGenErr.message})`);
+      if (imgGenErr.message && imgGenErr.message.includes('[AI Service] Qwen API error')) {
+        throw imgGenErr;
+      }
+      console.warn(`[AI Service] Falling back to baseline composite generator...`);
     }
 
     // Fallback: If image generation fails or model is unavailable, create a valid composite reference using source image or default asset
@@ -787,7 +817,7 @@ ${maskImageRef}
 
     return {
       url: `uploads/generations/${fileName}`,
-      promptUsed: systemPrompt,
+      promptUsed: typeof qwenPrompt !== 'undefined' ? qwenPrompt : 'Baseline composite generator fallback',
       modelUsed: `${modelUsed}-fallback`,
     };
   });
@@ -1446,7 +1476,11 @@ ${origTag ? `${origTag} is the ORIGINAL room layout photo uploaded by the user, 
       }
     }
 
-    const errDetail = resData?.message || resData?.code || (rawText ? rawText.slice(0, 300) : 'Unknown Qwen API error');
+    const rawErr = resData?.message || resData?.code || (rawText ? rawText.slice(0, 300) : 'Unknown Qwen API error');
+    let errDetail = rawErr;
+    if (typeof rawErr === 'string' && rawErr.includes('at most 9 image items')) {
+      errDetail = 'The AI model supports a maximum of 9 reference images. Please reduce the number of reference images.';
+    }
     console.error('[AI Service] Qwen Refinement API Call Error:', response.status, errDetail);
     throw new Error(`Failed to refine room image (HTTP ${response.status}): ${errDetail}`);
   });

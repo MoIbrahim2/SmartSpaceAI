@@ -46,7 +46,7 @@ const compareHash = (storedHash, incomingHash) => {
  * @returns {Promise<Object>} The registered User instance and status
  */
 const signUp = async (userData) => {
-  const { firstName, lastName, email, dateOfBirth, password } = userData;
+  const { firstName, lastName, email, dateOfBirth, password, role, businessName, phone, taxId, address } = userData;
 
   // Normalize email to lowercase
   const normalizedEmail = email.toLowerCase();
@@ -60,8 +60,11 @@ const signUp = async (userData) => {
   // Generate 6-digit OTP using helper
   const { rawCode, hashedCode, expiresAt } = generateOtp(15);
 
+  const isSeller = role === ROLES.SELLER || role === 'SELLER';
+
   // Create new user in PENDING_ACTIVATION state
   const newUser = await User.create({
+    role: isSeller ? ROLES.SELLER : ROLES.USER,
     status: 'PENDING_ACTIVATION',
     verificationCode: hashedCode,
     verificationCodeExpiresAt: expiresAt,
@@ -76,7 +79,13 @@ const signUp = async (userData) => {
       passwordHash: password,
       provider: 'local',
       emailVerified: false
-    }
+    },
+    sellerProfile: isSeller ? {
+      businessName: businessName || `${firstName} ${lastName}`,
+      phone: phone || '',
+      taxId: taxId || '',
+      address: address || ''
+    } : undefined
   });
 
   // Send email verification code
