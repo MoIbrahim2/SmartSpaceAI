@@ -22,7 +22,7 @@ export default function CommissionReports() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [month, setMonth] = useState("All");
-  const [year, setYear] = useState("2026");
+  const [year, setYear] = useState("All");
 
   const [activeReport, setActiveReport] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);

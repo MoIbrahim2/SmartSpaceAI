@@ -15,18 +15,21 @@ const { sendPayoutCompletedEmail } = require('../email.service');
  */
 const getMonthlyCommissionReports = async (query = {}) => {
   const currentDate = new Date();
-  const year = query.year && query.year !== 'All' ? parseInt(query.year, 10) : currentDate.getFullYear();
-  const month = query.month && query.month !== 'All' ? parseInt(query.month, 10) : (currentDate.getMonth() + 1);
-
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  const year = query.year && query.year !== 'All' ? parseInt(query.year, 10) : null;
+  const month = query.month && query.month !== 'All' ? parseInt(query.month, 10) : null;
 
   const orderMatch = {
     status: { $nin: ['CANCELLED', 'REJECTED'] }
   };
 
-  if (query.year && query.year !== 'All' && query.month && query.month !== 'All') {
+  if (year && month) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
     orderMatch.createdAt = { $gte: startDate, $lte: endDate };
+  } else if (year) {
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+    orderMatch.createdAt = { $gte: yearStart, $lte: yearEnd };
   }
 
   if (query.sellerId && mongoose.Types.ObjectId.isValid(query.sellerId)) {
@@ -50,6 +53,7 @@ const getMonthlyCommissionReports = async (query = {}) => {
   const aggMap = new Map();
 
   orderAggregations.forEach(item => {
+    if (!item || !item._id) return;
     const sId = item._id.toString();
     const gross = item.grossSales || 0;
     const comm = item.commissionAmount || 0;
@@ -80,26 +84,31 @@ const getMonthlyCommissionReports = async (query = {}) => {
   const sellers = await User.find(sellerFilter);
   const sellerIds = sellers.map(s => s._id);
 
-  // Fetch payout records for this year and month
-  const payouts = await CommissionPayout.find({
-    sellerId: { $in: sellerIds },
-    year,
-    month
-  });
+  // Fetch payout records matching year and month filters
+  const payoutFilter = { sellerId: { $in: sellerIds } };
+  if (year) payoutFilter.year = year;
+  if (month) payoutFilter.month = month;
+  const payouts = await CommissionPayout.find(payoutFilter);
 
   const payoutMap = new Map();
   payouts.forEach(p => {
-    payoutMap.set(p.sellerId.toString(), p);
+    if (p && p.sellerId) {
+      payoutMap.set(p.sellerId.toString(), p);
+    }
   });
 
   // Build report items
   let reportItems = sellers.map(seller => {
-    const sId = seller._id.toString();
+    if (!seller) return null;
+    const sId = seller._id ? seller._id.toString() : '';
     const agg = aggMap.get(sId) || { totalOrders: 0, grossSales: 0, commissionAmount: 0, netSellerAmount: 0 };
     const payout = payoutMap.get(sId);
 
-    const grossSales = Number(agg.grossSales.toFixed(2));
-    let commissionAmount = Number(agg.commissionAmount.toFixed(2));
+    const rawGross = typeof agg.grossSales === 'number' && !isNaN(agg.grossSales) ? agg.grossSales : 0;
+    const rawComm = typeof agg.commissionAmount === 'number' && !isNaN(agg.commissionAmount) ? agg.commissionAmount : 0;
+
+    const grossSales = Number(rawGross.toFixed(2));
+    let commissionAmount = Number(rawComm.toFixed(2));
     const commRate = seller.base_commission_percentage ?? (seller.sellerProfile?.commissionRate ? Math.round(seller.sellerProfile.commissionRate * 100) : 10);
 
     if (commissionAmount === 0 && grossSales > 0) {
@@ -107,22 +116,25 @@ const getMonthlyCommissionReports = async (query = {}) => {
     }
     const netSellerAmount = Number((grossSales - commissionAmount).toFixed(2));
     const status = payout ? 'Paid' : 'Unpaid';
+    const displayPeriod = month && year ? `${month}/${year}` : (year ? `Year ${year}` : 'All Time');
 
     return {
+      id: payout ? payout._id.toString() : `COM-${sId.slice(-4).toUpperCase()}`,
+      sellerId: sId,
       seller: {
         _id: seller._id,
         firstName: seller.profile?.firstName || seller.sellerProfile?.businessName || 'Seller',
         lastName: seller.profile?.lastName || '',
-        email: seller.authentication?.email || '',
+        email: seller.authentication?.email || seller.email || '',
         base_commission_percentage: commRate
       },
       sellerName: seller.sellerProfile?.businessName || (seller.profile?.firstName ? `${seller.profile.firstName} ${seller.profile.lastName || ''}`.trim() : 'Seller'),
-      sellerEmail: seller.authentication?.email || '',
-      year,
-      month,
-      period: `${month}/${year}`,
-      totalOrders: agg.totalOrders,
-      transactionsCount: agg.totalOrders,
+      sellerEmail: seller.authentication?.email || seller.email || '',
+      year: year || 'All',
+      month: month || 'All',
+      period: displayPeriod,
+      totalOrders: agg.totalOrders || 0,
+      transactionsCount: agg.totalOrders || 0,
       grossSales,
       commissionRate: commRate,
       commissionAmount,
@@ -137,7 +149,7 @@ const getMonthlyCommissionReports = async (query = {}) => {
         notes: payout.notes
       } : null
     };
-  });
+  }).filter(Boolean);
 
   // Filter by status if requested
   if (query.status && query.status !== 'All') {
@@ -147,16 +159,16 @@ const getMonthlyCommissionReports = async (query = {}) => {
 
   // Summary statistics across filtered report items
   const summary = reportItems.reduce((acc, curr) => {
-    acc.totalOrders += curr.totalOrders;
-    acc.totalGrossSales += curr.grossSales;
-    acc.totalCommissionEarned += curr.commissionAmount;
-    acc.totalNetSellerPayout += curr.netSellerAmount;
+    acc.totalOrders += (curr.totalOrders || 0);
+    acc.totalGrossSales += (curr.grossSales || 0);
+    acc.totalCommissionEarned += (curr.commissionAmount || 0);
+    acc.totalNetSellerPayout += (curr.netSellerAmount || 0);
     return acc;
   }, { totalOrders: 0, totalGrossSales: 0, totalCommissionEarned: 0, totalNetSellerPayout: 0 });
 
-  summary.totalGrossSales = Number(summary.totalGrossSales.toFixed(2));
-  summary.totalCommissionEarned = Number(summary.totalCommissionEarned.toFixed(2));
-  summary.totalNetSellerPayout = Number(summary.totalNetSellerPayout.toFixed(2));
+  summary.totalGrossSales = Number((summary.totalGrossSales || 0).toFixed(2));
+  summary.totalCommissionEarned = Number((summary.totalCommissionEarned || 0).toFixed(2));
+  summary.totalNetSellerPayout = Number((summary.totalNetSellerPayout || 0).toFixed(2));
 
   // Pagination
   const page = parseInt(query.page, 10) > 0 ? parseInt(query.page, 10) : 1;
@@ -166,7 +178,7 @@ const getMonthlyCommissionReports = async (query = {}) => {
   const paginatedReports = reportItems.slice((page - 1) * limit, page * limit);
 
   return {
-    period: { year, month },
+    period: { year: year || 'All', month: month || 'All' },
     summary,
     reports: paginatedReports,
     items: paginatedReports,
