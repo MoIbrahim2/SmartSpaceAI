@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const BuyRequest = require('../../models/buyRequest.model');
 const Order = require('../../models/order.model');
 const User = require('../../models/user.model');
 const CommissionPayout = require('../../models/commissionPayout.model');
@@ -13,39 +14,79 @@ const ROLES = require('../../constants/roles');
  */
 const getMonthlyCommissionReports = async (query = {}) => {
   const currentDate = new Date();
-  const year = parseInt(query.year, 10) || currentDate.getFullYear();
-  const month = parseInt(query.month, 10) || (currentDate.getMonth() + 1);
+  const year = query.year && query.year !== 'All' ? parseInt(query.year, 10) : currentDate.getFullYear();
+  const month = query.month && query.month !== 'All' ? parseInt(query.month, 10) : (currentDate.getMonth() + 1);
 
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-  // Match orders for given month/year excluding cancelled/rejected
-  const matchFilter = {
-    createdAt: { $gte: startDate, $lte: endDate },
+  // Match orders/buy-requests for given month/year excluding cancelled/rejected
+  const buyReqMatch = {
+    status: { $nin: ['CANCELLED', 'REJECTED'] }
+  };
+  const orderMatch = {
     status: { $nin: ['CANCELLED', 'REJECTED'] }
   };
 
-  if (query.sellerId && mongoose.Types.ObjectId.isValid(query.sellerId)) {
-    matchFilter.sellerId = new mongoose.Types.ObjectId(query.sellerId);
+  if (query.year && query.year !== 'All' && query.month && query.month !== 'All') {
+    buyReqMatch.createdAt = { $gte: startDate, $lte: endDate };
+    orderMatch.createdAt = { $gte: startDate, $lte: endDate };
   }
 
-  // Aggregate order earnings per seller
-  const orderAggregations = await Order.aggregate([
-    { $match: matchFilter },
-    {
-      $group: {
-        _id: '$sellerId',
-        totalOrders: { $sum: 1 },
-        grossSales: { $sum: '$totalAmount' },
-        commissionAmount: { $sum: '$commissionAmount' },
-        netSellerAmount: { $sum: '$netSellerAmount' }
+  if (query.sellerId && mongoose.Types.ObjectId.isValid(query.sellerId)) {
+    buyReqMatch.sellerId = new mongoose.Types.ObjectId(query.sellerId);
+    orderMatch.sellerId = new mongoose.Types.ObjectId(query.sellerId);
+  }
+
+  // Aggregate BuyRequests & Orders per seller
+  const [buyReqAggregations, orderAggregations] = await Promise.all([
+    BuyRequest.aggregate([
+      { $match: buyReqMatch },
+      {
+        $group: {
+          _id: '$sellerId',
+          totalOrders: { $sum: 1 },
+          grossSales: { $sum: '$grossTotalAmount' },
+          commissionAmount: { $sum: { $ifNull: ['$commission.amountOwed', 0] } }
+        }
       }
-    }
+    ]),
+    Order.aggregate([
+      { $match: orderMatch },
+      {
+        $group: {
+          _id: '$sellerId',
+          totalOrders: { $sum: 1 },
+          grossSales: { $sum: '$totalAmount' },
+          commissionAmount: { $sum: '$commissionAmount' },
+          netSellerAmount: { $sum: '$netSellerAmount' }
+        }
+      }
+    ])
   ]);
 
   const aggMap = new Map();
+
+  buyReqAggregations.forEach(item => {
+    const sId = item._id.toString();
+    const gross = item.grossSales || 0;
+    const comm = item.commissionAmount || 0;
+    aggMap.set(sId, {
+      totalOrders: item.totalOrders || 0,
+      grossSales: gross,
+      commissionAmount: comm,
+      netSellerAmount: gross - comm
+    });
+  });
+
   orderAggregations.forEach(item => {
-    aggMap.set(item._id.toString(), item);
+    const sId = item._id.toString();
+    const existing = aggMap.get(sId) || { totalOrders: 0, grossSales: 0, commissionAmount: 0, netSellerAmount: 0 };
+    existing.totalOrders += (item.totalOrders || 0);
+    existing.grossSales += (item.grossSales || 0);
+    existing.commissionAmount += (item.commissionAmount || 0);
+    existing.netSellerAmount += (item.netSellerAmount || 0);
+    aggMap.set(sId, existing);
   });
 
   // Fetch all sellers matching search criteria
@@ -59,7 +100,8 @@ const getMonthlyCommissionReports = async (query = {}) => {
     sellerFilter.$or = [
       { 'profile.firstName': searchRegex },
       { 'profile.lastName': searchRegex },
-      { 'authentication.email': searchRegex }
+      { 'authentication.email': searchRegex },
+      { 'sellerProfile.businessName': searchRegex }
     ];
   }
 
@@ -85,24 +127,36 @@ const getMonthlyCommissionReports = async (query = {}) => {
     const payout = payoutMap.get(sId);
 
     const grossSales = Number(agg.grossSales.toFixed(2));
-    const commissionAmount = Number(agg.commissionAmount.toFixed(2));
-    const netSellerAmount = Number(agg.netSellerAmount.toFixed(2));
-    const status = payout ? 'PAID' : 'UNPAID';
+    let commissionAmount = Number(agg.commissionAmount.toFixed(2));
+    const commRate = seller.base_commission_percentage ?? (seller.sellerProfile?.commissionRate ? Math.round(seller.sellerProfile.commissionRate * 100) : 10);
+
+    if (commissionAmount === 0 && grossSales > 0) {
+      commissionAmount = Number((grossSales * (commRate / 100)).toFixed(2));
+    }
+    const netSellerAmount = Number((grossSales - commissionAmount).toFixed(2));
+    const status = payout ? 'Paid' : 'Unpaid';
 
     return {
       seller: {
         _id: seller._id,
-        firstName: seller.profile?.firstName,
-        lastName: seller.profile?.lastName,
-        email: seller.authentication?.email,
-        base_commission_percentage: seller.base_commission_percentage ?? 10
+        firstName: seller.profile?.firstName || seller.sellerProfile?.businessName || 'Seller',
+        lastName: seller.profile?.lastName || '',
+        email: seller.authentication?.email || '',
+        base_commission_percentage: commRate
       },
+      sellerName: seller.sellerProfile?.businessName || (seller.profile?.firstName ? `${seller.profile.firstName} ${seller.profile.lastName || ''}`.trim() : 'Seller'),
+      sellerEmail: seller.authentication?.email || '',
       year,
       month,
+      period: `${month}/${year}`,
       totalOrders: agg.totalOrders,
+      transactionsCount: agg.totalOrders,
       grossSales,
+      commissionRate: commRate,
       commissionAmount,
+      earnedCommission: commissionAmount,
       netSellerAmount,
+      payoutStatus: status,
       status,
       payoutDetails: payout ? {
         paidAt: payout.paidAt,
@@ -113,9 +167,9 @@ const getMonthlyCommissionReports = async (query = {}) => {
   });
 
   // Filter by status if requested
-  if (query.status) {
+  if (query.status && query.status !== 'All') {
     const targetStatus = query.status.toUpperCase();
-    reportItems = reportItems.filter(item => item.status === targetStatus);
+    reportItems = reportItems.filter(item => item.status.toUpperCase() === targetStatus || item.payoutStatus.toUpperCase() === targetStatus);
   }
 
   // Summary statistics across filtered report items
@@ -142,6 +196,7 @@ const getMonthlyCommissionReports = async (query = {}) => {
     period: { year, month },
     summary,
     reports: paginatedReports,
+    items: paginatedReports,
     pagination: {
       total,
       page,
@@ -169,43 +224,68 @@ const markMonthAsPaid = async (adminId, payoutData) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'seller.not_found');
   }
 
-  // Check if payout already exists for this seller/month/year
   const existingPayout = await CommissionPayout.findOne({ sellerId, month, year });
   if (existingPayout) {
     throw new ApiError(HTTP_STATUS.CONFLICT, 'commission.already_paid');
   }
 
-  // Calculate actual order earnings for specified month/year
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-  const orderAgg = await Order.aggregate([
-    {
-      $match: {
-        sellerId: seller._id,
-        createdAt: { $gte: startDate, $lte: endDate },
-        status: { $nin: ['CANCELLED', 'REJECTED'] }
+  const [buyReqAgg, orderAgg] = await Promise.all([
+    BuyRequest.aggregate([
+      {
+        $match: {
+          sellerId: seller._id,
+          createdAt: { $gte: startDate, $lte: endDate },
+          status: { $nin: ['CANCELLED', 'REJECTED'] }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          grossSales: { $sum: '$grossTotalAmount' },
+          commissionAmount: { $sum: { $ifNull: ['$commission.amountOwed', 0] } }
+        }
       }
-    },
-    {
-      $group: {
-        _id: null,
-        grossSales: { $sum: '$totalAmount' },
-        commissionAmount: { $sum: '$commissionAmount' },
-        netSellerAmount: { $sum: '$netSellerAmount' }
+    ]),
+    Order.aggregate([
+      {
+        $match: {
+          sellerId: seller._id,
+          createdAt: { $gte: startDate, $lte: endDate },
+          status: { $nin: ['CANCELLED', 'REJECTED'] }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          grossSales: { $sum: '$totalAmount' },
+          commissionAmount: { $sum: '$commissionAmount' }
+        }
       }
-    }
+    ])
   ]);
 
-  const totals = orderAgg[0] || { grossSales: 0, commissionAmount: 0, netSellerAmount: 0 };
+  const buyReqTotals = buyReqAgg[0] || { grossSales: 0, commissionAmount: 0 };
+  const orderTotals = orderAgg[0] || { grossSales: 0, commissionAmount: 0 };
+
+  const grossSales = buyReqTotals.grossSales + orderTotals.grossSales;
+  let commissionAmount = buyReqTotals.commissionAmount + orderTotals.commissionAmount;
+  const commRate = seller.base_commission_percentage ?? (seller.sellerProfile?.commissionRate ? Math.round(seller.sellerProfile.commissionRate * 100) : 10);
+
+  if (commissionAmount === 0 && grossSales > 0) {
+    commissionAmount = Math.round(grossSales * (commRate / 100));
+  }
+  const netSellerAmount = grossSales - commissionAmount;
 
   const payout = await CommissionPayout.create({
     sellerId,
     month,
     year,
-    grossSales: Number(totals.grossSales.toFixed(2)),
-    commissionAmount: Number(totals.commissionAmount.toFixed(2)),
-    netSellerAmount: Number(totals.netSellerAmount.toFixed(2)),
+    grossSales: Number(grossSales.toFixed(2)),
+    commissionAmount: Number(commissionAmount.toFixed(2)),
+    netSellerAmount: Number(netSellerAmount.toFixed(2)),
     status: 'PAID',
     paidAt: new Date(),
     paidBy: adminId,
@@ -230,8 +310,28 @@ const getSellerCommissionHistory = async (sellerId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'seller.not_found');
   }
 
-  const [payouts, orderAggregations] = await Promise.all([
+  const [payouts, buyReqAggregations, orderAggregations] = await Promise.all([
     CommissionPayout.find({ sellerId }).sort({ year: -1, month: -1 }),
+    BuyRequest.aggregate([
+      {
+        $match: {
+          sellerId: seller._id,
+          status: { $nin: ['CANCELLED', 'REJECTED'] }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          totalOrders: { $sum: 1 },
+          grossSales: { $sum: '$grossTotalAmount' },
+          commissionAmount: { $sum: { $ifNull: ['$commission.amountOwed', 0] } }
+        }
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } }
+    ]),
     Order.aggregate([
       {
         $match: {
@@ -247,22 +347,47 @@ const getSellerCommissionHistory = async (sellerId) => {
           },
           totalOrders: { $sum: 1 },
           grossSales: { $sum: '$totalAmount' },
-          commissionAmount: { $sum: '$commissionAmount' },
-          netSellerAmount: { $sum: '$netSellerAmount' }
+          commissionAmount: { $sum: '$commissionAmount' }
         }
       },
       { $sort: { '_id.year': -1, '_id.month': -1 } }
     ])
   ]);
 
+  const map = new Map();
+
+  buyReqAggregations.forEach(item => {
+    const key = `${item._id.year}-${item._id.month}`;
+    const gross = item.grossSales || 0;
+    const comm = item.commissionAmount || 0;
+    map.set(key, {
+      year: item._id.year,
+      month: item._id.month,
+      totalOrders: item.totalOrders || 0,
+      grossSales: gross,
+      commissionAmount: comm,
+      netSellerAmount: gross - comm
+    });
+  });
+
+  orderAggregations.forEach(item => {
+    const key = `${item._id.year}-${item._id.month}`;
+    const existing = map.get(key) || { year: item._id.year, month: item._id.month, totalOrders: 0, grossSales: 0, commissionAmount: 0, netSellerAmount: 0 };
+    existing.totalOrders += (item.totalOrders || 0);
+    existing.grossSales += (item.grossSales || 0);
+    existing.commissionAmount += (item.commissionAmount || 0);
+    existing.netSellerAmount += (item.netSellerAmount || 0);
+    map.set(key, existing);
+  });
+
   const sellerObj = seller.toObject();
 
   return {
     seller: sellerObj,
     payoutHistory: payouts,
-    monthlyBreakdown: orderAggregations.map(item => ({
-      year: item._id.year,
-      month: item._id.month,
+    monthlyBreakdown: Array.from(map.values()).map(item => ({
+      year: item.year,
+      month: item.month,
       totalOrders: item.totalOrders,
       grossSales: Number(item.grossSales.toFixed(2)),
       commissionAmount: Number(item.commissionAmount.toFixed(2)),

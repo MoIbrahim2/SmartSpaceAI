@@ -56,11 +56,11 @@ export default function CommissionReports() {
           period: c.period || `${c.month || "May"} ${c.year || "2026"}`,
           month: c.month || "May",
           year: c.year || "2026",
-          grossSales: `$${(c.grossSales || 0).toLocaleString()}`,
+          grossSales: `EGP ${(c.grossSales || 0).toLocaleString()}`,
           commissionRate: `${c.commissionRate || sellerObj.base_commission_percentage || 10}%`,
-          earnedCommission: `$${(c.earnedCommission || c.commissionAmount || 0).toLocaleString()}`,
+          earnedCommission: `EGP ${(c.earnedCommission || c.commissionAmount || 0).toLocaleString()}`,
           numericEarned: c.earnedCommission || c.commissionAmount || 0,
-          payoutStatus: c.payoutStatus || c.status || "Pending",
+          payoutStatus: c.payoutStatus || c.status || "Unpaid",
           payoutDate: c.payoutDate ? new Date(c.payoutDate).toISOString().split("T")[0] : "Pending",
           transactionsCount: c.transactionsCount || c.totalOrders || 0,
         };
@@ -99,16 +99,16 @@ export default function CommissionReports() {
 
   const filtered = reports.filter((c) => {
     const matchesSearch = c.sellerName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = status === "All" || c.payoutStatus === status;
+    const matchesStatus = status === "All" || c.payoutStatus.toLowerCase() === status.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
   const totalEarned = reports.reduce((acc, curr) => acc + (curr.numericEarned || 0), 0);
   const pendingEarned = reports
-    .filter((r) => r.payoutStatus !== "Paid")
+    .filter((r) => r.payoutStatus.toLowerCase() !== "paid")
     .reduce((acc, curr) => acc + (curr.numericEarned || 0), 0);
   const paidEarned = reports
-    .filter((r) => r.payoutStatus === "Paid")
+    .filter((r) => r.payoutStatus.toLowerCase() === "paid")
     .reduce((acc, curr) => acc + (curr.numericEarned || 0), 0);
 
   const columns = [
@@ -125,7 +125,7 @@ export default function CommissionReports() {
       ),
     },
     { label: t("admin.commissions.colGrossSales"), key: "grossSales" },
-    { label: t("admin.commissions.colCommRate"), key: "commissionRate" },
+    { label: t("admin.commissions.colCommissionRate", t("admin.commissions.colCommRate")), key: "commissionRate" },
     {
       label: t("admin.commissions.colEarnedFee"),
       key: "earnedCommission",
@@ -151,7 +151,7 @@ export default function CommissionReports() {
                 setDrawerOpen(true);
               },
             },
-            ...(row.payoutStatus !== "Paid"
+            ...(row.payoutStatus.toLowerCase() !== "paid"
               ? [
                   {
                     label: t("admin.commissions.actMarkPaid"),
@@ -181,9 +181,9 @@ export default function CommissionReports() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatCard title={t("admin.commissions.totalEarnedFees")} value={`$${totalEarned.toLocaleString()}`} change="+18.5%" isPositive={true} icon={DollarSign} />
-        <StatCard title={t("admin.commissions.pendingPayouts")} value={`$${pendingEarned.toLocaleString()}`} change={`${reports.filter(r => r.payoutStatus !== "Paid").length} sellers`} isPositive={false} icon={Clock} />
-        <StatCard title={t("admin.commissions.completedPayouts")} value={`$${paidEarned.toLocaleString()}`} change="Completed" isPositive={true} icon={CheckCircle2} />
+        <StatCard title={t("admin.commissions.totalEarnedFees")} value={`EGP ${totalEarned.toLocaleString()}`} change="+18.5%" isPositive={true} icon={DollarSign} />
+        <StatCard title={t("admin.commissions.pendingPayouts")} value={`EGP ${pendingEarned.toLocaleString()}`} change={`${reports.filter(r => r.payoutStatus.toLowerCase() !== "paid").length} sellers`} isPositive={false} icon={Clock} />
+        <StatCard title={t("admin.commissions.completedPayouts")} value={`EGP ${paidEarned.toLocaleString()}`} change="Completed" isPositive={true} icon={CheckCircle2} />
       </div>
 
       <ReportFilters
