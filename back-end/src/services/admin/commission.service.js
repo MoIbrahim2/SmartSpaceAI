@@ -218,11 +218,19 @@ const markMonthAsPaid = async (adminId, payoutData) => {
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
   // Fetch all orders for this seller in the period to extract sold products and total sales
-  const orders = await Order.find({
+  let orders = await Order.find({
     sellerId: seller._id,
     createdAt: { $gte: startDate, $lte: endDate },
     status: { $nin: ['CANCELLED', 'REJECTED'] }
   });
+
+  // If no orders match the exact month date range, query all non-cancelled orders for this seller
+  if (orders.length === 0) {
+    orders = await Order.find({
+      sellerId: seller._id,
+      status: { $nin: ['CANCELLED', 'REJECTED'] }
+    });
+  }
 
   const productMap = new Map();
   let grossSales = 0;

@@ -86,7 +86,6 @@ export default function CommissionReports() {
         sellerId: reportItem.sellerId,
         year: parseInt(reportItem.year, 10) || new Date().getFullYear(),
         month: parseInt(reportItem.month, 10) || (new Date().getMonth() + 1),
-        amount: reportItem.numericEarned || 0,
       });
       showToast(t("admin.commissions.toastPayoutPaid"), "success");
       setMarkPaidConfirmOpen(false);
