@@ -31,7 +31,7 @@ export default function SellerOrders() {
       setLoading(true);
       const res = await getSellerOrders();
       if (res?.success) {
-        setOrders(res.data || []);
+        setOrders(Array.isArray(res?.data) ? res.data : (res?.data?.orders || []));
       }
     } catch (error) {
       console.error("Error loading seller orders:", error);

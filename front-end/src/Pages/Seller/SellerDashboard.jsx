@@ -33,8 +33,18 @@ export default function SellerDashboard() {
           getSellerEarnings(),
         ]);
 
-        const products = prodRes?.data || [];
-        const orders = orderRes?.data || [];
+        const products = Array.isArray(prodRes?.data?.products)
+          ? prodRes.data.products
+          : Array.isArray(prodRes?.data)
+          ? prodRes.data
+          : [];
+
+        const orders = Array.isArray(orderRes?.data)
+          ? orderRes.data
+          : Array.isArray(orderRes?.data?.orders)
+          ? orderRes.data.orders
+          : [];
+
         const earnings = earnRes?.data || {};
 
         // Calculate KPIs
