@@ -10,6 +10,7 @@ const StudioHeader = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileImgError, setProfileImgError] = useState(false);
 
   const activeApartments =
     location.pathname.startsWith("/home") ||
@@ -124,10 +125,19 @@ const StudioHeader = () => {
               <div className="relative">
                 <button
                   onClick={() => setMenuOpen((prev) => !prev)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#a67443] hover:bg-[#946334] text-white font-extrabold text-sm shadow-md transition-all active:scale-[0.98]"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#a67443] hover:bg-[#946334] text-white font-extrabold text-sm shadow-md transition-all active:scale-[0.98] overflow-hidden"
                   aria-label="User Profile Menu"
                 >
-                  {userInitials}
+                  {user.profileImage && !profileImgError ? (
+                    <img
+                      src={user.profileImage}
+                      alt="Profile"
+                      onError={() => setProfileImgError(true)}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    userInitials
+                  )}
                 </button>
 
                 {menuOpen && (

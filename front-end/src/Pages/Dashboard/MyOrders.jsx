@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { getMyOrders } from "../../api";
 import Icon from "../../Components/Icon";
 
@@ -13,12 +14,14 @@ const STATUS_COLOR_MAP = {
 };
 
 const MyOrders = () => {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const showSuccessBanner = location.state?.orderSuccess;
+  const isRtl = i18n.language?.startsWith("ar");
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -30,20 +33,22 @@ const MyOrders = () => {
         }
       } catch (err) {
         console.error("Fetch my orders error:", err);
-        setError("Failed to load your orders. Please try again.");
+        setError(t("myOrdersPage.loadError", "Failed to load your orders. Please try again."));
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [t]);
 
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
         <Icon name="refresh" className="animate-spin text-primary mb-4" size={40} />
-        <p className="text-on-surface-variant font-semibold">Loading your order history...</p>
+        <p className="text-on-surface-variant font-semibold">
+          {t("myOrdersPage.loading", "Loading your order history...")}
+        </p>
       </div>
     );
   }
@@ -58,9 +63,11 @@ const MyOrders = () => {
               <Icon name="check_circle" size={28} />
             </div>
             <div>
-              <h3 className="font-headline font-bold text-lg">Orders Placed Successfully!</h3>
+              <h3 className="font-headline font-bold text-lg">
+                {t("myOrdersPage.successTitle", "Orders Placed Successfully!")}
+              </h3>
               <p className="text-xs opacity-90">
-                Your orders have been dispatched directly to the sellers' fulfillment dashboards.
+                {t("myOrdersPage.successDesc", "Your orders have been dispatched directly to the sellers' fulfillment dashboards.")}
               </p>
             </div>
           </div>
@@ -68,7 +75,7 @@ const MyOrders = () => {
             to="/projects"
             className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow-md hover:bg-emerald-700 transition-all shrink-0"
           >
-            Back to My Rooms
+            {t("myOrdersPage.backToMyRooms", "Back to My Rooms")}
           </Link>
         </div>
       )}
@@ -77,10 +84,10 @@ const MyOrders = () => {
         <div>
           <h1 className="font-headline text-3xl font-bold text-on-surface flex items-center gap-3">
             <Icon name="local_shipping" className="text-primary" size={32} />
-            My Furniture Orders
+            {t("myOrdersPage.title", "My Furniture Orders")}
           </h1>
           <p className="text-on-surface-variant text-sm mt-1">
-            Track the status of your purchases directly with partner sellers.
+            {t("myOrdersPage.subtitle", "Track the status of your purchases directly with partner sellers.")}
           </p>
         </div>
 
@@ -89,7 +96,7 @@ const MyOrders = () => {
           className="px-5 py-2.5 rounded-xl bg-background neomorph-raised text-on-surface font-semibold text-xs hover:text-primary transition-all flex items-center gap-2"
         >
           <Icon name="design_services" size={16} />
-          Explore Furniture
+          {t("myOrdersPage.exploreFurniture", "Explore Furniture")}
         </Link>
       </div>
 
@@ -105,15 +112,17 @@ const MyOrders = () => {
           <div className="w-20 h-20 rounded-full bg-surface-variant/30 text-primary flex items-center justify-center mb-4">
             <Icon name="receipt_long" size={40} />
           </div>
-          <h3 className="font-headline font-bold text-xl text-on-surface mb-2">No Orders Found</h3>
+          <h3 className="font-headline font-bold text-xl text-on-surface mb-2">
+            {t("myOrdersPage.noOrdersTitle", "No Orders Found")}
+          </h3>
           <p className="text-sm text-on-surface-variant max-w-md mb-6">
-            You haven't placed any furniture orders yet. Once you complete checkout, your order history will appear here.
+            {t("myOrdersPage.noOrdersDesc", "You haven't placed any furniture orders yet. Once you complete checkout, your order history will appear here.")}
           </p>
           <Link
             to="/projects"
             className="px-6 py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-md hover:bg-primary-variant transition-all"
           >
-            Start Designing & Shop
+            {t("myOrdersPage.startDesigning", "Start Designing & Shop")}
           </Link>
         </div>
       ) : (
@@ -123,7 +132,7 @@ const MyOrders = () => {
             const itemsList = (Array.isArray(order.items) && order.items.length > 0)
               ? order.items
               : [{
-                  name: product.basic?.name || "Furniture Piece",
+                  name: product.basic?.name || t("myOrdersPage.furniturePiece", "Furniture Piece"),
                   price: order.unitPriceAtPurchase || order.grossTotalAmount || 0,
                   quantity: order.quantity || 1,
                   image: product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url || "/img/no-product-image.svg"
@@ -131,7 +140,8 @@ const MyOrders = () => {
 
             const statusStyle = STATUS_COLOR_MAP[order.status] || STATUS_COLOR_MAP.PENDING;
             const address = order.customer?.address || {};
-            const sellerName = order.sellerId?.sellerProfile?.businessName || order.sellerId?.profile?.firstName || "Partner Seller";
+            const sellerName = order.sellerId?.sellerProfile?.businessName || order.sellerId?.profile?.firstName || t("myOrdersPage.partnerSeller", "Partner Seller");
+            const statusLabel = t(`myOrdersPage.status.${order.status}`, order.status);
 
             return (
               <div key={order._id} className="bg-background rounded-3xl p-6 neomorph-raised border border-outline-variant/30 flex flex-col gap-4">
@@ -139,7 +149,7 @@ const MyOrders = () => {
                 <div className="flex items-center justify-between border-b border-outline-variant/20 pb-3">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-mono text-on-surface-variant font-bold">
-                      Order #{String(order._id).slice(-8)}
+                      {t("myOrdersPage.orderNumber", { id: String(order._id).slice(-8), defaultValue: `Order #${String(order._id).slice(-8)}` })}
                     </span>
                     <span className="text-xs font-bold text-primary flex items-center gap-1">
                       <Icon name="store" size={14} />
@@ -149,10 +159,10 @@ const MyOrders = () => {
 
                   <div className="flex items-center gap-3">
                     <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${statusStyle}`}>
-                      {order.status}
+                      {statusLabel}
                     </span>
                     <span className="text-[11px] text-on-surface-variant font-mono">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {new Date(order.createdAt).toLocaleDateString(isRtl ? "ar-EG" : "en-US")}
                     </span>
                   </div>
                 </div>
@@ -160,7 +170,7 @@ const MyOrders = () => {
                 {/* Items List inside this order batch */}
                 <div className="flex flex-col gap-3">
                   {itemsList.map((item, idx) => {
-                    const itemName = item.name || item.product?.name || "Furniture Piece";
+                    const itemName = item.name || item.product?.name || t("myOrdersPage.furniturePiece", "Furniture Piece");
                     const itemPrice = item.price || item.product?.price || 0;
                     const itemQty = item.quantity || 1;
                     const itemImg = item.image || item.product?.image || "/img/no-product-image.svg";
@@ -180,14 +190,18 @@ const MyOrders = () => {
                           <div>
                             <h4 className="font-headline font-bold text-sm text-on-surface line-clamp-1">{itemName}</h4>
                             <div className="flex items-center gap-3 text-xs text-on-surface-variant mt-1">
-                              <span>Qty: <strong className="text-on-surface">{itemQty}</strong></span>
-                              <span>Unit Price: <strong className="text-primary">{itemPrice?.toLocaleString()} EGP</strong></span>
+                              <span>
+                                {t("myOrdersPage.qty", "Qty:")} <strong className="text-on-surface">{itemQty.toLocaleString(isRtl ? "ar-EG" : "en-US")}</strong>
+                              </span>
+                              <span>
+                                {t("myOrdersPage.unitPrice", "Unit Price:")} <strong className="text-primary">{itemPrice?.toLocaleString(isRtl ? "ar-EG" : "en-US")} {t("myOrdersPage.egp", "EGP")}</strong>
+                              </span>
                             </div>
                           </div>
                         </div>
 
                         <span className="font-extrabold text-sm text-primary shrink-0">
-                          {(itemPrice * itemQty).toLocaleString()} EGP
+                          {(itemPrice * itemQty).toLocaleString(isRtl ? "ar-EG" : "en-US")} {t("myOrdersPage.egp", "EGP")}
                         </span>
                       </div>
                     );
@@ -199,16 +213,16 @@ const MyOrders = () => {
                   {order.customer?.phone ? (
                     <span className="text-[11px] text-on-surface-variant flex items-center gap-1">
                       <Icon name="local_shipping" size={14} className="text-primary" />
-                      Deliver to: <strong>{order.customer?.name}</strong> ({order.customer?.phone}) — {address.street || ""}, {address.city || ""}
+                      {t("myOrdersPage.deliverTo", "Deliver to:")} <strong>{order.customer?.name}</strong> ({order.customer?.phone}) — {address.street || ""}, {address.city || ""}
                     </span>
                   ) : <div />}
 
-                  <div className="text-right ml-auto">
+                  <div className={`text-right ${isRtl ? "mr-auto ml-0 text-left" : "ml-auto"}`}>
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">
-                      Total Order Amount
+                      {t("myOrdersPage.totalOrderAmount", "Total Order Amount")}
                     </span>
                     <span className="font-headline font-black text-xl text-primary">
-                      {order.grossTotalAmount?.toLocaleString()} EGP
+                      {order.grossTotalAmount?.toLocaleString(isRtl ? "ar-EG" : "en-US")} {t("myOrdersPage.egp", "EGP")}
                     </span>
                   </div>
                 </div>

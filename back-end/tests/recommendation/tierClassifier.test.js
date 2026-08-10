@@ -52,7 +52,7 @@ describe('classifyTiers', () => {
     expect(tiers.premium.length).toBe(0);
   });
 
-  test('limits each tier to 3 products', () => {
+  test('limits balanced and premium tiers to 3 products', () => {
     const products = [
       mockProduct(10000, 95),
       mockProduct(10100, 90),
@@ -66,6 +66,16 @@ describe('classifyTiers', () => {
     expect(tiers.balanced[0].score).toBe(95);
     expect(tiers.balanced[1].score).toBe(90);
     expect(tiers.balanced[2].score).toBe(85);
+  });
+
+  test('allows up to 15 products for cheaper tier', () => {
+    const cheaperProducts = Array.from({ length: 20 }, (_, i) =>
+      mockProduct(5000, 100 - i, `Cheap Product ${i + 1}`)
+    );
+    const tiers = classifyTiers(cheaperProducts, unitTarget);
+    expect(tiers.cheaper.length).toBe(15);
+    expect(tiers.cheaper[0].score).toBe(100);
+    expect(tiers.cheaper[14].score).toBe(86);
   });
 
   test('adds quantity and totalPriceForQuantity', () => {
