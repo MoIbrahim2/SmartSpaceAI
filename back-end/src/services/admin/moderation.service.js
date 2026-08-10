@@ -49,7 +49,7 @@ const getModerationItems = async (query = {}) => {
     productTitle: prod.basic?.name || 'Untitled Product',
     sellerName: prod.basic?.brand || 'External Scraped Seller',
     category: prod.classification?.canonicalCategory || 'General',
-    price: `$${prod.pricing?.currentPrice || 0}`,
+    price: `EGP ${(prod.pricing?.currentPrice || 0).toLocaleString()}`,
     aiConfidence: typeof prod.processing?.confidence === 'number'
       ? `${Math.round(prod.processing.confidence * 100)}%`
       : (prod.processing?.categoryConfidence

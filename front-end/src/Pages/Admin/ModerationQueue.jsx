@@ -96,7 +96,7 @@ export default function ModerationQueue() {
     },
     { label: t("admin.moderation.colSeller"), key: "sellerName" },
     {
-      label: t("admin.moderation.colAiConf"),
+      label: t("admin.moderation.colAiConfidence", t("admin.moderation.colAiConf")),
       key: "aiConfidence",
       render: (row) => (
         <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
@@ -106,7 +106,7 @@ export default function ModerationQueue() {
       ),
     },
     {
-      label: t("admin.moderation.colQualityIdx"),
+      label: t("admin.moderation.colQualityIndex", t("admin.moderation.colQualityIdx")),
       key: "qualityScore",
       render: (row) => (
         <span className="rounded-lg bg-surface-bright px-2.5 py-1 text-xs font-extrabold border border-outline/20">
@@ -162,11 +162,11 @@ export default function ModerationQueue() {
   }
 
   const statusOptions = [
-    { label: t("admin.moderation.optAll"), value: "ALL" },
-    { label: t("admin.moderation.optManualReview"), value: "MANUAL_REVIEW_REQUIRED" },
-    { label: t("admin.moderation.optPendingAi"), value: "PENDING_AI_VALIDATION" },
-    { label: t("admin.moderation.optAccepted"), value: "ACCEPTED" },
-    { label: t("admin.moderation.optRejected"), value: "REJECTED" },
+    { label: t("admin.moderation.optAll", t("admin.moderation.allStatuses")), value: "ALL" },
+    { label: t("admin.moderation.optManualReview", t("admin.moderation.manualReviewRequired")), value: "MANUAL_REVIEW_REQUIRED" },
+    { label: t("admin.moderation.optPendingAi", t("admin.moderation.pendingAiValidation")), value: "PENDING_AI_VALIDATION" },
+    { label: t("admin.moderation.optAccepted", t("admin.moderation.accepted")), value: "ACCEPTED" },
+    { label: t("admin.moderation.optRejected", t("admin.moderation.rejected")), value: "REJECTED" },
   ];
 
   return (
