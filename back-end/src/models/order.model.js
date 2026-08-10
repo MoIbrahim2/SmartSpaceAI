@@ -194,7 +194,9 @@ orderSchema.pre('save', function (next) {
       }
     };
   }
-  next();
+  if (typeof next === 'function') {
+    next();
+  }
 });
 
 const Order = mongoose.model('Order', orderSchema);
