@@ -80,15 +80,20 @@ const signUp = async (userData) => {
   });
 
   // Send email verification code
-  await emailService.sendUserVerificationEmail({
+  const emailResult = await emailService.sendUserVerificationEmail({
     email: normalizedEmail,
     firstName,
     verificationCode: rawCode
   });
 
+  if (!emailResult.success) {
+    console.warn(`[AUTH SERVICE] Signup created account for ${normalizedEmail}, but OTP email delivery failed (${emailResult.error}). Raw OTP code logged to terminal.`);
+  }
+
   return {
     user: newUser,
-    requiresVerification: true
+    requiresVerification: true,
+    emailSent: emailResult.success
   };
 };
 

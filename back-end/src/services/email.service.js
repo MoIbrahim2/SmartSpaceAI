@@ -4,29 +4,49 @@ const nodemailer = require('nodemailer');
  * Reusable Email Service for sending transactional emails (invitations, OTPs, verification codes)
  */
 
-let transporter = null;
-
 const getTransporter = () => {
-  if (!transporter) {
-    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const port = parseInt(process.env.SMTP_PORT || '587', 10);
-    const secure = process.env.SMTP_SECURE === 'true' || port === 465;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+  const user = process.env.SMTP_USER;
+  let pass = process.env.SMTP_PASS;
 
-    if (user && user !== 'your_gmail_email@gmail.com' && pass && pass !== 'your_16_digit_gmail_app_password') {
-      transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
-        auth: {
-          user,
-          pass,
-        },
-      });
-    }
+  // Automatically remove spaces from 16-character Gmail App Passwords
+  if (pass) {
+    pass = pass.replace(/\s+/g, '');
   }
-  return transporter;
+
+  if (user && user !== 'your_gmail_email@gmail.com' && pass && pass !== 'your_16_digit_gmail_app_password') {
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: {
+        user,
+        pass,
+      },
+    });
+  }
+  return null;
+};
+
+const getFromAddress = () => {
+  const envFrom = process.env.EMAIL_FROM;
+  const user = process.env.SMTP_USER;
+
+  if (envFrom) {
+    if (envFrom.includes('<') && envFrom.includes('>')) {
+      return envFrom;
+    }
+    const parts = envFrom.trim().split(/\s+/);
+    const lastPart = parts[parts.length - 1];
+    if (lastPart.includes('@')) {
+      const name = parts.slice(0, -1).join(' ').replace(/^"|"$/g, '');
+      return `"${name || 'SmartSpace AI'}" <${lastPart}>`;
+    }
+    return envFrom;
+  }
+  return `"SmartSpace AI" <${user || 'noreply@smartspaceai.me'}>`;
 };
 
 /**
@@ -78,7 +98,7 @@ Note: This code expires in 15 minutes.
 
   if (mailTransporter) {
     try {
-      const fromAddress = process.env.EMAIL_FROM || `"SmartSpace AI" <${process.env.SMTP_USER}>`;
+      const fromAddress = getFromAddress();
       const info = await mailTransporter.sendMail({
         from: fromAddress,
         to: email,
@@ -91,7 +111,10 @@ Note: This code expires in 15 minutes.
       return { success: true, messageId: info.messageId };
     } catch (err) {
       console.error(`[EMAIL SERVICE] Failed to send email via Gmail SMTP to ${email}:`, err.message);
-      console.log(`[EMAIL FALLBACK] Verification Code for ${email}: ${verificationCode}`);
+      console.log('====================================================');
+      console.log(`[EMAIL FALLBACK OTP CODE] To: ${email}`);
+      console.log(`[EMAIL FALLBACK OTP CODE] Verification Code: ${verificationCode}`);
+      console.log('====================================================');
       return { success: false, error: err.message };
     }
   } else {
@@ -155,7 +178,7 @@ Note: This code expires in 15 minutes.
 
   if (mailTransporter) {
     try {
-      const fromAddress = process.env.EMAIL_FROM || `"SmartSpace AI" <${process.env.SMTP_USER}>`;
+      const fromAddress = getFromAddress();
       const info = await mailTransporter.sendMail({
         from: fromAddress,
         to: email,
@@ -168,7 +191,10 @@ Note: This code expires in 15 minutes.
       return { success: true, messageId: info.messageId };
     } catch (err) {
       console.error(`[EMAIL SERVICE] Failed to send verification email to ${email}:`, err.message);
-      console.log(`[EMAIL FALLBACK] Verification Code for ${email}: ${verificationCode}`);
+      console.log('====================================================');
+      console.log(`[EMAIL FALLBACK OTP CODE] To: ${email}`);
+      console.log(`[EMAIL FALLBACK OTP CODE] Verification Code: ${verificationCode}`);
+      console.log('====================================================');
       return { success: false, error: err.message };
     }
   } else {
@@ -231,7 +257,7 @@ Note: This code expires in 15 minutes. If you did not request a password reset, 
 
   if (mailTransporter) {
     try {
-      const fromAddress = process.env.EMAIL_FROM || `"SmartSpace AI" <${process.env.SMTP_USER}>`;
+      const fromAddress = getFromAddress();
       const info = await mailTransporter.sendMail({
         from: fromAddress,
         to: email,
@@ -244,7 +270,10 @@ Note: This code expires in 15 minutes. If you did not request a password reset, 
       return { success: true, messageId: info.messageId };
     } catch (err) {
       console.error(`[EMAIL SERVICE] Failed to send password reset email to ${email}:`, err.message);
-      console.log(`[EMAIL FALLBACK] Password Reset Code for ${email}: ${verificationCode}`);
+      console.log('====================================================');
+      console.log(`[EMAIL FALLBACK OTP CODE] To: ${email}`);
+      console.log(`[EMAIL FALLBACK OTP CODE] Password Reset Code: ${verificationCode}`);
+      console.log('====================================================');
       return { success: false, error: err.message };
     }
   } else {
@@ -264,4 +293,3 @@ module.exports = {
   sendUserVerificationEmail,
   sendPasswordResetEmail,
 };
-
