@@ -108,8 +108,8 @@ const handleWebhookEvent = async (event) => {
       if (session.metadata?.type === 'furniture_order') {
         const orderIds = (session.metadata.orderIds || '').split(',').filter(Boolean);
         if (orderIds.length > 0) {
-          const BuyRequest = require('../models/buyRequest.model');
-          await BuyRequest.updateMany(
+          const Order = require('../models/order.model');
+          await Order.updateMany(
             { _id: { $in: orderIds } },
             { $set: { status: 'PENDING' } }
           );

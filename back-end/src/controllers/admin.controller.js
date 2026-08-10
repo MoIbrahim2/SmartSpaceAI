@@ -1,6 +1,6 @@
 const User = require('../models/user.model');
 const Product = require('../models/product.model');
-const BuyRequest = require('../models/buyRequest.model');
+const Order = require('../models/order.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
 const ROLES = require('../constants/roles');
@@ -75,9 +75,9 @@ const getSellers = asyncHandler(async (req, res) => {
   ]);
 
   // Group and sum total sales for each seller (only count DELIVERED orders)
-  const totalSalesAgg = await BuyRequest.aggregate([
+  const totalSalesAgg = await Order.aggregate([
     { $match: { sellerId: { $in: sellerIds }, status: 'DELIVERED' } },
-    { $group: { _id: '$sellerId', totalSales: { $sum: '$grossTotalAmount' } } }
+    { $group: { _id: '$sellerId', totalSales: { $sum: { $ifNull: ['$totalAmount', '$grossTotalAmount'] } } } }
   ]);
 
   // Create lookup maps
@@ -131,7 +131,7 @@ const deleteSeller = asyncHandler(async (req, res) => {
   }
 
   // Check for active orders (pending, processing, shipped)
-  const activeOrdersCount = await BuyRequest.countDocuments({
+  const activeOrdersCount = await Order.countDocuments({
     sellerId: id,
     status: { $in: ['PENDING', 'PROCESSING', 'SHIPPED'] }
   });
@@ -158,3 +158,4 @@ module.exports = {
   updateSellerCommission,
   deleteSeller
 };
+

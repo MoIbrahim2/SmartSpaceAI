@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const User = require('../src/models/user.model');
 const Product = require('../src/models/product.model');
-const BuyRequest = require('../src/models/buyRequest.model');
+const Order = require('../src/models/order.model');
 dotenv.config();
 
 const BASE = 'http://localhost:3000/api';
@@ -65,9 +65,9 @@ const signIn = async (email) => {
   return body.data.accessToken;
 };
 
-// DB helpers to create buy requests (no API exists to create them)
+// DB helpers to create orders
 const createBuyRequest = async (data) => {
-  return BuyRequest.create(data);
+  return Order.create(data);
 };
 
 (async () => {
@@ -292,7 +292,7 @@ const createBuyRequest = async (data) => {
       deliveredOrder = d;
       record('O9b', '  delivered order includes items/totalAmount shape', d.items?.length === 1 && d.totalAmount === 3200, `total=${d.totalAmount}`);
       // cross-check commission in DB
-      const dbOrder = await BuyRequest.findById(orderA1._id);
+      const dbOrder = await Order.findById(orderA1._id);
       const expected = Math.round(3200 * 0.12);
       record('O9c', '  commission.amountOwed = 12% of gross (384)', dbOrder?.commission?.amountOwed === expected && dbOrder?.commission?.isCommissionPaid === false, `amount=${dbOrder?.commission?.amountOwed}`);
       record('O9d', '  settlementGroup set (YYYY-MM)', /^\d{4}-\d{2}$/.test(dbOrder?.commission?.settlementGroup || ''), `group=${dbOrder?.commission?.settlementGroup}`);

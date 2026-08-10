@@ -1,13 +1,13 @@
 const User = require('../src/models/user.model');
 const Product = require('../src/models/product.model');
-const BuyRequest = require('../src/models/buyRequest.model');
+const Order = require('../src/models/order.model');
 const adminController = require('../src/controllers/admin.controller');
 const ApiError = require('../src/errors/ApiError');
 const ROLES = require('../src/constants/roles');
 
 jest.mock('../src/models/user.model');
 jest.mock('../src/models/product.model');
-jest.mock('../src/models/buyRequest.model');
+jest.mock('../src/models/order.model');
 
 describe('Admin Controller Tests', () => {
   beforeEach(() => {
@@ -123,7 +123,7 @@ describe('Admin Controller Tests', () => {
         { _id: 'seller1', count: 5 }
       ]);
 
-      BuyRequest.aggregate.mockResolvedValue([
+      Order.aggregate.mockResolvedValue([
         { _id: 'seller1', totalSales: 1500 }
       ]);
 
@@ -140,7 +140,7 @@ describe('Admin Controller Tests', () => {
 
       expect(User.find).toHaveBeenCalledWith({ role: ROLES.SELLER });
       expect(Product.aggregate).toHaveBeenCalled();
-      expect(BuyRequest.aggregate).toHaveBeenCalled();
+      expect(Order.aggregate).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           success: true,
@@ -222,7 +222,7 @@ describe('Admin Controller Tests', () => {
       };
 
       User.findOne.mockResolvedValue(mockSeller);
-      BuyRequest.countDocuments.mockResolvedValue(0);
+      Order.countDocuments.mockResolvedValue(0);
       Product.deleteMany.mockResolvedValue({ deletedCount: 5 });
       User.findByIdAndDelete.mockResolvedValue(mockSeller);
 
@@ -240,7 +240,7 @@ describe('Admin Controller Tests', () => {
       await new Promise((resolve) => setImmediate(resolve));
 
       expect(User.findOne).toHaveBeenCalledWith({ _id: 'seller1', role: ROLES.SELLER });
-      expect(BuyRequest.countDocuments).toHaveBeenCalledWith({
+      expect(Order.countDocuments).toHaveBeenCalledWith({
         sellerId: 'seller1',
         status: { $in: ['PENDING', 'PROCESSING', 'SHIPPED'] }
       });
@@ -262,7 +262,7 @@ describe('Admin Controller Tests', () => {
       };
 
       User.findOne.mockResolvedValue(mockSeller);
-      BuyRequest.countDocuments.mockResolvedValue(1);
+      Order.countDocuments.mockResolvedValue(1);
 
       const req = {
         params: { id: 'seller1' }

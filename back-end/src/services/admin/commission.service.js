@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const BuyRequest = require('../../models/buyRequest.model');
 const Order = require('../../models/order.model');
 const User = require('../../models/user.model');
 const CommissionPayout = require('../../models/commissionPayout.model');
@@ -20,54 +19,35 @@ const getMonthlyCommissionReports = async (query = {}) => {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-  // Match orders/buy-requests for given month/year excluding cancelled/rejected
-  const buyReqMatch = {
-    status: { $nin: ['CANCELLED', 'REJECTED'] }
-  };
   const orderMatch = {
     status: { $nin: ['CANCELLED', 'REJECTED'] }
   };
 
   if (query.year && query.year !== 'All' && query.month && query.month !== 'All') {
-    buyReqMatch.createdAt = { $gte: startDate, $lte: endDate };
     orderMatch.createdAt = { $gte: startDate, $lte: endDate };
   }
 
   if (query.sellerId && mongoose.Types.ObjectId.isValid(query.sellerId)) {
-    buyReqMatch.sellerId = new mongoose.Types.ObjectId(query.sellerId);
     orderMatch.sellerId = new mongoose.Types.ObjectId(query.sellerId);
   }
 
-  // Aggregate BuyRequests & Orders per seller
-  const [buyReqAggregations, orderAggregations] = await Promise.all([
-    BuyRequest.aggregate([
-      { $match: buyReqMatch },
-      {
-        $group: {
-          _id: '$sellerId',
-          totalOrders: { $sum: 1 },
-          grossSales: { $sum: '$grossTotalAmount' },
-          commissionAmount: { $sum: { $ifNull: ['$commission.amountOwed', 0] } }
-        }
+  // Aggregate Orders per seller
+  const orderAggregations = await Order.aggregate([
+    { $match: orderMatch },
+    {
+      $group: {
+        _id: '$sellerId',
+        totalOrders: { $sum: 1 },
+        grossSales: { $sum: { $ifNull: ['$totalAmount', '$grossTotalAmount'] } },
+        commissionAmount: { $sum: { $ifNull: ['$commissionAmount', '$commission.amountOwed'] } },
+        netSellerAmount: { $sum: { $ifNull: ['$netSellerAmount', 0] } }
       }
-    ]),
-    Order.aggregate([
-      { $match: orderMatch },
-      {
-        $group: {
-          _id: '$sellerId',
-          totalOrders: { $sum: 1 },
-          grossSales: { $sum: '$totalAmount' },
-          commissionAmount: { $sum: '$commissionAmount' },
-          netSellerAmount: { $sum: '$netSellerAmount' }
-        }
-      }
-    ])
+    }
   ]);
 
   const aggMap = new Map();
 
-  buyReqAggregations.forEach(item => {
+  orderAggregations.forEach(item => {
     const sId = item._id.toString();
     const gross = item.grossSales || 0;
     const comm = item.commissionAmount || 0;
@@ -75,18 +55,8 @@ const getMonthlyCommissionReports = async (query = {}) => {
       totalOrders: item.totalOrders || 0,
       grossSales: gross,
       commissionAmount: comm,
-      netSellerAmount: gross - comm
+      netSellerAmount: item.netSellerAmount || (gross - comm)
     });
-  });
-
-  orderAggregations.forEach(item => {
-    const sId = item._id.toString();
-    const existing = aggMap.get(sId) || { totalOrders: 0, grossSales: 0, commissionAmount: 0, netSellerAmount: 0 };
-    existing.totalOrders += (item.totalOrders || 0);
-    existing.grossSales += (item.grossSales || 0);
-    existing.commissionAmount += (item.commissionAmount || 0);
-    existing.netSellerAmount += (item.netSellerAmount || 0);
-    aggMap.set(sId, existing);
   });
 
   // Fetch all sellers matching search criteria
@@ -232,46 +202,26 @@ const markMonthAsPaid = async (adminId, payoutData) => {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-  const [buyReqAgg, orderAgg] = await Promise.all([
-    BuyRequest.aggregate([
-      {
-        $match: {
-          sellerId: seller._id,
-          createdAt: { $gte: startDate, $lte: endDate },
-          status: { $nin: ['CANCELLED', 'REJECTED'] }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          grossSales: { $sum: '$grossTotalAmount' },
-          commissionAmount: { $sum: { $ifNull: ['$commission.amountOwed', 0] } }
-        }
+  const orderAgg = await Order.aggregate([
+    {
+      $match: {
+        sellerId: seller._id,
+        createdAt: { $gte: startDate, $lte: endDate },
+        status: { $nin: ['CANCELLED', 'REJECTED'] }
       }
-    ]),
-    Order.aggregate([
-      {
-        $match: {
-          sellerId: seller._id,
-          createdAt: { $gte: startDate, $lte: endDate },
-          status: { $nin: ['CANCELLED', 'REJECTED'] }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          grossSales: { $sum: '$totalAmount' },
-          commissionAmount: { $sum: '$commissionAmount' }
-        }
+    },
+    {
+      $group: {
+        _id: null,
+        grossSales: { $sum: { $ifNull: ['$totalAmount', '$grossTotalAmount'] } },
+        commissionAmount: { $sum: { $ifNull: ['$commissionAmount', '$commission.amountOwed'] } }
       }
-    ])
+    }
   ]);
 
-  const buyReqTotals = buyReqAgg[0] || { grossSales: 0, commissionAmount: 0 };
   const orderTotals = orderAgg[0] || { grossSales: 0, commissionAmount: 0 };
-
-  const grossSales = buyReqTotals.grossSales + orderTotals.grossSales;
-  let commissionAmount = buyReqTotals.commissionAmount + orderTotals.commissionAmount;
+  const grossSales = orderTotals.grossSales;
+  let commissionAmount = orderTotals.commissionAmount;
   const commRate = seller.base_commission_percentage ?? (seller.sellerProfile?.commissionRate ? Math.round(seller.sellerProfile.commissionRate * 100) : 10);
 
   if (commissionAmount === 0 && grossSales > 0) {
@@ -310,28 +260,8 @@ const getSellerCommissionHistory = async (sellerId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'seller.not_found');
   }
 
-  const [payouts, buyReqAggregations, orderAggregations] = await Promise.all([
+  const [payouts, orderAggregations] = await Promise.all([
     CommissionPayout.find({ sellerId }).sort({ year: -1, month: -1 }),
-    BuyRequest.aggregate([
-      {
-        $match: {
-          sellerId: seller._id,
-          status: { $nin: ['CANCELLED', 'REJECTED'] }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
-          },
-          totalOrders: { $sum: 1 },
-          grossSales: { $sum: '$grossTotalAmount' },
-          commissionAmount: { $sum: { $ifNull: ['$commission.amountOwed', 0] } }
-        }
-      },
-      { $sort: { '_id.year': -1, '_id.month': -1 } }
-    ]),
     Order.aggregate([
       {
         $match: {
@@ -346,8 +276,8 @@ const getSellerCommissionHistory = async (sellerId) => {
             month: { $month: '$createdAt' }
           },
           totalOrders: { $sum: 1 },
-          grossSales: { $sum: '$totalAmount' },
-          commissionAmount: { $sum: '$commissionAmount' }
+          grossSales: { $sum: { $ifNull: ['$totalAmount', '$grossTotalAmount'] } },
+          commissionAmount: { $sum: { $ifNull: ['$commissionAmount', '$commission.amountOwed'] } }
         }
       },
       { $sort: { '_id.year': -1, '_id.month': -1 } }
@@ -356,7 +286,7 @@ const getSellerCommissionHistory = async (sellerId) => {
 
   const map = new Map();
 
-  buyReqAggregations.forEach(item => {
+  orderAggregations.forEach(item => {
     const key = `${item._id.year}-${item._id.month}`;
     const gross = item.grossSales || 0;
     const comm = item.commissionAmount || 0;
@@ -368,16 +298,6 @@ const getSellerCommissionHistory = async (sellerId) => {
       commissionAmount: comm,
       netSellerAmount: gross - comm
     });
-  });
-
-  orderAggregations.forEach(item => {
-    const key = `${item._id.year}-${item._id.month}`;
-    const existing = map.get(key) || { year: item._id.year, month: item._id.month, totalOrders: 0, grossSales: 0, commissionAmount: 0, netSellerAmount: 0 };
-    existing.totalOrders += (item.totalOrders || 0);
-    existing.grossSales += (item.grossSales || 0);
-    existing.commissionAmount += (item.commissionAmount || 0);
-    existing.netSellerAmount += (item.netSellerAmount || 0);
-    map.set(key, existing);
   });
 
   const sellerObj = seller.toObject();
@@ -401,3 +321,4 @@ module.exports = {
   markMonthAsPaid,
   getSellerCommissionHistory
 };
+

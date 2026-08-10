@@ -4,14 +4,14 @@
 
 const sellerService = require('../src/services/seller.service');
 const Product = require('../src/models/product.model');
-const BuyRequest = require('../src/models/buyRequest.model');
+const Order = require('../src/models/order.model');
 const User = require('../src/models/user.model');
 const ApiError = require('../src/errors/ApiError');
 const { validateSellerProductSubmission } = require('../src/services/aiService');
 
 // Mock all Mongoose models
 jest.mock('../src/models/product.model');
-jest.mock('../src/models/buyRequest.model');
+jest.mock('../src/models/order.model');
 jest.mock('../src/models/user.model');
 jest.mock('../src/services/aiService', () => ({
   validateSellerProductSubmission: jest.fn().mockResolvedValue(true)
@@ -180,7 +180,7 @@ describe('Seller Services', () => {
   describe('deleteSellerProduct', () => {
     test('should throw error if product has active pending/processing orders', async () => {
       Product.findOne.mockResolvedValue({ _id: mockProductId });
-      BuyRequest.countDocuments.mockResolvedValue(1);
+      Order.countDocuments.mockResolvedValue(1);
 
       await expect(
         sellerService.deleteSellerProduct(mockSellerId, mockProductId)
@@ -189,7 +189,7 @@ describe('Seller Services', () => {
 
     test('should delete product when no active orders exist', async () => {
       Product.findOne.mockResolvedValue({ _id: mockProductId });
-      BuyRequest.countDocuments.mockResolvedValue(0);
+      Order.countDocuments.mockResolvedValue(0);
       Product.deleteOne.mockResolvedValue({ deletedCount: 1 });
 
       const result = await sellerService.deleteSellerProduct(mockSellerId, mockProductId);
@@ -220,7 +220,7 @@ describe('Seller Services', () => {
         })
       });
 
-      BuyRequest.find.mockReturnValue({
+      Order.find.mockReturnValue({
         populate: mockPopulate
       });
 
@@ -247,7 +247,7 @@ describe('Seller Services', () => {
         status: 'DELIVERED',
         toObject: function() { return this; }
       };
-      BuyRequest.findOne.mockResolvedValue(mockOrder);
+      Order.findOne.mockResolvedValue(mockOrder);
 
       await expect(
         sellerService.updateOrderStatus(mockSellerId, mockOrderId, 'PENDING')
@@ -274,7 +274,7 @@ describe('Seller Services', () => {
         })
       };
 
-      BuyRequest.findOne.mockResolvedValue(mockOrder);
+      Order.findOne.mockResolvedValue(mockOrder);
       User.findById.mockResolvedValue({
         sellerProfile: { commissionRate: 0.15 }
       });
@@ -310,7 +310,7 @@ describe('Seller Services', () => {
         }
       ];
 
-      BuyRequest.find.mockResolvedValue(mockDeliveredOrders);
+      Order.find.mockResolvedValue(mockDeliveredOrders);
 
       const result = await sellerService.getSellerEarnings(mockSellerId);
 

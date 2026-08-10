@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const Product = require('../models/product.model');
-const BuyRequest = require('../models/buyRequest.model');
+const Order = require('../models/order.model');
 const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
@@ -218,7 +218,7 @@ const deleteSellerProduct = async (sellerId, productId) => {
   }
 
   // Prevent deletion if there are active fulfillment orders in PENDING or PROCESSING states
-  const activeOrdersCount = await BuyRequest.countDocuments({
+  const activeOrdersCount = await Order.countDocuments({
     productId,
     status: { $in: ['PENDING', 'PROCESSING'] }
   });
@@ -275,7 +275,7 @@ const formatOrderForFrontend = (order) => {
     ];
   }
 
-  orderObj.totalAmount = orderObj.grossTotalAmount;
+  orderObj.totalAmount = orderObj.grossTotalAmount || orderObj.totalAmount || 0;
   return orderObj;
 };
 
@@ -292,7 +292,7 @@ const listSellerOrders = async (sellerId, queryParams = {}) => {
     query.status = queryParams.status;
   }
 
-  const orders = await BuyRequest.find(query)
+  const orders = await Order.find(query)
     .populate({
       path: 'productId',
       select: 'basic.name images pricing'
@@ -314,7 +314,7 @@ const listSellerOrders = async (sellerId, queryParams = {}) => {
  * @returns {Promise<Object>} Updated order (BuyRequest)
  */
 const updateOrderStatus = async (sellerId, orderId, status) => {
-  const order = await BuyRequest.findOne({ _id: orderId, sellerId });
+  const order = await Order.findOne({ _id: orderId, sellerId });
   if (!order) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Order not found or not authorized');
   }
@@ -370,7 +370,7 @@ const getSellerEarnings = async (sellerId) => {
   const seller = await User.findById(sellerId);
   const commissionRate = seller?.sellerProfile?.commissionRate || 0.12;
 
-  const deliveredOrders = await BuyRequest.find({
+  const deliveredOrders = await Order.find({
     sellerId,
     status: 'DELIVERED'
   });

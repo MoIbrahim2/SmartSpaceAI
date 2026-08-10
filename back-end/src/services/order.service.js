@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Stripe = require('stripe');
 const Product = require('../models/product.model');
-const BuyRequest = require('../models/buyRequest.model');
+const Order = require('../models/order.model');
 const User = require('../models/user.model');
 const ApiError = require('../errors/ApiError');
 const HTTP_STATUS = require('../constants/statusCodes');
@@ -59,7 +59,7 @@ const checkout = async (buyerId, payload) => {
     });
   }
 
-  // 2. Group validated items by sellerId and create EXACTLY 1 BuyRequest per seller
+  // 2. Group validated items by sellerId and create EXACTLY 1 Order per seller
   const itemsBySeller = {};
   for (const item of validatedItems) {
     const sId = item.sellerId.toString();
@@ -78,14 +78,16 @@ const checkout = async (buyerId, payload) => {
   for (const sId of Object.keys(itemsBySeller)) {
     const sellerGroup = itemsBySeller[sId];
     const seller = await User.findById(sellerGroup.sellerId);
-    const commissionRate = seller?.sellerProfile?.commissionRate || 0.12;
+    const commissionRate = seller?.sellerProfile?.commissionRate || seller?.base_commission_percentage / 100 || 0.12;
     const grossTotalAmount = sellerGroup.grossTotalAmount;
     const amountOwed = Math.round(grossTotalAmount * commissionRate);
+    const netSellerAmount = grossTotalAmount - amountOwed;
 
     const firstItem = sellerGroup.items[0];
 
-    const buyRequest = new BuyRequest({
+    const newOrder = new Order({
       buyerId,
+      userId: buyerId,
       sellerId: sellerGroup.sellerId,
       productId: firstItem.productId,
       quantity: firstItem.quantity,
@@ -93,22 +95,32 @@ const checkout = async (buyerId, payload) => {
       items: sellerGroup.items.map((i) => ({
         productId: i.productId,
         name: i.name,
-        image: i.product?.images?.[0]?.url || i.product?.images?.[0] || i.product?.imageUrl || null,
+        image: i.image || i.product?.images?.[0]?.url || i.product?.images?.[0] || i.product?.imageUrl || null,
         price: i.price,
         quantity: i.quantity,
         totalPrice: i.totalPrice
       })),
+      totalAmount: grossTotalAmount,
       grossTotalAmount,
+      commissionPercentage: Math.round(commissionRate * 100),
+      commissionAmount: amountOwed,
+      netSellerAmount,
       status: 'PENDING',
       customer: {
         name: customer.name,
         phone: customer.phone,
         address: {
-          country: customer.address.country || 'Egypt',
-          city: customer.address.city,
-          district: customer.address.district || customer.address.city,
-          street: customer.address.street
+          country: customer.address?.country || 'Egypt',
+          city: customer.address?.city || '',
+          district: customer.address?.district || customer.address?.city || '',
+          street: customer.address?.street || ''
         }
+      },
+      shippingAddress: {
+        street: customer.address?.street || '',
+        city: customer.address?.city || '',
+        country: customer.address?.country || 'Egypt',
+        phone: customer.phone
       },
       commission: {
         appliedRate: commissionRate,
@@ -117,8 +129,8 @@ const checkout = async (buyerId, payload) => {
       }
     });
 
-    await buyRequest.save();
-    createdOrders.push(buyRequest);
+    await newOrder.save();
+    createdOrders.push(newOrder);
   }
 
   // 3. Handle Stripe Payment Method
@@ -169,7 +181,7 @@ const checkout = async (buyerId, payload) => {
  * @returns {Promise<Array>}
  */
 const getBuyerOrders = async (buyerId) => {
-  const orders = await BuyRequest.find({ buyerId })
+  const orders = await Order.find({ $or: [{ buyerId }, { userId: buyerId }] })
     .populate({
       path: 'productId',
       select: 'basic.name images pricing'
@@ -190,7 +202,7 @@ const getBuyerOrders = async (buyerId) => {
  * @returns {Promise<Object>}
  */
 const getOrderById = async (buyerId, orderId) => {
-  const order = await BuyRequest.findOne({ _id: orderId, buyerId })
+  const order = await Order.findOne({ _id: orderId, $or: [{ buyerId }, { userId: buyerId }] })
     .populate({
       path: 'productId',
       select: 'basic.name images pricing classification dimensions'
@@ -212,3 +224,4 @@ module.exports = {
   getBuyerOrders,
   getOrderById
 };
+

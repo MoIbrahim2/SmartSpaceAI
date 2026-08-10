@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const User = require('../src/models/user.model');
 const Product = require('../src/models/product.model');
-const BuyRequest = require('../src/models/buyRequest.model');
+const Order = require('../src/models/order.model');
 dotenv.config();
 
 const BASE = 'http://localhost:3000/api';
@@ -42,7 +42,7 @@ const signup = async (u) => {
   const existingIds = existing.map(u => u._id);
   if (existingIds.length) {
     await Product.deleteMany({ sellerId: { $in: existingIds } });
-    await BuyRequest.deleteMany({ $or: [{ sellerId: { $in: existingIds } }, { buyerId: { $in: existingIds } }] });
+    await Order.deleteMany({ $or: [{ sellerId: { $in: existingIds } }, { buyerId: { $in: existingIds } }, { userId: { $in: existingIds } }] });
     await User.deleteMany({ _id: { $in: existingIds } });
     console.log(`Removed existing test users: ${existingIds.length}`);
   }

@@ -3,7 +3,6 @@ const crypto = require('crypto');
 const User = require('../../models/user.model');
 const Product = require('../../models/product.model');
 const Order = require('../../models/order.model');
-const BuyRequest = require('../../models/buyRequest.model');
 const emailService = require('../email.service');
 const { generateOtp } = require('../../helpers/otp.helper');
 const ApiError = require('../../errors/ApiError');
@@ -140,24 +139,15 @@ const getSellers = async (query = {}) => {
       // 2. Calculate real total sales from Order collection
       const orderSalesAgg = await Order.aggregate([
         { $match: { sellerId, status: { $nin: ['CANCELLED', 'REJECTED'] } } },
-        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        { $group: { _id: null, total: { $sum: { $ifNull: ['$totalAmount', '$grossTotalAmount'] } } } }
       ]);
-      const orderSales = orderSalesAgg[0]?.total || 0;
+      const totalSalesAmount = orderSalesAgg[0]?.total || 0;
 
-      // 3. Calculate real total sales from BuyRequest collection
-      const buyReqSalesAgg = await BuyRequest.aggregate([
-        { $match: { sellerId, status: { $nin: ['REJECTED'] } } },
-        { $group: { _id: null, total: { $sum: '$grossTotalAmount' } } }
-      ]);
-      const buyReqSales = buyReqSalesAgg[0]?.total || 0;
-
-      const totalSalesAmount = orderSales + buyReqSales;
-
-      // 4. Resolve commission percentage
+      // 3. Resolve commission percentage
       const commissionRate = seller.base_commission_percentage ?? 
         (seller.sellerProfile?.commissionRate ? Math.round(seller.sellerProfile.commissionRate * 100) : 10);
 
-      // 5. Resolve display name and email
+      // 4. Resolve display name and email
       const firstName = seller.profile?.firstName || '';
       const lastName = seller.profile?.lastName || '';
       const fullName = `${firstName} ${lastName}`.trim();
@@ -215,23 +205,17 @@ const getSellerById = async (sellerId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'seller.not_found');
   }
 
-  // Compute live statistics for this seller across Product, Order, and BuyRequest
-  const [totalProducts, totalOrdersCount, totalBuyReqCount, orderSalesAgg, buyReqSalesAgg] = await Promise.all([
+  // Compute live statistics for this seller across Product and Order
+  const [totalProducts, totalOrders, orderSalesAgg] = await Promise.all([
     Product.countDocuments({ $or: [{ sellerId: seller._id }, { 'source.sellerId': seller._id }] }),
     Order.countDocuments({ sellerId: seller._id }),
-    BuyRequest.countDocuments({ sellerId: seller._id }),
     Order.aggregate([
       { $match: { sellerId: seller._id, status: { $nin: ['CANCELLED', 'REJECTED'] } } },
-      { $group: { _id: null, totalSales: { $sum: '$totalAmount' } } }
-    ]),
-    BuyRequest.aggregate([
-      { $match: { sellerId: seller._id, status: { $nin: ['REJECTED'] } } },
-      { $group: { _id: null, totalSales: { $sum: '$grossTotalAmount' } } }
+      { $group: { _id: null, totalSales: { $sum: { $ifNull: ['$totalAmount', '$grossTotalAmount'] } } } }
     ])
   ]);
 
-  const totalSales = (orderSalesAgg[0]?.totalSales || 0) + (buyReqSalesAgg[0]?.totalSales || 0);
-  const totalOrders = totalOrdersCount + totalBuyReqCount;
+  const totalSales = orderSalesAgg[0]?.totalSales || 0;
   const sellerObj = seller.toObject();
 
   return {
