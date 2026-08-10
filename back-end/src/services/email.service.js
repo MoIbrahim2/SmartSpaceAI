@@ -288,8 +288,102 @@ Note: This code expires in 15 minutes. If you did not request a password reset, 
   }
 };
 
+/**
+ * Send seller payout completion email with attached PDF payout report
+ * @param {Object} options
+ * @param {string} options.email
+ * @param {string} options.sellerName
+ * @param {string|number} options.amount
+ * @param {string} options.period
+ * @param {string} options.payoutDate
+ * @param {string} options.reportId
+ * @param {Buffer} options.pdfBuffer
+ */
+const sendPayoutCompletedEmail = async ({ email, sellerName, amount, period, payoutDate, reportId, pdfBuffer }) => {
+  const subject = `SmartSpaceAI - Payout Completed - Report #${reportId}`;
+  const formattedAmount = typeof amount === 'number' ? `EGP ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : amount;
+
+  const textBody = `
+Hello ${sellerName || 'Seller'},
+
+We are pleased to inform you that your payout for the reporting period ${period} has been successfully completed.
+
+Payout Details:
+- Payout Amount: ${formattedAmount}
+- Reporting Period: ${period}
+- Payout Date: ${payoutDate}
+- Report ID: ${reportId}
+
+Your detailed payout report has been attached to this email as a PDF document.
+
+Thank you for selling on SmartSpaceAI!
+  `.trim();
+
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+      <h2 style="color: #0f766e; margin-top: 0;">SmartSpaceAI - Payout Confirmation</h2>
+      <p style="color: #334155; font-size: 15px;">Hello <strong>${sellerName || 'Seller'}</strong>,</p>
+      <p style="color: #334155; font-size: 15px;">We are pleased to confirm that your payout for <strong>${period}</strong> has been completed successfully.</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 10px; margin: 24px 0;">
+        <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px;">Payout Summary</h3>
+        <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Payout Amount:</strong> <span style="color: #16a34a; font-weight: bold;">${formattedAmount}</span></p>
+        <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Reporting Period:</strong> ${period}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Payout Date:</strong> ${payoutDate}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Report ID:</strong> ${reportId}</p>
+      </div>
+      
+      <p style="color: #334155; font-size: 14px;">Your official PDF payout report containing a detailed itemized breakdown of sold products and financial calculations is attached to this email.</p>
+      
+      <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; margin: 0;">Thank you for partnering with SmartSpaceAI.</p>
+    </div>
+  `.trim();
+
+  const mailTransporter = getTransporter();
+
+  const attachments = pdfBuffer ? [{
+    filename: `Payout_Report_${reportId}.pdf`,
+    content: pdfBuffer,
+    contentType: 'application/pdf'
+  }] : [];
+
+  if (mailTransporter) {
+    try {
+      const fromAddress = getFromAddress();
+      const info = await mailTransporter.sendMail({
+        from: fromAddress,
+        to: email,
+        subject,
+        text: textBody,
+        html: htmlBody,
+        attachments
+      });
+
+      console.log(`[EMAIL SERVICE] Sent payout email to ${email} (MessageID: ${info.messageId})`);
+      return { success: true, messageId: info.messageId };
+    } catch (err) {
+      console.error(`[EMAIL SERVICE] Failed to send payout email to ${email}:`, err.message);
+      return { success: false, error: err.message };
+    }
+  } else {
+    console.log('====================================================');
+    console.log(`[EMAIL SERVICE (SIMULATED)] To: ${email}`);
+    console.log(`[EMAIL SERVICE (SIMULATED)] Subject: ${subject}`);
+    console.log(`[EMAIL SERVICE (SIMULATED)] Amount: ${formattedAmount}`);
+    console.log(`[EMAIL SERVICE (SIMULATED)] Period: ${period}`);
+    console.log(`[EMAIL SERVICE (SIMULATED)] Payout Date: ${payoutDate}`);
+    console.log(`[EMAIL SERVICE (SIMULATED)] Attachment: Payout_Report_${reportId}.pdf (${pdfBuffer ? pdfBuffer.length : 0} bytes)`);
+    console.log('====================================================');
+
+    return { success: true, simulated: true };
+  }
+};
+
 module.exports = {
   sendSellerInvitationEmail,
   sendUserVerificationEmail,
   sendPasswordResetEmail,
+  sendPayoutCompletedEmail
 };
+

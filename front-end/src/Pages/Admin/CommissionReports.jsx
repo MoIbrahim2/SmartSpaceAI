@@ -81,6 +81,10 @@ export default function CommissionReports() {
 
   const handleMarkPaid = async (reportItem) => {
     if (!reportItem) return;
+    if (reportItem.payoutStatus?.toLowerCase() === "paid") {
+      showToast("Payout is already marked as Paid", "info");
+      return;
+    }
     try {
       await markCommissionPaid({
         sellerId: reportItem.sellerId,
@@ -144,7 +148,7 @@ export default function CommissionReports() {
         <ActionDropdown
           actions={[
             {
-              label: t("admin.commissions.actViewDetails"),
+              label: t("admin.commissions.actViewDetails", t("admin.commissions.actViewReport")),
               icon: Eye,
               onClick: () => {
                 setActiveReport(row);

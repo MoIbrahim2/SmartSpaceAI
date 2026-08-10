@@ -5,6 +5,8 @@ const CommissionPayout = require('../../models/commissionPayout.model');
 const ApiError = require('../../errors/ApiError');
 const HTTP_STATUS = require('../../constants/statusCodes');
 const ROLES = require('../../constants/roles');
+const { generatePayoutPdf } = require('./payoutPdf.service');
+const { sendPayoutCompletedEmail } = require('../email.service');
 
 /**
  * Fetch monthly commission report breakdown across sellers
@@ -128,6 +130,7 @@ const getMonthlyCommissionReports = async (query = {}) => {
       netSellerAmount,
       payoutStatus: status,
       status,
+      payoutDate: payout && payout.paidAt ? new Date(payout.paidAt).toISOString().split('T')[0] : 'Pending',
       payoutDetails: payout ? {
         paidAt: payout.paidAt,
         paidBy: payout.paidBy,
@@ -202,26 +205,51 @@ const markMonthAsPaid = async (adminId, payoutData) => {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-  const orderAgg = await Order.aggregate([
-    {
-      $match: {
-        sellerId: seller._id,
-        createdAt: { $gte: startDate, $lte: endDate },
-        status: { $nin: ['CANCELLED', 'REJECTED'] }
-      }
-    },
-    {
-      $group: {
-        _id: null,
-        grossSales: { $sum: { $ifNull: ['$totalAmount', '$grossTotalAmount'] } },
-        commissionAmount: { $sum: { $ifNull: ['$commissionAmount', '$commission.amountOwed'] } }
-      }
-    }
-  ]);
+  // Fetch all orders for this seller in the period to extract sold products and total sales
+  const orders = await Order.find({
+    sellerId: seller._id,
+    createdAt: { $gte: startDate, $lte: endDate },
+    status: { $nin: ['CANCELLED', 'REJECTED'] }
+  });
 
-  const orderTotals = orderAgg[0] || { grossSales: 0, commissionAmount: 0 };
-  const grossSales = orderTotals.grossSales;
-  let commissionAmount = orderTotals.commissionAmount;
+  const productMap = new Map();
+  let grossSales = 0;
+  let commissionAmount = 0;
+
+  orders.forEach(order => {
+    const orderGross = order.totalAmount ?? order.grossTotalAmount ?? 0;
+    const orderComm = order.commissionAmount ?? order.commission?.amountOwed ?? 0;
+    grossSales += orderGross;
+    commissionAmount += orderComm;
+
+    if (Array.isArray(order.items) && order.items.length > 0) {
+      order.items.forEach(item => {
+        const key = item.productId ? item.productId.toString() : (item.name || 'Product');
+        const existing = productMap.get(key) || {
+          name: item.name || 'Product',
+          quantity: 0,
+          unitPrice: item.price || 0,
+          totalAmount: 0
+        };
+        existing.quantity += (item.quantity || 1);
+        existing.totalAmount += (item.totalPrice || ((item.quantity || 1) * (item.price || 0)));
+        productMap.set(key, existing);
+      });
+    } else if (order.productId || orderGross > 0) {
+      const key = order.productId ? order.productId.toString() : 'Product';
+      const existing = productMap.get(key) || {
+        name: 'Product',
+        quantity: 0,
+        unitPrice: order.unitPriceAtPurchase || orderGross || 0,
+        totalAmount: 0
+      };
+      const qty = order.quantity || 1;
+      existing.quantity += qty;
+      existing.totalAmount += orderGross;
+      productMap.set(key, existing);
+    }
+  });
+
   const commRate = seller.base_commission_percentage ?? (seller.sellerProfile?.commissionRate ? Math.round(seller.sellerProfile.commissionRate * 100) : 10);
 
   if (commissionAmount === 0 && grossSales > 0) {
@@ -242,7 +270,63 @@ const markMonthAsPaid = async (adminId, payoutData) => {
     notes
   });
 
-  return payout;
+  const soldProducts = Array.from(productMap.values()).map(p => ({
+    name: p.name,
+    quantity: p.quantity,
+    unitPrice: p.quantity > 0 ? Number((p.totalAmount / p.quantity).toFixed(2)) : p.unitPrice,
+    totalAmount: Number(p.totalAmount.toFixed(2))
+  }));
+
+  const formattedPayoutDate = payout.paidAt.toISOString().split('T')[0];
+  const reportId = `COM-${payout._id.toString().slice(-4).toUpperCase()}`;
+  const sellerName = seller.sellerProfile?.businessName || (seller.profile?.firstName ? `${seller.profile.firstName} ${seller.profile.lastName || ''}`.trim() : 'Seller');
+  const sellerEmail = seller.authentication?.email || seller.email || '';
+
+  // Generate PDF report
+  let pdfBuffer = null;
+  try {
+    pdfBuffer = await generatePayoutPdf({
+      sellerName,
+      sellerEmail,
+      reportId,
+      period: `${month}/${year}`,
+      payoutDate: formattedPayoutDate,
+      payoutStatus: 'Paid',
+      soldProducts,
+      grossSales: Number(grossSales.toFixed(2)),
+      commissionRate: commRate,
+      commissionAmount: Number(commissionAmount.toFixed(2)),
+      netSellerAmount: Number(netSellerAmount.toFixed(2))
+    });
+  } catch (pdfErr) {
+    console.error('Failed to generate PDF payout report:', pdfErr);
+  }
+
+  // Send Email Notification with PDF attachment
+  if (sellerEmail) {
+    try {
+      await sendPayoutCompletedEmail({
+        email: sellerEmail,
+        sellerName,
+        amount: Number(netSellerAmount.toFixed(2)),
+        period: `${month}/${year}`,
+        payoutDate: formattedPayoutDate,
+        reportId,
+        pdfBuffer
+      });
+    } catch (emailErr) {
+      console.error('Failed to send payout completed email:', emailErr);
+    }
+  }
+
+  return {
+    ...payout.toObject(),
+    payoutDate: formattedPayoutDate,
+    status: 'Paid',
+    payoutStatus: 'Paid',
+    reportId,
+    soldProducts
+  };
 };
 
 /**

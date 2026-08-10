@@ -48,12 +48,18 @@ export default function CommissionDetailsDrawer({ item, isOpen, onClose, onMarkP
             <span className="font-extrabold text-on-surface">{t("admin.commissions.platformComm")}:</span>
             <span className="font-extrabold text-primary">{item.earnedCommission}</span>
           </div>
+          {item.netSellerAmount !== undefined && (
+            <div className="flex items-center justify-between py-1 text-base border-t border-outline/10 pt-2">
+              <span className="font-extrabold text-on-surface">{t("admin.commissions.netSellerPayout", "Net Seller Payout")}:</span>
+              <span className="font-extrabold text-emerald-600">EGP {item.netSellerAmount?.toLocaleString()}</span>
+            </div>
+          )}
         </div>
 
-        {item.payoutStatus !== "Paid" && (
+        {item.payoutStatus?.toLowerCase() !== "paid" && (
           <button
             onClick={() => {
-              onMarkPaid(item.id);
+              onMarkPaid(item);
               onClose();
             }}
             className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white neo-shadow hover:bg-emerald-700 transition-all"
