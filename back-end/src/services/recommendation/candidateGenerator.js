@@ -15,6 +15,7 @@ const {
 } = require('../../config/recommendation.config');
 const { normalizeCategory } = require('./helpers');
 const { scrapeForCategory } = require('../scraping/scraperService');
+const { inferCategory } = require('../scraping/productMapper');
 
 /**
  * Fetch candidate products for a given category from BOTH MongoDB and real-time website scrapers.
@@ -124,11 +125,27 @@ const fetchCandidates = async ({
   const dbCandidates = dbResult || [];
   const rawScrapedProducts = scrapeResult?.products || [];
 
-  // Filter scraped products against negative preferences, budget ceiling, and image validity
+  // Filter scraped products against negative preferences, budget ceiling, image validity, and category match
   const filteredScraped = rawScrapedProducts.filter((p) => {
     const price = p.pricing?.currentPrice || 0;
     if (price <= 0) return false;
     if (unitTargetBudget > 0 && price > premiumCeiling) return false;
+
+    // Verify that the scraped product belongs to the requested category
+    const normReqCat = normalizeCategory(resolvedCategory);
+    const pCat = p.classification?.canonicalCategory || '';
+    const normScrapedCat = normalizeCategory(pCat);
+
+    if (normScrapedCat && normScrapedCat !== 'furniture' && normScrapedCat !== normReqCat) {
+      return false;
+    }
+
+    const title = p.basic?.name || p.title || p.name || '';
+    const inferredCat = inferCategory(title, pCat, []);
+    const normInferredCat = normalizeCategory(inferredCat);
+    if (normInferredCat && normInferredCat !== 'furniture' && normInferredCat !== normReqCat) {
+      return false;
+    }
 
     // Check image validity
     const imgs = p.images || [];

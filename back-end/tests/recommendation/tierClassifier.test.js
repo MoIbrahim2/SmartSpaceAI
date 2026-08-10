@@ -24,28 +24,28 @@ const mockProduct = (price, score, name = 'Test Product') => ({
 describe('classifyTiers', () => {
   const unitTarget = 10000;
 
-  test('correctly classifies CHEAPER (< 0.85)', () => {
-    const products = [mockProduct(7000, 80)];
+  test('correctly classifies CHEAPER (< 0.45)', () => {
+    const products = [mockProduct(4000, 80)];
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.cheaper.length).toBe(1);
     expect(tiers.balanced.length).toBe(0);
     expect(tiers.premium.length).toBe(0);
   });
 
-  test('correctly classifies BALANCED (0.85–1.15)', () => {
-    const products = [mockProduct(10000, 90)]; // ratio = 1.0
+  test('correctly classifies BALANCED (0.45–0.75)', () => {
+    const products = [mockProduct(6000, 90)]; // ratio = 0.6
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.balanced.length).toBe(1);
   });
 
-  test('correctly classifies PREMIUM (1.15–1.35)', () => {
-    const products = [mockProduct(12000, 85)]; // ratio = 1.2
+  test('correctly classifies PREMIUM (0.75–1.00)', () => {
+    const products = [mockProduct(9000, 85)]; // ratio = 0.9
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.premium.length).toBe(1);
   });
 
-  test('excludes products above 1.35x (defensive check)', () => {
-    const products = [mockProduct(14000, 85)]; // ratio = 1.4, beyond ceiling
+  test('excludes products above 1.00x (defensive check)', () => {
+    const products = [mockProduct(11000, 85)]; // ratio = 1.1, beyond ceiling
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.cheaper.length).toBe(0);
     expect(tiers.balanced.length).toBe(0);
@@ -54,11 +54,11 @@ describe('classifyTiers', () => {
 
   test('limits balanced and premium tiers to 3 products', () => {
     const products = [
-      mockProduct(10000, 95),
-      mockProduct(10100, 90),
-      mockProduct(10200, 85),
-      mockProduct(10300, 80), // 4th balanced — should be cut
-      mockProduct(10500, 75), // 5th balanced — should be cut
+      mockProduct(6000, 95),
+      mockProduct(6100, 90),
+      mockProduct(6200, 85),
+      mockProduct(6300, 80), // 4th balanced — should be cut
+      mockProduct(6500, 75), // 5th balanced — should be cut
     ];
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.balanced.length).toBe(3);
@@ -70,7 +70,7 @@ describe('classifyTiers', () => {
 
   test('allows up to 15 products for cheaper tier', () => {
     const cheaperProducts = Array.from({ length: 20 }, (_, i) =>
-      mockProduct(5000, 100 - i, `Cheap Product ${i + 1}`)
+      mockProduct(3000, 100 - i, `Cheap Product ${i + 1}`)
     );
     const tiers = classifyTiers(cheaperProducts, unitTarget);
     expect(tiers.cheaper.length).toBe(15);
@@ -79,21 +79,21 @@ describe('classifyTiers', () => {
   });
 
   test('adds quantity and totalPriceForQuantity', () => {
-    const products = [mockProduct(3200, 80)];
+    const products = [mockProduct(1600, 80)];
     const tiers = classifyTiers(products, 3200, 2);
     const product = tiers.balanced[0];
     expect(product.quantity).toBe(2);
-    expect(product.totalPriceForQuantity).toBe(6400);
+    expect(product.totalPriceForQuantity).toBe(3200);
   });
 
-  test('boundary: ratio = 0.85 → BALANCED', () => {
-    const products = [mockProduct(8500, 80)];
+  test('boundary: ratio = 0.45 → BALANCED', () => {
+    const products = [mockProduct(4500, 80)];
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.balanced.length).toBe(1);
   });
 
-  test('boundary: ratio = 1.15 → BALANCED', () => {
-    const products = [mockProduct(11500, 80)];
+  test('boundary: ratio = 0.75 → BALANCED', () => {
+    const products = [mockProduct(7500, 80)];
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.balanced.length).toBe(1);
   });

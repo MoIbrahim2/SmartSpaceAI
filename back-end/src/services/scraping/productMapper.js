@@ -135,6 +135,12 @@ const inferCategory = (title, type = '', tags = []) => {
   const searchText = `${title} ${type} ${tags.join(' ')}`.toLowerCase();
 
   const categoryPatterns = [
+    { pattern: /air conditioner|split ac|aircon|\bac\b|hvac|مكيف/i, category: 'Air Conditioner' },
+    { pattern: /refrigerator|fridge|freezer|ثلاجة/i, category: 'Refrigerator' },
+    { pattern: /washing machine|laundry machine|washer|غسالة/i, category: 'Washing Machine' },
+    { pattern: /dishwasher|غسالة أطباق/i, category: 'Dishwasher' },
+    { pattern: /microwave|ميكروويف/i, category: 'Microwave' },
+    { pattern: /\btv\b|television|smart tv|تلفزيون/i, category: 'TV' },
     { pattern: /l[- ]?shape|sectional|corner sofa/, category: 'L-Shape Sofa' },
     { pattern: /sofa bed|sleeper sofa/, category: 'Sofa Bed' },
     { pattern: /\bsofa\b|couch|settee/, category: 'Sofa' },

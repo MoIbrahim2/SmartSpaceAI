@@ -270,9 +270,9 @@ const StepSelectProducts = ({
       </div>
 
       {/* Filter Toolbar (Marketplace & Seller Filter) */}
-      <div className="mb-6 p-4 rounded-2xl neomorph-raised bg-background flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-outline-variant/20">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5 mr-1">
+      <div className="mb-6 p-3.5 sm:p-4 rounded-2xl neomorph-raised bg-background flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4 border border-outline-variant/20 max-w-full overflow-hidden">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5 mr-1 shrink-0">
             <Icon name="filter_list" size={16} className="text-primary" />
             {t("dashboard.filterSource", "Filter Source:")}
           </span>
@@ -280,7 +280,7 @@ const StepSelectProducts = ({
           <button
             type="button"
             onClick={() => setSourceFilter("ALL")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
               sourceFilter === "ALL"
                 ? "bg-primary text-white shadow-md"
                 : "bg-background text-on-surface-variant neomorph-raised hover:text-on-surface"
@@ -292,7 +292,7 @@ const StepSelectProducts = ({
           <button
             type="button"
             onClick={() => setSourceFilter("LOCAL")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
               sourceFilter === "LOCAL"
                 ? "bg-emerald-600 text-white shadow-md"
                 : "bg-background text-on-surface-variant neomorph-raised hover:text-emerald-600"
@@ -305,7 +305,7 @@ const StepSelectProducts = ({
           <button
             type="button"
             onClick={() => setSourceFilter("EXTERNAL")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 shrink-0 ${
               sourceFilter === "EXTERNAL"
                 ? "bg-amber-600 text-white shadow-md"
                 : "bg-background text-on-surface-variant neomorph-raised hover:text-amber-600"
@@ -318,14 +318,14 @@ const StepSelectProducts = ({
 
         {/* Specific Seller / Brand Dropdown */}
         {availableSellers.length > 0 && (
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <span className="text-xs font-bold text-on-surface-variant whitespace-nowrap">
+          <div className="flex items-center gap-2 w-full lg:w-auto justify-start lg:justify-end min-w-0 shrink-0">
+            <span className="text-xs font-bold text-on-surface-variant whitespace-nowrap shrink-0">
               {t("dashboard.storeSellerLabel", "Store / Seller:")}
             </span>
             <select
               value={sellerFilter}
               onChange={(e) => setSellerFilter(e.target.value)}
-              className="p-2 rounded-xl neomorph-raised bg-background text-xs font-bold text-on-surface border border-outline-variant focus:outline-none focus:border-primary shrink-0"
+              className="p-2 rounded-xl neomorph-raised bg-background text-xs font-bold text-on-surface border border-outline-variant focus:outline-none focus:border-primary max-w-[200px] sm:max-w-[240px] md:max-w-[280px] min-w-0 truncate cursor-pointer flex-1 lg:flex-none"
             >
               <option value="ALL">{t("dashboard.allStoresBrands", "All Stores & Brands")}</option>
               {availableSellers.map((seller) => (
