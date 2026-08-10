@@ -51,6 +51,18 @@ const classifyTiers = (scoredProducts, unitTargetBudget, resolvedQuantity = 1) =
     }
   }
 
+  // Fallback: If no products fell into cheaper/balanced/premium because market prices exceed unitTargetBudget,
+  // place the cheapest available candidates into PREMIUM tier so recommendations are preserved.
+  if (cheaper.length === 0 && balanced.length === 0 && premium.length === 0 && scoredProducts.length > 0) {
+    const validScored = scoredProducts.filter((p) => (p.pricing?.currentPrice || 0) > 0);
+    const sortedByPrice = [...validScored].sort((a, b) => (a.pricing?.currentPrice || 0) - (b.pricing?.currentPrice || 0));
+    const cheapestCandidates = sortedByPrice.slice(0, MAX_PER_TIER);
+    for (const p of cheapestCandidates) {
+      const tierProduct = formatTierProduct(p, resolvedQuantity);
+      premium.push({ ...tierProduct, tier: 'PREMIUM' });
+    }
+  }
+
   // Sort each tier by score descending, take top N
   return {
     cheaper: cheaper.sort((a, b) => b.score - a.score).slice(0, MAX_CHEAPER_PER_TIER),
