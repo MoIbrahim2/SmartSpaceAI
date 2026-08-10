@@ -1,6 +1,50 @@
+const mongoose = require('mongoose');
 const Product = require('../../models/product.model');
+const User = require('../../models/user.model');
 const ApiError = require('../../errors/ApiError');
 const HTTP_STATUS = require('../../constants/statusCodes');
+
+/**
+ * Helper to resolve a clean, professional Seller / Store Name for a product
+ */
+const resolveSellerName = (prod, userMap = new Map()) => {
+  // 1. Check if linked seller user exists in userMap
+  const sId = (prod.sellerId || prod.source?.sellerId)?.toString();
+  if (sId && userMap.has(sId)) {
+    const user = userMap.get(sId);
+    const sellerName = user.sellerProfile?.businessName || 
+      (user.profile?.firstName ? `${user.profile.firstName} ${user.profile.lastName || ''}`.trim() : '') ||
+      user.authentication?.email || user.email;
+    if (sellerName) return sellerName;
+  }
+
+  // 2. Check marketplace name in source
+  if (prod.source?.marketplace && typeof prod.source.marketplace === 'string' && prod.source.marketplace.length < 30) {
+    return prod.source.marketplace.trim();
+  }
+
+  // 3. Check brand, filtering out promotional text / long marketing sentences (>30 chars or containing "free delivery" / "0% interest")
+  const brand = prod.basic?.brand;
+  if (brand && typeof brand === 'string') {
+    const isPromoText = brand.length > 30 || 
+      /delivery|interest|discount|offer|payment|buy now|fees|down payment|0%/i.test(brand);
+    
+    if (!isPromoText && brand.trim()) {
+      return brand.trim();
+    }
+  }
+
+  // 4. Extract brand from product title (e.g. "Jac", "Midea", "Fresh", "LG", "Samsung")
+  const prodName = prod.basic?.name || '';
+  if (prodName) {
+    const firstWord = prodName.split(' ')[0];
+    if (firstWord && firstWord.length >= 2 && firstWord.length <= 20) {
+      return `${firstWord} Store`;
+    }
+  }
+
+  return 'SmartSpace AI Store';
+};
 
 /**
  * Fetch products in the moderation queue (pending review, AI validation, flagged)
@@ -44,10 +88,21 @@ const getModerationItems = async (query = {}) => {
     Product.countDocuments(filter)
   ]);
 
+  // Query User model for registered seller store names
+  const sellerIds = products
+    .map(p => p.sellerId || p.source?.sellerId)
+    .filter(id => id && mongoose.Types.ObjectId.isValid(id));
+
+  const userMap = new Map();
+  if (sellerIds.length > 0) {
+    const users = await User.find({ _id: { $in: sellerIds } }).lean();
+    users.forEach(u => userMap.set(u._id.toString(), u));
+  }
+
   const items = products.map((prod) => ({
     id: prod._id,
     productTitle: prod.basic?.name || 'Untitled Product',
-    sellerName: prod.basic?.brand || 'External Scraped Seller',
+    sellerName: resolveSellerName(prod, userMap),
     category: prod.classification?.canonicalCategory || 'General',
     price: `EGP ${(prod.pricing?.currentPrice || 0).toLocaleString()}`,
     aiConfidence: typeof prod.processing?.confidence === 'number'
