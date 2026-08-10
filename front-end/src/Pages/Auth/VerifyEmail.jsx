@@ -48,10 +48,13 @@ const VerifyEmail = () => {
     setResending(true);
     try {
       await resendVerificationCode(email);
-      setInfoMessage(t("auth.codeResentSuccess", "Verification code resent successfully!"));
+      setInfoMessage(
+        t("auth.codeResentSuccess", "Verification code resent successfully!"),
+      );
       setCooldown(60);
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Failed to resend code.";
+      const msg =
+        err.response?.data?.message || err.message || "Failed to resend code.";
       setError(msg);
     } finally {
       setResending(false);
@@ -69,7 +72,9 @@ const VerifyEmail = () => {
     }
 
     if (verificationCode.trim().length !== 6) {
-      setError(t("auth.codeLengthError", "Verification code must be 6 digits."));
+      setError(
+        t("auth.codeLengthError", "Verification code must be 6 digits."),
+      );
       return;
     }
 
@@ -90,7 +95,8 @@ const VerifyEmail = () => {
         }, 2000);
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Verification failed.";
+      const msg =
+        err.response?.data?.message || err.message || "Verification failed.";
       setError(msg);
     } finally {
       setLoading(false);
@@ -115,7 +121,10 @@ const VerifyEmail = () => {
                 <span className="font-semibold text-on-surface">{email}</span>
               </>
             ) : (
-              t("auth.verifyEmailSubtitle", "Enter your email and the 6-digit code sent to you")
+              t(
+                "auth.verifyEmailSubtitle",
+                "Enter your email and the 6-digit code sent to you",
+              )
             )}
           </p>
         </div>
@@ -129,7 +138,10 @@ const VerifyEmail = () => {
               {t("auth.verificationSuccessTitle", "Email Verified!")}
             </h3>
             <p className="mt-2 text-xs text-on-surface-variant">
-              {t("auth.verificationSuccessDesc", "Your account is active. Redirecting to home...")}
+              {t(
+                "auth.verificationSuccessDesc",
+                "Your account is active. Redirecting to home...",
+              )}
             </p>
           </div>
         ) : (
@@ -183,8 +195,8 @@ const VerifyEmail = () => {
                   {resending
                     ? t("auth.resendingCode", "Resending...")
                     : cooldown > 0
-                    ? `${t("auth.resendCode", "Resend Code")} (${cooldown}s)`
-                    : t("auth.resendCode", "Resend Code")}
+                      ? `${t("auth.resendCode", "Resend Code")} (${cooldown}s)`
+                      : t("auth.resendCode", "Resend Code")}
                 </button>
               </div>
 
@@ -195,7 +207,9 @@ const VerifyEmail = () => {
                   autoFocus
                   maxLength={6}
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+                  onChange={(e) =>
+                    setVerificationCode(e.target.value.replace(/\D/g, ""))
+                  }
                   placeholder="123456"
                   className="w-full tracking-[0.5em] text-center font-mono text-xl font-bold rounded-2xl border border-outline/30 bg-surface-container-lowest py-3.5 px-4 text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-inner"
                 />
@@ -205,15 +219,22 @@ const VerifyEmail = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || verificationCode.trim().length !== 6 || !email}
+              disabled={
+                loading || verificationCode.trim().length !== 6 || !email
+              }
               className="flex w-full items-center justify-center rounded-2xl bg-primary py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:bg-primary-hover active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? t("auth.verifying", "Verifying...") : t("auth.verifyCodeBtn", "Verify Email")}
+              {loading
+                ? t("auth.verifying", "Verifying...")
+                : t("auth.verifyCodeBtn", "Verify Email")}
             </button>
 
             <div className="text-center text-xs font-medium text-on-surface-variant">
               {t("auth.alreadyHaveAccount", "Already have an account?")}{" "}
-              <Link to="/login" className="font-semibold text-primary hover:underline">
+              <Link
+                to="/login"
+                className="font-semibold text-primary hover:underline"
+              >
                 {t("auth.signIn", "Sign In")}
               </Link>
             </div>
