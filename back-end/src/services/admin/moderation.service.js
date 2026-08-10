@@ -13,7 +13,13 @@ const getModerationItems = async (query = {}) => {
   const filter = {};
 
   if (query.status && query.status !== 'ALL') {
-    filter['processing.status'] = query.status;
+    if (query.status === 'PENDING') {
+      filter['processing.status'] = {
+        $in: ['PENDING_AI_VALIDATION', 'PENDING_REVIEW', 'MANUAL_REVIEW_REQUIRED', 'FLAGGED_ISSUES', 'NEEDS_REVIEW']
+      };
+    } else {
+      filter['processing.status'] = query.status;
+    }
   }
 
   if (query.category && query.category !== 'ALL') {

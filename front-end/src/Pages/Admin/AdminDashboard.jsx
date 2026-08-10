@@ -37,7 +37,7 @@ export default function AdminDashboard() {
         setLoading(true);
         const [dashStats, modRes] = await Promise.all([
           getDashboardStats().catch(() => null),
-          getModerationItems({ limit: 5 }).catch(() => null),
+          getModerationItems({ limit: 5, status: 'PENDING' }).catch(() => null),
         ]);
 
         if (isMounted) {
@@ -45,7 +45,7 @@ export default function AdminDashboard() {
             setStats(dashStats);
           }
           if (modRes?.items) {
-            setModerations(modRes.items.slice(0, 3));
+            setModerations(modRes.items);
           }
         }
       } catch (err) {
