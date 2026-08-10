@@ -62,6 +62,14 @@ const CATEGORY_SEARCH_TERMS = {
   'outdoor sofa': ['outdoor sofa', 'garden sofa', 'patio sofa'],
   'outdoor table': ['outdoor table', 'garden table', 'patio table'],
   'outdoor chair': ['outdoor chair', 'garden chair'],
+
+  // Appliances & Electronics
+  'air conditioner': ['air conditioner', 'split ac', 'aircon', 'ac unit'],
+  tv: ['tv', 'television', 'smart tv'],
+  refrigerator: ['refrigerator', 'fridge'],
+  'washing machine': ['washing machine', 'washer'],
+  dishwasher: ['dishwasher'],
+  microwave: ['microwave'],
 };
 
 /**

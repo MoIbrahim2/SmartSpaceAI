@@ -133,9 +133,9 @@
         "sizeMode": "STANDARD"
       },
       "budget": {
-        "defaultPercentage": 12,
-        "minPercentage": 8,
-        "maxPercentage": 18
+        "defaultPercentage": 13,
+        "minPercentage": 10,
+        "maxPercentage": 20
       },
       "sizeRules": [
         {
@@ -1086,9 +1086,9 @@
         "sizeMode": "ADJUST_PER_ITEM"
       },
       "budget": {
-        "defaultPercentage": 4,
+        "defaultPercentage": 5,
         "minPercentage": 1,
-        "maxPercentage": 8
+        "maxPercentage": 10
       },
       "sizeRules": [
         {
