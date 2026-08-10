@@ -8,7 +8,6 @@ import StatusBadge from "../../Components/Admin/Shared/StatusBadge";
 import ActionDropdown from "../../Components/Admin/Shared/ActionDropdown";
 import EmptyState from "../../Components/Admin/Shared/EmptyState";
 import ConfirmDialog from "../../Components/Admin/Shared/ConfirmDialog";
-import ReportFilters from "../../Components/Admin/Reports/ReportFilters";
 import CommissionDetailsDrawer from "../../Components/Admin/Reports/CommissionDetailsDrawer";
 import LoadingState from "../../Components/Admin/LoadingState";
 import { useToast } from "../../Components/Admin/Shared/ToastContext";
@@ -19,10 +18,6 @@ export default function CommissionReports() {
   const { showToast } = useToast();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All");
-  const [month, setMonth] = useState("All");
-  const [year, setYear] = useState("All");
 
   const [activeReport, setActiveReport] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -31,8 +26,8 @@ export default function CommissionReports() {
   const fetchCommissions = async () => {
     try {
       setLoading(true);
-      const data = await getMonthlyCommissions({ year: year !== "All" ? year : undefined, month: month !== "All" ? month : undefined });
-      const rawReports = data.reports || data.items || (Array.isArray(data) ? data : []);
+      const data = await getMonthlyCommissions();
+      const rawReports = data?.reports || data?.items || (Array.isArray(data) ? data : []);
 
       const formatted = rawReports.map((c) => {
         const sellerObj = c.seller || {};
@@ -53,15 +48,15 @@ export default function CommissionReports() {
           sellerId: c.sellerId || sellerObj._id,
           sellerName: displayName,
           sellerEmail: sellerObj.email || c.email || "",
-          period: c.period || `${c.month || "May"} ${c.year || "2026"}`,
-          month: c.month || "May",
-          year: c.year || "2026",
+          period: c.period || "All Time",
+          month: c.month || "All",
+          year: c.year || "All",
           grossSales: `EGP ${(c.grossSales || 0).toLocaleString()}`,
           commissionRate: `${c.commissionRate || sellerObj.base_commission_percentage || 10}%`,
           earnedCommission: `EGP ${(c.earnedCommission || c.commissionAmount || 0).toLocaleString()}`,
           numericEarned: c.earnedCommission || c.commissionAmount || 0,
           payoutStatus: c.payoutStatus || c.status || "Unpaid",
-          payoutDate: c.payoutDate ? new Date(c.payoutDate).toISOString().split("T")[0] : "Pending",
+          payoutDate: c.payoutDate && c.payoutDate !== "Pending" ? c.payoutDate : "Pending",
           transactionsCount: c.transactionsCount || c.totalOrders || 0,
         };
       });
@@ -69,7 +64,8 @@ export default function CommissionReports() {
       setReports(formatted);
     } catch (err) {
       console.error("Failed to fetch commission reports:", err);
-      showToast("Failed to load commission reports", "error");
+      showToast(err.response?.data?.message || err.message || "Failed to load commission reports", "error");
+      setReports([]);
     } finally {
       setLoading(false);
     }
@@ -77,7 +73,7 @@ export default function CommissionReports() {
 
   useEffect(() => {
     fetchCommissions();
-  }, [month, year]);
+  }, []);
 
   const handleMarkPaid = async (reportItem) => {
     if (!reportItem) return;
@@ -88,8 +84,8 @@ export default function CommissionReports() {
     try {
       await markCommissionPaid({
         sellerId: reportItem.sellerId,
-        year: parseInt(reportItem.year, 10) || 2026,
-        month: parseInt(reportItem.month, 10) || 5,
+        year: parseInt(reportItem.year, 10) || new Date().getFullYear(),
+        month: parseInt(reportItem.month, 10) || (new Date().getMonth() + 1),
         amount: reportItem.numericEarned || 0,
       });
       showToast(t("admin.commissions.toastPayoutPaid"), "success");
@@ -100,12 +96,6 @@ export default function CommissionReports() {
       showToast(err.response?.data?.message || err.message || "Failed to mark payout as paid", "error");
     }
   };
-
-  const filtered = reports.filter((c) => {
-    const matchesSearch = c.sellerName.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = status === "All" || c.payoutStatus.toLowerCase() === status.toLowerCase();
-    return matchesSearch && matchesStatus;
-  });
 
   const totalEarned = reports.reduce((acc, curr) => acc + (curr.numericEarned || 0), 0);
   const pendingEarned = reports
@@ -190,22 +180,10 @@ export default function CommissionReports() {
         <StatCard title={t("admin.commissions.completedPayouts")} value={`EGP ${paidEarned.toLocaleString()}`} change="Completed" isPositive={true} icon={CheckCircle2} />
       </div>
 
-      <ReportFilters
-        search={search}
-        onSearchChange={setSearch}
-        status={status}
-        onStatusChange={setStatus}
-        month={month}
-        onMonthChange={setMonth}
-        year={year}
-        onYearChange={setYear}
-        onExportCSV={() => showToast(t("admin.commissions.toastExportCsv"), "info")}
-      />
-
-      {filtered.length === 0 ? (
+      {reports.length === 0 ? (
         <EmptyState title={t("admin.commissions.noReportsTitle")} description={t("admin.commissions.noReportsDesc")} />
       ) : (
-        <DataTable columns={columns} data={filtered} />
+        <DataTable columns={columns} data={reports} />
       )}
 
       <CommissionDetailsDrawer

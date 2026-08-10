@@ -142,7 +142,7 @@ router.patch('/orders/:id/status', validate(updateOrderStatusSchema), orderContr
  * @desc    Fetch monthly commission reports and aggregations
  * @access  Private (ADMIN)
  */
-router.get('/commission/monthly', commissionController.getMonthlyCommissionReports);
+router.get('/commission/monthly', validate(getMonthlyReportSchema), commissionController.getMonthlyCommissionReports);
 
 /**
  * @route   GET /api/admin/commission/sellers/:sellerId

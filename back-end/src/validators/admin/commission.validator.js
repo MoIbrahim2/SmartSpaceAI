@@ -3,13 +3,13 @@ const Joi = require('joi');
 const objectIdPattern = /^[0-9a-fA-F]{24}$/;
 
 const getMonthlyReportSchema = Joi.object({
-  year: Joi.number().integer().min(2020).max(2100).optional(),
-  month: Joi.number().integer().min(1).max(12).optional(),
+  year: Joi.alternatives().try(Joi.number().integer().min(2020).max(2100), Joi.string().valid('All', 'all', '')).optional(),
+  month: Joi.alternatives().try(Joi.number().integer().min(1).max(12), Joi.string().valid('All', 'all', '')).optional(),
   sellerId: Joi.string().regex(objectIdPattern).optional(),
-  status: Joi.string().valid('PAID', 'UNPAID').optional(),
+  status: Joi.string().valid('PAID', 'UNPAID', 'Paid', 'Unpaid', 'All', 'all', '').optional(),
   page: Joi.number().integer().min(1).optional(),
   limit: Joi.number().integer().min(1).max(100).optional(),
-  search: Joi.string().trim().optional(),
+  search: Joi.string().trim().allow('').optional(),
   sort: Joi.string().trim().optional(),
   order: Joi.string().valid('asc', 'desc', 'ASC', 'DESC').optional()
 });
