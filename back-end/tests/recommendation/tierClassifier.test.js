@@ -44,12 +44,12 @@ describe('classifyTiers', () => {
     expect(tiers.premium.length).toBe(1);
   });
 
-  test('excludes products above 1.00x (defensive check)', () => {
-    const products = [mockProduct(11000, 85)]; // ratio = 1.1, beyond ceiling
+  test('fallbacks to populating premium tier if all products exceed target ratio', () => {
+    const products = [mockProduct(11000, 85)]; // ratio = 1.1, beyond target ratio
     const tiers = classifyTiers(products, unitTarget);
     expect(tiers.cheaper.length).toBe(0);
     expect(tiers.balanced.length).toBe(0);
-    expect(tiers.premium.length).toBe(0);
+    expect(tiers.premium.length).toBe(1);
   });
 
   test('limits balanced and premium tiers to 3 products', () => {

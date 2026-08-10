@@ -122,8 +122,47 @@ const fetchCandidates = async ({
   // Await both sources simultaneously
   const [dbResult, scrapeResult] = await Promise.all([dbPromise, scrapePromise]);
 
-  const dbCandidates = dbResult || [];
+  let dbCandidates = dbResult || [];
   const rawScrapedProducts = scrapeResult?.products || [];
+
+  // Fallback: If strict budget ceiling returned 0 DB candidates, but catalog products exist for this category,
+  // fetch the cheapest available DB candidates for this category.
+  if (dbCandidates.length === 0 && totalCategoryMatches > 0) {
+    const relaxedQuery = { ...query };
+    delete relaxedQuery['pricing.currentPrice'].$lte;
+
+    dbCandidates = await Product.find(relaxedQuery)
+      .select({
+        'basic.name': 1,
+        'basic.brand': 1,
+        'classification.canonicalCategory': 1,
+        'classification.styles': 1,
+        'classification.materials': 1,
+        'classification.colors': 1,
+        'classification.roomTypes': 1,
+        'pricing.currentPrice': 1,
+        'pricing.originalPrice': 1,
+        'pricing.currency': 1,
+        'pricing.discountPercentage': 1,
+        'dimensions.width': 1,
+        'dimensions.height': 1,
+        'dimensions.length': 1,
+        'dimensions.dimensionUnit': 1,
+        'images': 1,
+        'availability.inStock': 1,
+        'rating.average': 1,
+        'rating.reviews': 1,
+        'processing.issues': 1,
+        'processing.qualityScore': 1,
+        'source.productUrl': 1,
+        'source.marketplace': 1,
+        'externalId': 1,
+        'sellerId': 1,
+      })
+      .sort({ 'pricing.currentPrice': 1 })
+      .limit(MAX_CANDIDATES_FROM_DB)
+      .lean();
+  }
 
   // Filter scraped products against negative preferences, budget ceiling, image validity, and category match
   const filteredScraped = rawScrapedProducts.filter((p) => {

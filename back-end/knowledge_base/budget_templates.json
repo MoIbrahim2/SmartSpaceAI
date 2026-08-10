@@ -21,9 +21,9 @@
         },
         {
           "category": "Air Conditioner",
-          "defaultPercentage": 12,
-          "minPercentage": 8,
-          "maxPercentage": 18,
+          "defaultPercentage": 22,
+          "minPercentage": 15,
+          "maxPercentage": 35,
           "priority": 2,
           "role": "CORE"
         },
