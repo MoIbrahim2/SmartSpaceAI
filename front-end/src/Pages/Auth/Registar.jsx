@@ -11,16 +11,10 @@ const Register = () => {
   const navigate = useNavigate();
   const { signup, user, loading: authLoading } = useAuth();
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${BASE_URL}/auth/google`;
-  };
-
-  if (!authLoading && user) {
-    return <Navigate to="/home" replace />;
-  }
-
   const [agree, setAgree] = useState(false);
   const [role, setRole] = useState("USER");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -36,6 +30,14 @@ const Register = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${BASE_URL}/auth/google`;
+  };
+
+  if (!authLoading && user) {
+    return <Navigate to="/home" replace />;
+  }
+
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -44,11 +46,11 @@ const Register = () => {
     e.preventDefault();
     setError("");
     if (!agree) {
-      setError(t("auth.termsError"));
+      setError(t("auth.termsError") || "Please agree to the Terms of Service.");
       return;
     }
     if (form.password !== form.confirmPassword) {
-      setError(t("auth.passwordsMatchError"));
+      setError(t("auth.passwordsMatchError") || "Passwords do not match.");
       return;
     }
     setLoading(true);
@@ -69,12 +71,12 @@ const Register = () => {
         } else if (message) {
           setError(message);
         } else {
-          setError(t("auth.regFailed"));
+          setError(t("auth.regFailed") || "Registration failed.");
         }
       } else if (message) {
         setError(message);
       } else {
-        setError(err.message || t("auth.regFailed"));
+        setError(err.message || t("auth.regFailed") || "Registration failed.");
       }
     } finally {
       setLoading(false);
@@ -95,31 +97,31 @@ const Register = () => {
       <AuthHeader />
 
       {/* Main Content Layout */}
-      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-6 pt-24 pb-8 md:px-12 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-4 sm:px-8 md:px-12 pt-20 sm:pt-24 lg:pt-28 pb-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 xl:gap-16">
         {/* Left Side: Headline, Description & 3 Feature Badges */}
-        <div className="mb-8 max-w-xl text-white lg:mb-0 lg:w-1/2">
+        <div className="mb-6 max-w-xl text-white lg:mb-0 lg:w-1/2">
           {/* Badge Pill */}
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/15 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-md">
-            <Icon name="auto_awesome" size={14} className="text-amber-300" />
+          <div className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-amber-500/30 bg-amber-500/15 px-3 sm:px-3.5 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-md">
+            <Icon name="auto_awesome" size={14} className="text-amber-300 shrink-0" />
             <span>{t("landing.aiPoweredBadge")}</span>
           </div>
 
-          <h1 className="text-3xl font-headline font-extrabold tracking-tight text-white drop-shadow-md md:text-5xl lg:text-6xl leading-[1.15]">
-            {t("landing.welcomeTo")} <br />
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-headline font-extrabold tracking-tight text-white drop-shadow-md leading-[1.15]">
+            {t("landing.welcomeTo")} <br className="hidden sm:inline" />
             <span className="text-white">Smart</span>
             <span className="text-[#cda37f]">Space AI</span>
           </h1>
 
-          <p className="mt-4 max-w-md text-sm font-medium text-white/85 drop-shadow md:text-base leading-relaxed">
+          <p className="mt-3 sm:mt-4 max-w-md text-xs sm:text-sm md:text-base font-medium text-white/85 drop-shadow leading-relaxed">
             {t("landing.heroLead")}
           </p>
 
-          {/* 3 Feature Badges */}
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* 3 Feature Badges - shown on md and up to keep registration form fast and accessible */}
+          <div className="mt-8 hidden md:grid grid-cols-3 gap-4">
             {/* Feature 1 */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
-                <Icon name="auto_awesome" size={20} />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="auto_awesome" size={18} />
               </div>
               <h4 className="text-xs font-bold text-white">
                 {t("landing.aiPoweredTitle")}
@@ -131,8 +133,8 @@ const Register = () => {
 
             {/* Feature 2 */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
-                <Icon name="view_in_ar" size={20} />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="view_in_ar" size={18} />
               </div>
               <h4 className="text-xs font-bold text-white">
                 {t("landing.tabVirtualStaging")}
@@ -144,8 +146,8 @@ const Register = () => {
 
             {/* Feature 3 */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
-                <Icon name="bolt" size={20} />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="bolt" size={18} />
               </div>
               <h4 className="text-xs font-bold text-white">
                 {t("landing.oneClickTitle")}
@@ -158,35 +160,63 @@ const Register = () => {
         </div>
 
         {/* Right Side: Clean, Modern & Balanced Signup Card */}
-        <div className="w-full max-w-[460px] lg:w-1/2 lg:ml-auto rtl:lg:mr-auto rtl:lg:ml-0">
-          <div className="w-full rounded-3xl bg-[#f5f0ea] dark:bg-[#181614] p-7 sm:p-8 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/10 text-[#1c1917] dark:text-white transition-all">
-            <header className="mb-6 text-left rtl:text-right">
-              <h2 className="text-2xl font-headline font-bold text-[#1c1917] dark:text-white tracking-tight">
-                {t("auth.createAccount")}
+        <div className="w-full max-w-[480px] mx-auto lg:mx-0 lg:w-1/2 xl:max-w-[500px] lg:ml-auto rtl:lg:mr-auto rtl:lg:ml-0">
+          <div className="w-full rounded-2xl sm:rounded-3xl bg-[#f5f0ea] dark:bg-[#181614] p-5 sm:p-7 md:p-8 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/10 text-[#1c1917] dark:text-white transition-all">
+            <header className="mb-4 sm:mb-5 text-left rtl:text-right">
+              <h2 className="text-xl sm:text-2xl font-headline font-bold text-[#1c1917] dark:text-white tracking-tight">
+                {t("auth.createAccount") || "Create Account"}
               </h2>
               <p className="mt-1 text-xs font-medium text-[#78716c] dark:text-white/70">
-                {t("auth.joinVisionaries")}
+                {t("auth.joinVisionaries") || "Join our community of design visionaries today."}
               </p>
             </header>
 
+            {/* Role Switcher Tabs (Client vs Vendor) */}
+            <div className="mb-4 sm:mb-5 grid grid-cols-2 gap-1 rounded-xl bg-[#eae3d9] dark:bg-white/10 p-1">
+              <button
+                type="button"
+                onClick={() => setRole("USER")}
+                className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
+                  role === "USER"
+                    ? "bg-white dark:bg-[#262422] text-[#a67443] dark:text-amber-400 shadow-sm"
+                    : "text-[#78716c] dark:text-white/60 hover:text-[#1c1917] dark:hover:text-white"
+                }`}
+              >
+                <Icon name="person" size={15} />
+                <span>Homeowner / Client</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole("SELLER")}
+                className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all ${
+                  role === "SELLER"
+                    ? "bg-white dark:bg-[#262422] text-[#a67443] dark:text-amber-400 shadow-sm"
+                    : "text-[#78716c] dark:text-white/60 hover:text-[#1c1917] dark:hover:text-white"
+                }`}
+              >
+                <Icon name="storefront" size={15} />
+                <span>Vendor / Seller</span>
+              </button>
+            </div>
+
             {error && (
-              <div className="mb-5 rounded-xl bg-red-500/15 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-300 border border-red-500/30">
+              <div className="mb-4 sm:mb-5 rounded-xl bg-red-500/15 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-300 border border-red-500/30">
                 {error}
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-3 sm:space-y-3.5" onSubmit={handleSubmit}>
               {/* First Name & Last Name */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
+                <div className="flex flex-col gap-1 sm:gap-1.5">
                   <label
-                    className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                    className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                     htmlFor="reg-firstname"
                   >
-                    {t("auth.firstName")}
+                    {t("auth.firstName") || "First Name"}
                   </label>
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-3.5 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="John"
                     type="text"
                     autoComplete="given-name"
@@ -197,15 +227,15 @@ const Register = () => {
                     required
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1 sm:gap-1.5">
                   <label
-                    className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                    className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                     htmlFor="reg-lastname"
                   >
-                    {t("auth.lastName")}
+                    {t("auth.lastName") || "Last Name"}
                   </label>
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-3.5 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="Doe"
                     type="text"
                     autoComplete="family-name"
@@ -219,12 +249,12 @@ const Register = () => {
               </div>
 
               {/* Email Address */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label
-                  className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                  className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                   htmlFor="reg-email"
                 >
-                  {t("auth.emailAddress")}
+                  {t("auth.emailAddress") || "Email Address"}
                 </label>
                 <div className="group relative flex items-center">
                   <Icon
@@ -233,7 +263,7 @@ const Register = () => {
                     size={18}
                   />
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="john.doe@example.com"
                     type="email"
                     autoComplete="email"
@@ -247,12 +277,12 @@ const Register = () => {
               </div>
 
               {/* Date of Birth */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label
-                  className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                  className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                   htmlFor="reg-dob"
                 >
-                  {t("auth.dateOfBirth")}
+                  {t("auth.dateOfBirth") || "Date of Birth"}
                 </label>
                 <div className="group relative flex items-center">
                   <Icon
@@ -261,7 +291,7 @@ const Register = () => {
                     size={18}
                   />
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     type="date"
                     autoComplete="bday"
                     name="dateOfBirth"
@@ -275,19 +305,19 @@ const Register = () => {
 
               {/* Vendor Specific Credentials */}
               {role === "SELLER" && (
-                <div className="space-y-4 pt-3 pb-1 border-t border-[#d6d3d1] dark:border-white/15">
+                <div className="space-y-3 pt-2 pb-1 border-t border-[#d6d3d1] dark:border-white/15">
                   <div className="flex items-center gap-2 text-xs font-extrabold uppercase text-[#a67443] dark:text-amber-400">
                     <Icon name="storefront" size={16} />
                     <span>Vendor Business Credentials</span>
                   </div>
 
                   {/* Business / Store Name */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                  <div className="flex flex-col gap-1 sm:gap-1.5">
+                    <label className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
                       Business / Store Name
                     </label>
                     <input
-                      className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                      className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-3.5 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                       placeholder="e.g. Modern Cairo Furniture"
                       type="text"
                       name="businessName"
@@ -298,13 +328,13 @@ const Register = () => {
                   </div>
 
                   {/* Contact Phone & Tax ID */}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
+                    <div className="flex flex-col gap-1 sm:gap-1.5">
+                      <label className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
                         Contact Phone
                       </label>
                       <input
-                        className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                        className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-3.5 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                         placeholder="+20 100 123 4567"
                         type="tel"
                         name="phone"
@@ -313,12 +343,12 @@ const Register = () => {
                         required
                       />
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                    <div className="flex flex-col gap-1 sm:gap-1.5">
+                      <label className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
                         Tax Reg. Number
                       </label>
                       <input
-                        className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                        className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-3.5 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                         placeholder="EG-987654321"
                         type="text"
                         name="taxId"
@@ -329,12 +359,12 @@ const Register = () => {
                   </div>
 
                   {/* Physical Store Location */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
+                  <div className="flex flex-col gap-1 sm:gap-1.5">
+                    <label className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider">
                       Store Physical Location
                     </label>
                     <input
-                      className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-4 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                      className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 px-3.5 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                       placeholder="e.g. 15 El-Tahrir St, New Cairo"
                       type="text"
                       name="address"
@@ -346,12 +376,12 @@ const Register = () => {
               )}
 
               {/* Password */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label
-                  className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                  className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                   htmlFor="reg-password"
                 >
-                  {t("auth.password")}
+                  {t("auth.password") || "Password"}
                 </label>
                 <div className="group relative flex items-center">
                   <Icon
@@ -360,9 +390,9 @@ const Register = () => {
                     size={18}
                   />
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-10 rtl:pl-10 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="••••••••"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
                     name="password"
                     id="reg-password"
@@ -370,16 +400,29 @@ const Register = () => {
                     onChange={handleChange}
                     required
                   />
+                  <button
+                    className="absolute right-3.5 rtl:right-auto rtl:left-3.5 text-[#78716c] dark:text-white/50 hover:text-[#1c1917] dark:hover:text-white transition-colors p-1"
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    <Icon
+                      name={showPassword ? "visibility_off" : "visibility"}
+                      size={18}
+                    />
+                  </button>
                 </div>
               </div>
 
               {/* Confirm Password */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label
-                  className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                  className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                   htmlFor="reg-confirm"
                 >
-                  {t("auth.confirmPassword")}
+                  {t("auth.confirmPassword") || "Confirm Password"}
                 </label>
                 <div className="group relative flex items-center">
                   <Icon
@@ -388,9 +431,9 @@ const Register = () => {
                     size={18}
                   />
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-10 rtl:pl-10 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="••••••••"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
                     name="confirmPassword"
                     id="reg-confirm"
@@ -398,34 +441,49 @@ const Register = () => {
                     onChange={handleChange}
                     required
                   />
+                  <button
+                    className="absolute right-3.5 rtl:right-auto rtl:left-3.5 text-[#78716c] dark:text-white/50 hover:text-[#1c1917] dark:hover:text-white transition-colors p-1"
+                    type="button"
+                    onClick={() => setShowConfirmPassword((value) => !value)}
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    <Icon
+                      name={showConfirmPassword ? "visibility_off" : "visibility"}
+                      size={18}
+                    />
+                  </button>
                 </div>
               </div>
 
               {/* Terms Agreement Checkbox */}
-              <label className="flex cursor-pointer items-center gap-2.5 px-1 pt-1">
+              <label className="flex cursor-pointer items-center gap-2.5 px-0.5 pt-0.5 select-none">
                 <input
                   type="checkbox"
                   className="peer sr-only"
                   checked={agree}
                   onChange={() => setAgree((value) => !value)}
                 />
-                <div className="flex h-4.5 w-4.5 items-center justify-center rounded-md border border-[#a8a29e] dark:border-white/30 bg-[#eae3d9] dark:bg-white/10 transition-all peer-checked:border-[#a67443] dark:peer-checked:border-amber-500 peer-checked:bg-[#a67443] dark:peer-checked:bg-amber-500 peer-checked:text-white">
+                <div className="flex h-5 w-5 min-w-[20px] min-h-[20px] shrink-0 items-center justify-center rounded-md border border-[#a8a29e] dark:border-white/30 bg-[#eae3d9] dark:bg-white/10 transition-all peer-checked:border-[#a67443] dark:peer-checked:border-amber-500 peer-checked:bg-[#a67443] dark:peer-checked:bg-amber-500 peer-checked:text-white">
                   {agree && (
                     <Icon name="check" size={13} className="font-bold" />
                   )}
                 </div>
                 <span className="select-none text-xs font-bold text-[#44403c] dark:text-white/90">
-                  {t("auth.agreeToTerms")}
+                  {t("auth.agreeToTerms") || "I agree to the Terms of Service and Privacy Policy"}
                 </span>
               </label>
 
               {/* Submit Button */}
               <button
-                className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base tracking-wide shadow-md shadow-[#a67443]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                className="mt-2 flex h-11 sm:h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-sm sm:text-base tracking-wide shadow-md shadow-[#a67443]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                 type="submit"
                 disabled={loading}
               >
-                {loading ? t("auth.creatingAccount") : t("auth.createAccount")}
+                {loading
+                  ? t("auth.creatingAccount") || "Creating Account..."
+                  : t("auth.createAccount") || "Create Account"}
                 {!loading && (
                   <Icon
                     name="arrow_forward"
@@ -437,17 +495,17 @@ const Register = () => {
             </form>
 
             {/* Divider */}
-            <div className="my-5 flex items-center gap-3">
+            <div className="my-4 sm:my-5 flex items-center gap-3">
               <div className="h-[1px] flex-1 bg-[#d6d3d1] dark:bg-white/15" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#a8a29e] dark:text-white/50">
-                OR CONTINUE WITH
+              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#a8a29e] dark:text-white/50">
+                {t("auth.orContinueWith") || "OR CONTINUE WITH"}
               </span>
               <div className="h-[1px] flex-1 bg-[#d6d3d1] dark:bg-white/15" />
             </div>
 
             {/* Google Signup Button */}
             <button
-              className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#e7e5e4] dark:border-white/20 bg-white dark:bg-white/10 hover:bg-stone-50 dark:hover:bg-white/15 text-[#1c1917] dark:text-white font-semibold text-sm shadow-sm transition-all active:scale-[0.99]"
+              className="group flex h-11 sm:h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#e7e5e4] dark:border-white/20 bg-white dark:bg-white/10 hover:bg-stone-50 dark:hover:bg-white/15 text-[#1c1917] dark:text-white font-semibold text-xs sm:text-sm shadow-sm transition-all active:scale-[0.99]"
               type="button"
               onClick={handleGoogleLogin}
             >
@@ -474,17 +532,17 @@ const Register = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>{t("auth.google")}</span>
+              <span>{t("auth.google") || "Continue with Google"}</span>
             </button>
 
             {/* Log In Link */}
-            <p className="mt-5 text-center text-xs font-medium text-[#78716c] dark:text-white/70">
-              {t("auth.alreadyHaveAccount")}
+            <p className="mt-4 sm:mt-5 text-center text-xs font-medium text-[#78716c] dark:text-white/70">
+              {t("auth.alreadyHaveAccount") || "Already have an account?"}{" "}
               <Link
-                className="ml-1 rtl:mr-1 font-bold text-[#a67443] dark:text-amber-400 hover:underline transition-colors"
+                className="font-bold text-[#a67443] dark:text-amber-400 hover:underline transition-colors"
                 to="/login"
               >
-                {t("common.logIn")}
+                {t("common.logIn") || "Log In"}
               </Link>
             </p>
           </div>
@@ -492,7 +550,7 @@ const Register = () => {
       </main>
 
       {/* Simple Clean Page Footer Copyright */}
-      <footer className="relative z-10 text-center pb-5 text-xs font-medium text-white/60 drop-shadow">
+      <footer className="relative z-10 text-center py-4 sm:py-5 text-xs font-medium text-white/60 drop-shadow">
         {t("common.copyright")}
       </footer>
     </div>

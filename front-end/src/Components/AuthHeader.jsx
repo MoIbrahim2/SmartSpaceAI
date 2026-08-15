@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
 const AuthHeader = () => {
   const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/login";
+  const isRegisterPage = location.pathname === "/register";
 
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -36,77 +39,94 @@ const AuthHeader = () => {
   };
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-black/40 px-6 py-3.5 backdrop-blur-md md:px-12 transition-colors">
-      {/* Brand Logo - Navigates to Home (/) */}
-      <Link to="/" className="flex items-center gap-2.5">
+    <header className="fixed left-0 right-0 top-0 z-50 flex h-14 sm:h-16 items-center justify-between border-b border-white/10 bg-black/50 px-3 sm:px-6 md:px-12 backdrop-blur-md transition-all">
+      {/* Brand Logo */}
+      <Link to="/" className="flex items-center gap-2 shrink-0 group">
         <img
           src="/img/logo-smart.png"
           alt="SmartSpace Logo"
-          className="h-12 md:h-14 w-auto object-contain rounded-xl drop-shadow"
+          className="h-9 sm:h-11 md:h-12 w-auto object-contain rounded-xl drop-shadow transition-transform group-hover:scale-105"
         />
       </Link>
 
-      {/* Center Nav Links */}
-      <div className="hidden items-center gap-8 md:flex">
+      {/* Center Nav Links - hidden on < lg to prevent collisions on tablets */}
+      <nav className="hidden items-center gap-6 xl:gap-8 lg:flex">
         <Link
-          className="font-body text-sm font-medium text-white/90 transition-colors hover:text-amber-300"
+          className="font-body text-sm font-medium text-white/85 transition-colors hover:text-amber-300"
           to="/credits"
         >
           {t("common.pricing")}
         </Link>
         <Link
-          className="font-body text-sm font-medium text-white/90 transition-colors hover:text-amber-300"
+          className="font-body text-sm font-medium text-white/85 transition-colors hover:text-amber-300"
           to="/contact"
         >
           {t("common.technicalSupport")}
         </Link>
         <Link
-          className="font-body text-sm font-medium text-white/90 transition-colors hover:text-amber-300"
+          className="font-body text-sm font-medium text-white/85 transition-colors hover:text-amber-300"
           to="/projects"
         >
           {t("common.gallery")}
         </Link>
-      </div>
+      </nav>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
         {/* Dark Mode / Light Mode Toggle */}
         <button
           onClick={toggleTheme}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20"
+          className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-95"
           aria-label="Toggle Theme"
           title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={18} />
+          <Icon name={theme === "dark" ? "light_mode" : "dark_mode"} size={15} />
         </button>
 
         {/* Language Switcher Pill (Arabic / English) */}
         <button
-          className="flex h-9 items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-4 text-xs font-semibold text-white transition-all hover:bg-white/20"
+          className="flex h-8 sm:h-9 shrink-0 items-center gap-1 sm:gap-1.5 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-2 sm:px-3.5 text-xs font-bold text-white transition-all hover:bg-white/20 active:scale-95"
           onClick={handleLanguageChange}
           aria-label="Toggle Language"
         >
-          <Icon name="language" size={15} className="text-white/80" />
-          <span>{i18n.language?.startsWith("ar") ? "English" : "العربية"}</span>
+          <Icon name="language" size={13} className="text-white/80 shrink-0" />
+          <span className="sm:hidden">{i18n.language?.startsWith("ar") ? "EN" : "ع"}</span>
+          <span className="hidden sm:inline whitespace-nowrap">{i18n.language?.startsWith("ar") ? "English" : "العربية"}</span>
         </button>
-        
-        {/* Log In Pill */}
-        <Link
-          className="hidden sm:flex h-9 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-5 text-sm font-medium text-white transition-all hover:bg-white/20"
-          to="/login"
-        >
-          {t("common.logIn")}
-        </Link>
 
-        {/* Register Pill */}
-        <Link
-          className="flex h-9 items-center justify-center rounded-full bg-[#b88653] hover:bg-[#a67443] px-5 text-sm font-semibold text-white shadow-md transition-all"
-          to="/register"
-        >
-          {t("common.register")}
-        </Link>
+        {/* Contextual Action Link */}
+        {isLoginPage ? (
+          <Link
+            className="flex h-8 sm:h-9 shrink-0 items-center justify-center rounded-full bg-[#a67443] hover:bg-[#946334] px-2.5 sm:px-4 text-[11px] sm:text-xs md:text-sm font-bold text-white shadow-md transition-all whitespace-nowrap active:scale-95"
+            to="/register"
+          >
+            {t("common.register") || "Register"}
+          </Link>
+        ) : isRegisterPage ? (
+          <Link
+            className="flex h-8 sm:h-9 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/15 hover:bg-white/25 px-2.5 sm:px-4 text-[11px] sm:text-xs md:text-sm font-bold text-white shadow-md backdrop-blur-md transition-all whitespace-nowrap active:scale-95"
+            to="/login"
+          >
+            {t("common.logIn") || "Log In"}
+          </Link>
+        ) : (
+          <>
+            <Link
+              className="hidden sm:flex h-8 sm:h-9 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-3.5 text-xs sm:text-sm font-medium text-white transition-all hover:bg-white/20 whitespace-nowrap"
+              to="/login"
+            >
+              {t("common.logIn") || "Log In"}
+            </Link>
+            <Link
+              className="flex h-8 sm:h-9 shrink-0 items-center justify-center rounded-full bg-[#a67443] hover:bg-[#946334] px-2.5 sm:px-4 text-[11px] sm:text-xs md:text-sm font-bold text-white shadow-md transition-all whitespace-nowrap active:scale-95"
+              to="/register"
+            >
+              {t("common.register") || "Register"}
+            </Link>
+          </>
+        )}
       </div>
-    </nav>
+    </header>
   );
 };
 

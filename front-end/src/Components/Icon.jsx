@@ -56,6 +56,9 @@ import {
   Ruler,
   Palette,
   Hourglass,
+  Layers,
+  Briefcase,
+  Box,
 } from "lucide-react";
 
 const iconMap = {
@@ -104,6 +107,11 @@ const iconMap = {
   remove_shopping_cart: ShoppingCart,
   shopping_bag: ShoppingBag,
   store: Store,
+  storefront: Store,
+  briefcase: Briefcase,
+  view_in_ar: Layers,
+  layers: Layers,
+  box: Box,
   local_shipping: Truck,
   open_in_new: ExternalLink,
   filter_list: Filter,

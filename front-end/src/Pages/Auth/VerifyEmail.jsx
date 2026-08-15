@@ -104,8 +104,8 @@ const VerifyEmail = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-surface-container-lowest via-surface to-surface-container/30 p-4 text-on-surface selection:bg-primary selection:text-white">
-      <div className="w-full max-w-md rounded-3xl border border-outline/10 bg-surface p-8 shadow-2xl backdrop-blur-md md:p-10">
+    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-surface-container-lowest via-surface to-surface-container/30 p-3 sm:p-4 text-on-surface selection:bg-primary selection:text-white">
+      <div className="w-full max-w-md rounded-2xl sm:rounded-3xl border border-outline/10 bg-surface p-5 sm:p-8 md:p-10 shadow-2xl backdrop-blur-md">
         {/* Brand Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">

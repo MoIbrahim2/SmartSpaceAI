@@ -98,31 +98,31 @@ const Login = () => {
       <AuthHeader />
 
       {/* Main Content Layout */}
-      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-6 pt-24 pb-8 md:px-12 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
+      <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-4 sm:px-8 md:px-12 pt-20 sm:pt-24 lg:pt-28 pb-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 xl:gap-16">
         {/* Left Side: Headline, Description & 3 Feature Badges */}
-        <div className="mb-8 max-w-xl text-white lg:mb-0 lg:w-1/2">
+        <div className="mb-6 max-w-xl text-white lg:mb-0 lg:w-1/2">
           {/* Badge Pill */}
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/15 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-md">
-            <Icon name="auto_awesome" size={14} className="text-amber-300" />
+          <div className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-amber-500/30 bg-amber-500/15 px-3 sm:px-3.5 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-amber-300 backdrop-blur-md">
+            <Icon name="auto_awesome" size={14} className="text-amber-300 shrink-0" />
             <span>{t("landing.aiPoweredBadge")}</span>
           </div>
 
-          <h1 className="text-3xl font-headline font-extrabold tracking-tight text-white drop-shadow-md md:text-5xl lg:text-6xl leading-[1.15]">
-            {t("landing.welcomeTo")} <br />
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-headline font-extrabold tracking-tight text-white drop-shadow-md leading-[1.15]">
+            {t("landing.welcomeTo")} <br className="hidden sm:inline" />
             <span className="text-white">Smart</span>
             <span className="text-[#cda37f]">Space AI</span>
           </h1>
 
-          <p className="mt-4 max-w-md text-sm font-medium text-white/85 drop-shadow md:text-base leading-relaxed">
+          <p className="mt-3 sm:mt-4 max-w-md text-xs sm:text-sm md:text-base font-medium text-white/85 drop-shadow leading-relaxed">
             {t("landing.heroLead")}
           </p>
 
-          {/* 3 Feature Badges */}
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {/* 3 Feature Badges - shown on md and up to keep mobile login focused and compact */}
+          <div className="mt-8 hidden md:grid grid-cols-3 gap-4">
             {/* Feature 1 */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
-                <Icon name="auto_awesome" size={20} />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="auto_awesome" size={18} />
               </div>
               <h4 className="text-xs font-bold text-white">
                 {t("landing.aiPoweredTitle")}
@@ -134,8 +134,8 @@ const Login = () => {
 
             {/* Feature 2 */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
-                <Icon name="view_in_ar" size={20} />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="view_in_ar" size={18} />
               </div>
               <h4 className="text-xs font-bold text-white">
                 {t("landing.tabVirtualStaging")}
@@ -147,8 +147,8 @@ const Login = () => {
 
             {/* Feature 3 */}
             <div className="flex flex-col items-start gap-1.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
-                <Icon name="bolt" size={20} />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white backdrop-blur-md shadow-sm">
+                <Icon name="bolt" size={18} />
               </div>
               <h4 className="text-xs font-bold text-white">
                 {t("landing.oneClickTitle")}
@@ -161,19 +161,19 @@ const Login = () => {
         </div>
 
         {/* Right Side: Clean, Modern & Balanced Login Card */}
-        <div className="w-full max-w-[420px] lg:w-1/2 lg:ml-auto rtl:lg:mr-auto rtl:lg:ml-0">
-          <div className="w-full rounded-3xl bg-[#f5f0ea] dark:bg-[#181614] p-7 sm:p-8 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/10 text-[#1c1917] dark:text-white transition-all">
-            <header className="mb-6 text-left rtl:text-right">
-              <h2 className="text-2xl font-headline font-bold text-[#1c1917] dark:text-white tracking-tight">
-                Welcome back
+        <div className="w-full max-w-[440px] mx-auto lg:mx-0 lg:w-1/2 xl:max-w-[460px] lg:ml-auto rtl:lg:mr-auto rtl:lg:ml-0">
+          <div className="w-full rounded-2xl sm:rounded-3xl bg-[#f5f0ea] dark:bg-[#181614] p-5 sm:p-7 md:p-8 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.5)] border border-white/40 dark:border-white/10 text-[#1c1917] dark:text-white transition-all">
+            <header className="mb-5 sm:mb-6 text-left rtl:text-right">
+              <h2 className="text-xl sm:text-2xl font-headline font-bold text-[#1c1917] dark:text-white tracking-tight">
+                {t("auth.welcomeBack") || "Welcome back"}
               </h2>
               <p className="mt-1 text-xs font-medium text-[#78716c] dark:text-white/70">
-                Access your AI-powered design studio
+                {t("auth.accessStudio") || "Access your AI-powered design studio"}
               </p>
             </header>
 
             {error && (
-              <div className="mb-5 rounded-xl bg-red-500/15 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-300 flex flex-col gap-1.5 border border-red-500/30">
+              <div className="mb-4 sm:mb-5 rounded-xl bg-red-500/15 px-3.5 py-2.5 text-xs font-medium text-red-700 dark:text-red-300 flex flex-col gap-1.5 border border-red-500/30">
                 <span>
                   {error === "auth.pending_activation"
                     ? "Your account is pending email verification."
@@ -195,11 +195,11 @@ const Login = () => {
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-3.5 sm:space-y-4" onSubmit={handleSubmit}>
               {/* Email field */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <label
-                  className="px-1 text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                  className="px-1 text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                   htmlFor="login-email"
                 >
                   {t("auth.emailAddress") || "Email Address"}
@@ -211,7 +211,7 @@ const Login = () => {
                     size={18}
                   />
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-4 rtl:pl-4 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="name@company.com"
                     type="email"
                     autoComplete="email"
@@ -225,16 +225,16 @@ const Login = () => {
               </div>
 
               {/* Password field */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
                 <div className="flex items-center justify-between px-1">
                   <label
-                    className="text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
+                    className="text-[11px] sm:text-xs font-extrabold text-[#44403c] dark:text-white/90 uppercase tracking-wider"
                     htmlFor="login-password"
                   >
                     {t("auth.password") || "Password"}
                   </label>
                   <Link
-                    className="text-xs font-bold text-[#a67443] dark:text-amber-400 hover:underline transition-colors"
+                    className="text-[11px] sm:text-xs font-bold text-[#a67443] dark:text-amber-400 hover:underline transition-colors"
                     to={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
                   >
                     {t("auth.passwordForgot") || "Forgot password?"}
@@ -247,7 +247,7 @@ const Login = () => {
                     size={18}
                   />
                   <input
-                    className="h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-10 rtl:pl-10 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
+                    className="h-11 sm:h-12 w-full rounded-xl border border-transparent bg-[#eae3d9] dark:bg-white/10 pl-10 pr-10 rtl:pl-10 rtl:pr-10 text-sm font-medium text-[#1c1917] dark:text-white placeholder:text-[#a8a29e] dark:placeholder:text-white/40 outline-none transition-all focus:border-[#a67443] dark:focus:border-amber-400 focus:bg-white dark:focus:bg-white/15"
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
@@ -258,7 +258,7 @@ const Login = () => {
                     required
                   />
                   <button
-                    className="absolute right-3.5 rtl:right-auto rtl:left-3.5 text-[#78716c] dark:text-white/50 hover:text-[#1c1917] dark:hover:text-white transition-colors"
+                    className="absolute right-3.5 rtl:right-auto rtl:left-3.5 text-[#78716c] dark:text-white/50 hover:text-[#1c1917] dark:hover:text-white transition-colors p-1"
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
                     aria-label={
@@ -274,14 +274,14 @@ const Login = () => {
               </div>
 
               {/* Remember me */}
-              <label className="flex cursor-pointer items-center gap-2.5 px-1 pt-0.5">
+              <label className="flex cursor-pointer items-center gap-2.5 px-0.5 pt-0.5 select-none">
                 <input
                   type="checkbox"
                   className="peer sr-only"
                   checked={remember}
                   onChange={() => setRemember((value) => !value)}
                 />
-                <div className="flex h-4.5 w-4.5 items-center justify-center rounded-md border border-[#a8a29e] dark:border-white/30 bg-[#eae3d9] dark:bg-white/10 transition-all peer-checked:border-[#a67443] dark:peer-checked:border-amber-500 peer-checked:bg-[#a67443] dark:peer-checked:bg-amber-500 peer-checked:text-white">
+                <div className="flex h-5 w-5 min-w-[20px] min-h-[20px] shrink-0 items-center justify-center rounded-md border border-[#a8a29e] dark:border-white/30 bg-[#eae3d9] dark:bg-white/10 transition-all peer-checked:border-[#a67443] dark:peer-checked:border-amber-500 peer-checked:bg-[#a67443] dark:peer-checked:bg-amber-500 peer-checked:text-white">
                   {remember && (
                     <Icon name="check" size={13} className="font-bold" />
                   )}
@@ -293,7 +293,7 @@ const Login = () => {
 
               {/* Sign In Button */}
               <button
-                className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-base tracking-wide shadow-md shadow-[#a67443]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+                className="mt-2 flex h-11 sm:h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#a67443] hover:bg-[#946334] text-white font-bold text-sm sm:text-base tracking-wide shadow-md shadow-[#a67443]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
                 type="submit"
                 disabled={loading}
               >
@@ -311,17 +311,17 @@ const Login = () => {
             </form>
 
             {/* Divider */}
-            <div className="my-5 flex items-center gap-3">
+            <div className="my-4 sm:my-5 flex items-center gap-3">
               <div className="h-[1px] flex-1 bg-[#d6d3d1] dark:bg-white/15" />
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#a8a29e] dark:text-white/50">
-                OR CONTINUE WITH
+              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#a8a29e] dark:text-white/50">
+                {t("auth.orContinueWith") || "OR CONTINUE WITH"}
               </span>
               <div className="h-[1px] flex-1 bg-[#d6d3d1] dark:bg-white/15" />
             </div>
 
             {/* Google Login Button */}
             <button
-              className="group flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#e7e5e4] dark:border-white/20 bg-white dark:bg-white/10 hover:bg-stone-50 dark:hover:bg-white/15 text-[#1c1917] dark:text-white font-semibold text-sm shadow-sm transition-all active:scale-[0.99]"
+              className="group flex h-11 sm:h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-[#e7e5e4] dark:border-white/20 bg-white dark:bg-white/10 hover:bg-stone-50 dark:hover:bg-white/15 text-[#1c1917] dark:text-white font-semibold text-xs sm:text-sm shadow-sm transition-all active:scale-[0.99]"
               type="button"
               onClick={handleGoogleLogin}
             >
@@ -348,14 +348,25 @@ const Login = () => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>Continue with Google</span>
+              <span>{t("auth.google") || "Continue with Google"}</span>
             </button>
+
+            {/* Don't have an account link */}
+            <p className="mt-4 sm:mt-5 text-center text-xs font-medium text-[#78716c] dark:text-white/70">
+              {t("auth.newToSmartSpace") || "New to SmartSpace?"}{" "}
+              <Link
+                className="font-bold text-[#a67443] dark:text-amber-400 hover:underline transition-colors"
+                to="/register"
+              >
+                {t("auth.createAccount") || "Create Account"}
+              </Link>
+            </p>
           </div>
         </div>
       </main>
 
       {/* Simple Clean Page Footer Copyright */}
-      <footer className="relative z-10 text-center pb-5 text-xs font-medium text-white/60 drop-shadow">
+      <footer className="relative z-10 text-center py-4 sm:py-5 text-xs font-medium text-white/60 drop-shadow">
         {t("common.copyright")}
       </footer>
     </div>
